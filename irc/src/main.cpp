@@ -39,6 +39,8 @@ void separator(std::string str)
 
 int main(int argc, char** argv)
 {
+	
+
 	(void) argv;
 	
 	if (argc != 3)
@@ -52,8 +54,9 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-
-    std::cout << "Hello World!\n";
+	if (server(argc, argv) != 0 )
+		return (-1);
+	
 
     return 0;
 }
