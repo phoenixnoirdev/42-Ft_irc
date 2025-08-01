@@ -1,4 +1,6 @@
 
+#include "inc.hpp"
+
 int main_de_base(int argc, char **argv)
 {
 	// ver man socket
@@ -17,16 +19,24 @@ int main_de_base(int argc, char **argv)
 	/*convert Port in **function mainUtils.cpp** with parsing*/
 	uint16_t	port;
 
-	if(!(PortConvert(argv[1], port)))
+	/*if(!(PortConvert(argv[1], port)))
 		return (1);
-	
+	*/
+
+
+
+
 	/*IP  mainUtils.cpp */	
 	sockaddr_in		hint;
 
+
+
+	
 	/*memset(&hint, 0, sizeof(hint));*/
+	/*
 	if (!IpConvert(argv[2], hint.sin_addr))
 	    return (1);
-		
+	*/
 
 	hint.sin_family = AF_INET; //ipv4
 	hint.sin_port = htons(port);

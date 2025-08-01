@@ -11,8 +11,10 @@ int server(int argc, char **argv)
 	char		svc[NI_MAXSERV];//32 	🐓 📍 🗼
 	uint16_t	port;
 
+	/*
 	if(!(PortConvert(argv[1], port)))
 		return (1);
+	*/
 
 	/*IP  mainUtils.cpp */	
 	sockaddr_in		hint;
@@ -25,8 +27,25 @@ int server(int argc, char **argv)
 	hint.sin_port = htons(port);
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
    /*Creat a socket*/
 	/*listnig est le descripteur de socket retourné par socket()*/
+	
+	
+	
 	int			listening; // fd
 
 	listening = socket(AF_INET, SOCK_STREAM, 0); 
@@ -42,6 +61,10 @@ int server(int argc, char **argv)
 		std::cerr << "setsockopt failed" << std::endl;
 		return (-1);
 	}
+
+
+
+
 	/*setsockopt(listening, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 	// Aqui você define como não-bloqueante corretamente: apenas quando tiver varios clientes
 	int flags = fcntl(listening, F_GETFL, 0);
@@ -50,6 +73,19 @@ int server(int argc, char **argv)
 	    std::cerr << "Erro ao configurar O_NONBLOCK\n";
     	return (-1);
 	}*/
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	/*int bind(int sockfd, const struct sockaddr *addr,
                 socklen_t addrlen);*/

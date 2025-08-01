@@ -1,18 +1,17 @@
 
-#include "IrcLib.hpp"
+//#include "IrcLib.hpp"
 
-#define PORT_MAX 65535
+//#define PORT_MAX 65535
 
 /*PARSING*/
 /*convert a string <port> passed by argument to a int*/
-
+/*
 bool PortConvert(const std::string& arg, uint16_t& outPort)
 {
 	int port;
 
 	std::stringstream ss(arg);
-	/*return bool to stringstream*/
-	/*verify if its a valid int*/
+	
 	if (!(ss >> port) || !ss.eof())
     {
 		std::cerr << "Error: port conversion fail" << std::endl;
@@ -27,8 +26,14 @@ bool PortConvert(const std::string& arg, uint16_t& outPort)
 	outPort = static_cast<uint16_t>(port);
 		return (true);
 }
+*/
 
-/*bool IpConvert(const std::string& ipStr, struct in_addr& outAddr)
+
+
+
+/*
+//Uniaue;ent les ip de type: 127.0.0.1
+bool IpConvert(const std::string& ipStr, struct in_addr& outAddr)
 {
 	//  hint.s_addr = inet_addr("132.241.5.10");  inet_addr only work with literal ip's not  hostname like gethostbyname()
     struct hostent* he = gethostbyname(ipStr.c_str());
@@ -40,8 +45,16 @@ bool PortConvert(const std::string& arg, uint16_t& outPort)
 
     std::memcpy(&outAddr, he->h_addr, sizeof(struct in_addr));
     return true;
-}*/
+}
+*/
 
+
+
+
+/*
+Fonctionne qvec les ip 127.0.0.1 et localhost
+*/
+/*
 bool IpConvert(const std::string& ipStr, struct in_addr& outAddr)
 {
     struct addrinfo hints;
@@ -65,6 +78,10 @@ bool IpConvert(const std::string& ipStr, struct in_addr& outAddr)
     freeaddrinfo(res); // Libera a memória alocada
     return true;
 }
+*/
+
+
+
 
 /* getaddrinfo() return a pointer to addrinfo struct
 struct addrinfo {
@@ -79,6 +96,8 @@ struct addrinfo {
 };
 */
 
+
+
 /*****to understand how sockaddr_in struct works ******
 
 struct sockaddr_in
@@ -88,6 +107,8 @@ struct sockaddr_in
     struct in_addr		sin_addr;  		// <-- este é o campo que representa o IP
     char 				sin_zero[8];	//padding
 };
+
+
 
 *****e a estrutura sin_addr que 'e chamada na struct sockaddr_in ******
 

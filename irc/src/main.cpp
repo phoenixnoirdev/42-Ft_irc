@@ -54,8 +54,13 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	//Server::server("PORT", "PASS")
+
+
+	/*
 	if (server(argc, argv) != 0 )
 		return (-1);
+	*/
 	
 
     return 0;

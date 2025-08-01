@@ -7,6 +7,12 @@
 
 //Lib
 #include <iostream>
+#include <string>
+#include <limits>
+
+//Lib custom
+#include "server.hpp"
+#include "error.hpp"
 
 #include "lib_filip.hpp" // 🐓
 
