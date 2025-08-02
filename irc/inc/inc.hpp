@@ -13,6 +13,7 @@
 //Lib custom
 #include "server.hpp"
 #include "error.hpp"
+#include "utils.hpp"
 
 #include "lib_filip.hpp" // 🐓
 

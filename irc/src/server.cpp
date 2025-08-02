@@ -19,8 +19,7 @@
 Server::Server(std::string port, std::string pass)
 {
 
-    PortConvert(port);
-
+    this->_Port = Utils::PortConvert(port);
     this->_Pass = pass;
 
     return ;
@@ -44,30 +43,4 @@ Server::~Server()
 //Fonctions private
 //===============
 
-/**
- * @brief Convertit une chaîne en entier pour définir le port du serveur.
- *
- * Cette fonction tente de convertir l'argument fourni en un entier.
- * Si l'argument ne peut pas être converti ou s'il reste des caractères
- * après la conversion, une erreur est levée via Error::ErrorServ(1).
- * Si le port est en dehors des bornes valides (1 à PORT_MAX), une erreur
- * est levée via Error::ErrorServ(2). Si tout est valide, le port
- * converti est stocké dans l'attribut _Port du serveur.
- *
- * @param arg Chaîne représentant un port à convertir (doit être un entier).
- */
-void Server::PortConvert(const std::string& arg)
-{
-	int port;
-
-	std::stringstream ss(arg);
-
-	if (!(ss >> port) || !ss.eof())
-        Error::ErrorServ(1);
-
-	if (port < 1 || port > PORT_MAX)// 
-        Error::ErrorServ(2);
-    
-	this->_Port = static_cast<uint16_t>(port);
-}
 

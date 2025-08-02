@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   server.hpp                                           :+:      :+:    :+:   */
+/*   utils.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,37 +10,37 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SERVER_HPP
-#define SERVER_HPP
+#ifndef UTILS_HPP
+#define UTILS_HPP
 
 #include <string>
 #include <netdb.h>
 
-# define BUF_SIZE 4096 //Size max du buffer de lecture pour le message client
+//==============================
+// PORT
+//==============================
+#define PORT_MAX 65535
+#define PORT_MIN 1
 
-class Server
+class Utils
 {
     private:
-        std::string _Pass;
-        uint16_t	_Port;
 
 
     public:
         //=================
         //Constructeur
         //=================
-        Server(std::string port, std::string pass);
-        ~Server();
 
         //===============
         //Fonctions public
         //===============
-        
+        static uint16_t PortConvert(const std::string& arg);
 
         //===============
         //Fonctions private
         //===============
-
+        
 };
 
 #endif //SERVER.HPP

@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   error.cpp                                           :+:      :+:    :+:   */
+/*   error.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -12,10 +12,14 @@
 
 #include "../inc/inc.hpp"
 
-std::string Error::GetValErr(int err)
-{
-    return std::string(GREEN) + std::to_string(err) + RED;
-}
+//=================
+//Constructeur
+//=================
+
+
+//===============
+//Fonctions public
+//===============
 
 void Error::ErrorServ(int err)
 {
@@ -30,3 +34,14 @@ void Error::ErrorServ(int err)
 
     std::exit(EXIT_FAILURE);
 }
+
+
+//===============
+//Fonctions private
+//===============
+
+std::string Error::GetValErr(int err)
+{
+    return std::string(GREEN) + std::to_string(err) + RED;
+}
+
