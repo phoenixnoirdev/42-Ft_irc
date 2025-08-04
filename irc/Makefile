@@ -14,7 +14,7 @@
 #	Makefile variables
 ################################################################################
 
-CCXX		=	clang++
+CCXX		=	c++
 FLAGWSXX	=	-Wall -Wextra -Werror -std=c++98
 AR			=	ar rcs
 RM			=	/bin/rm -f
@@ -33,7 +33,8 @@ OBJ			=	$(addprefix $(OBJ_DIR), $(FILES:.cpp=.o))
 
 FILES		=	main.cpp\
 				server.cpp\
-				Error.cpp\
+				error.cpp\
+				utils.cpp\
 				
 ################################################################################
 #	Colors

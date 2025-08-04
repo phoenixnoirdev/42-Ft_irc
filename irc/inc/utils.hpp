@@ -36,7 +36,9 @@ class Utils
         //Fonctions public
         //===============
         static uint16_t PortConvert(const std::string& arg);
-
+        static struct in_addr IpConvert(const std::string& ipStr);
+        static std::string IntToString(int i);
+        
         //===============
         //Fonctions private
         //===============

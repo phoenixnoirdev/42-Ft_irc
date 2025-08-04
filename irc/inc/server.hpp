@@ -21,8 +21,12 @@
 class Server
 {
     private:
-        std::string _Pass;
-        uint16_t	_Port;
+        std::string     _Pass;
+        uint16_t	    _Port;
+        struct in_addr  _Ip; 
+        int             _Listening;
+        int			    _ClientSocket;
+        bool            _ServeurOn;
 
 
     public:
@@ -35,12 +39,14 @@ class Server
         //===============
         //Fonctions public
         //===============
-        
+        void Shutdown();
 
         //===============
         //Fonctions private
         //===============
-
+        void Init();
+        void AcceptClient();
+        void Run();
 };
 
 #endif //SERVER.HPP

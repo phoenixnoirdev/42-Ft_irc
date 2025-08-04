@@ -40,12 +40,63 @@ uint16_t Utils::PortConvert(const std::string& arg)
 	std::stringstream ss(arg);
 
 	if (!(ss >> port) || !ss.eof())
-        Error::ErrorServ(1);
+        Error::ErrorServ(1, "");
 
 	if (port < 1 || port > PORT_MAX)// 
-        Error::ErrorServ(2);
+        Error::ErrorServ(2, "");
     
 	return static_cast<uint16_t>(port);
+}
+
+/**
+ * @brief Convertit une adresse IP en structure in_addr (IPv4).
+ *
+ * Utilise getaddrinfo pour résoudre une adresse IP passée en chaîne
+ * de caractères (ipStr) vers une structure sockaddr, puis extrait
+ * l'adresse IPv4 (in_addr) correspondante.
+ *
+ * En cas d'échec de résolution, une erreur est levée via
+ * Error::ErrorServ(3, gai_strerror(status)).
+ *
+ * @param ipStr Adresse IP en format chaîne (ex: "127.0.0.1").
+ * @return struct in_addr Adresse IP convertie au format binaire.
+ */
+struct in_addr Utils::IpConvert(const std::string& ipStr)
+{
+    struct addrinfo hints;
+    struct addrinfo* res = NULL;
+    struct in_addr outAddr;
+
+    std::memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    int status = getaddrinfo(ipStr.c_str(), NULL, &hints, &res);
+    if (status != 0 || !res)
+        Error::ErrorServ(3, gai_strerror(status));	
+
+    struct sockaddr_in* ipv4 = (struct sockaddr_in*)res->ai_addr;
+    outAddr = ipv4->sin_addr;
+
+    freeaddrinfo(res);
+    return outAddr;
+}
+
+/**
+ * @brief Convertit un entier en chaîne de caractères.
+ *
+ * Utilise un std::stringstream pour convertir un entier en string.
+ *
+ * @param i L'entier à convertir.
+ * @return std::string Représentation texte de l'entier.
+ */
+std::string Utils::IntToString(int i)
+{
+    std::stringstream ss;
+
+    ss << i;
+
+    return ss.str();
 }
 
 

@@ -1,69 +1,56 @@
 
-#include "inc.hpp"
+//#include "inc.hpp"
 
 //    🐓 functions dans le repertoire  tmp utils.cpp
 	/*convert Port in **function mainUtils.cpp** with parsing*/
 
-
+/*
 int server(int argc, char **argv)
-{
-    char		host[NI_MAXHOST];//1024	🐓 
-	char		svc[NI_MAXSERV];//32 	🐓 📍 🗼
-	uint16_t	port;
+{*/
+    //char		host[NI_MAXHOST];//1024	🐓 
+	//char		svc[NI_MAXSERV];//32 	🐓 📍 🗼
+	//uint16_t	port;
+ 
 
 	/*
 	if(!(PortConvert(argv[1], port)))
 		return (1);
 	*/
 
-	/*IP  mainUtils.cpp */	
-	sockaddr_in		hint;
-
-	/*memset(&hint, 0, sizeof(hint));*/
+	/*
 	if (!IpConvert(argv[2], hint.sin_addr))
 	    return (1);
+	*/
 
+	/*
+	sockaddr_in		hint;
+	memset(&hint, 0, sizeof(hint));
 	hint.sin_family = AF_INET; //ipv4
 	hint.sin_port = htons(port);
+	*/
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   /*Creat a socket*/
+   	/*Creat a socket*/
 	/*listnig est le descripteur de socket retourné par socket()*/
-	
-	
-	
-	int			listening; // fd
+	//int			listening; // fd
 
+	/*
 	listening = socket(AF_INET, SOCK_STREAM, 0); 
 	if (listening == -1)
 	{
 		std::cerr << "Can't create a socket!" << std::endl;
 		return (-2);
 	}
+	*/
 
+	/*
     int opt = 1;
 	if (setsockopt(listening, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
 	{
 		std::cerr << "setsockopt failed" << std::endl;
 		return (-1);
 	}
-
-
-
+	*/
 
 	/*setsockopt(listening, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 	// Aqui você define como não-bloqueante corretamente: apenas quando tiver varios clientes
@@ -74,43 +61,39 @@ int server(int argc, char **argv)
     	return (-1);
 	}*/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 	/*int bind(int sockfd, const struct sockaddr *addr,
                 socklen_t addrlen);*/
 	/*bind*/
+	/*
 	if (bind (listening, (struct sockaddr*)&hint, sizeof(hint)) == -1)
 	{
 		std::cerr << "can't bind IP/port" << std::endl;
 		return (-2);
 	}
+	*/
 
 	/*Mark the socket for listening in*/
+	/*
 	if ( listen( listening, SOMAXCONN) == -1)
 	{
 		std::cerr << "Can't Listen " << std::endl;
 		return (-2);
 	}
+	*/
 	
-	 std::cout << "Server OK - listening on " << argv[2] << ":" << port << std::endl;
-	 std::cout << "mensagem 2 Server OK - listening on Port:" << port << " Ip: " << inet_ntoa(hint.sin_addr) << std::endl;
-//	std::cout << "mensagem 2 Server OK - listening on Port:" << hint.sin_port << " Ip: " << inet_ntoa(hint.sin_addr) << std::endl;
+
+
+	/*
+	std::cout << "Server OK - listening on " << argv[2] << ":" << port << std::endl;
+	std::cout << "mensagem 2 Server OK - listening on Port:" << port << " Ip: " << inet_ntoa(hint.sin_addr) << std::endl;
+	*/
+	//std::cout << "mensagem 2 Server OK - listening on Port:" << hint.sin_port << " Ip: " << inet_ntoa(hint.sin_addr) << std::endl;
 	 // foi para testar o livro hint.sin_port = 0 (da porta aleatoria) 
 
 	
 	/*Accept a call*/
 	/*Accept a client connection*/
+	/*
 	int			clientSocket;
 	sockaddr_in	client;
 	socklen_t	clientSize;
@@ -122,12 +105,14 @@ int server(int argc, char **argv)
 		std::cout << "Problem with client connecting" << std::endl;
 		return (-2);
 	}
-
+	*/
 	/*Close the listening socket	*/
+	/*
 	close (listening);
 	memset (host, 0, NI_MAXHOST);
 	memset (svc, 0, NI_MAXSERV);
-
+	*/
+	/*
 	int result = getnameinfo((sockaddr*)&client,
 										clientSize,
 										host,
@@ -149,8 +134,8 @@ int server(int argc, char **argv)
 
 
 	}
-
-
+	*/
+	/*
 	// While receiving - display message, echo message
 	char buf[BUF_SIZE];
 	while (true)
@@ -170,9 +155,10 @@ int server(int argc, char **argv)
 			break ;
 		}
 		std::cout << "Received: " << std::string(buf, 0, bytesRecv) << std::endl; 
-		
+		*/
 		/*resend message*/
 		/*send(clientSocket, buf, bytesRecv , 0);*/
+		/*
 		send(clientSocket, "Hello, world!\n", 14, 0) ;
 
 		if (send(clientSocket, buf, bytesRecv , 0) == -1)
@@ -186,5 +172,5 @@ int server(int argc, char **argv)
 	close(clientSocket);
 
     return (0);
-
-}
+	*/
+//}

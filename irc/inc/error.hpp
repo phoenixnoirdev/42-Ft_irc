@@ -27,7 +27,7 @@ class Error
         //===============
         //Fonctions public
         //===============
-        static void ErrorServ(int err);
+        static void ErrorServ(int err,  std::string str);
 
 
         //===============

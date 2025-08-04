@@ -10,7 +10,10 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "inc.hpp"
+#include "../inc/inc.hpp"
+
+Server* ServPtr = NULL;
+
 
 /**
  * @brief Affiche plusieurs lignes vides dans la console.
@@ -37,12 +40,29 @@ void separator(std::string str)
 	lBreak(2);
 }
 
+/**
+ * @brief Gère les signaux pour effectuer un arrêt propre du serveur.
+ *
+ * Affiche un message indiquant qu'un signal a été reçu, puis appelle
+ * la méthode Shutdown() via le pointeur global ServPtr si celui-ci est
+ * non nul. Termine ensuite le programme avec le code du signal reçu.
+ *
+ * @param signum Numéro du signal reçu (ex: SIGINT, SIGTERM).
+ */
+void SigHandler(int signum)
+{
+	std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
+	std::cout << YELLOW << "\n[Signal " << GREEN << signum << YELLOW << "] Fermeture propre du serveur..." << RESET << std::endl;
+	std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
+
+	if (ServPtr != NULL)
+		ServPtr->Shutdown();
+
+	std::exit(signum);
+}
+
 int main(int argc, char** argv)
 {
-	
-
-	(void) argv;
-	
 	if (argc != 3)
 	{
 		std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
@@ -54,13 +74,23 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	//Server::server("PORT", "PASS")
+	
+	// Ignore SIGPIPE pour éviter crash sur socket fermé
+	signal(SIGPIPE, SIG_IGN);
 
+	// Capture SIGINT (CTRL+C)
+	signal(SIGINT, SigHandler);
 
-	/*
-	if (server(argc, argv) != 0 )
-		return (-1);
-	*/
+	try
+	{
+		Server server(argv[1], argv[2]);
+		ServPtr = &server;
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << RED << "Fatal error: " << e.what() << RESET << std::endl;
+		return 1;
+	}
 	
 
     return 0;
