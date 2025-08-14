@@ -20,5 +20,6 @@
 #include "server.hpp"
 #include "error.hpp"
 #include "utils.hpp"
+#include "user.hpp"
 
 #endif //INC.HPP

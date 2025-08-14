@@ -111,6 +111,7 @@ void Server::Init()
     std::cout << GREEN << "Server OK" << RESET << std::endl;
     std::cout << YELLOW << "-- listening on Port:" << CYAN  << this->_Port << RESET << std::endl;
     std::cout << YELLOW << "-- Ip: " << CYAN << inet_ntoa(hint.sin_addr) <<  RESET << std::endl;
+    std::cout << YELLOW << "-- Pwd: " << CYAN << this->_Pass <<  RESET << std::endl;
     std::cout << YELLOW << "------------------------------------" << RESET << std::endl;      
 }
 
@@ -175,19 +176,65 @@ void Server::Run()
 			break ;
 		}
 
+
+        //Buffer de reception pour compiler les data receptionner car le protocoel
+        //IRC envoie par packet
+        this->_RecvBuffer.append(buf, bytesRecv);
+
+        /*
+        * fonction controle du password
+        */
+        if (PassCont() == false)
+        {
+			std::cerr << "Wrong Password " << std::endl;
+			break ;
+        }
+
+
 		std::cout << "Received: " << std::string(buf, 0, bytesRecv) << std::endl; 
 		
 		/*resend message*/
-		/*send(clientSocket, buf, bytesRecv , 0);*/
+		/*send(this->clientSocket, buf, bytesRecv , 0);*/
 		send(this->_ClientSocket, "Hello, world!\n", 14, 0) ;
 
 		if (send(this->_ClientSocket, buf, bytesRecv , 0) == -1)
 		{
 			std::cerr << "Send failed" << std::endl;
-			break;
+			break ;
 		}
 	
 	}
 
     Shutdown();
+}
+
+/**
+ * @brief Traite le buffer reçu pour détecter et valider la commande PASS.
+ *
+ * Cette fonction lit le contenu du buffer `_RecvBuffer` ligne par ligne
+ * (délimité par "\r\n"). Si une ligne commence par "PASS", elle extrait
+ * la valeur du mot de passe et la compare au mot de passe attendu `_Pass`.
+ *
+ * @return true si le mot de passe est correct ou si la commande PASS
+ *         n’a pas encore été reçue, false si la commande PASS est
+ *         reçue mais invalide.
+ */
+bool Server::PassCont()
+{
+    std::string::size_type pos;
+
+    while ((pos = this->_RecvBuffer.find("\r\n")) != std::string::npos)
+    {
+        std::string line = this->_RecvBuffer.substr(0, pos);
+        this->_RecvBuffer.erase(0, pos + 2);
+
+        if (line.substr(0, 4) == "PASS")
+        {
+            std::string passValue = line.size() > 5 ? line.substr(5) : "";
+            //std::cout << "[DEBUG] PASS trouvé: " << passValue << std::endl;
+            return passValue == this->_Pass;
+        }
+    }
+
+    return true;
 }

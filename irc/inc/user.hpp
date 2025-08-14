@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   server.hpp                                           :+:      :+:    :+:   */
+/*   user.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,47 +10,43 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SERVER_HPP
-#define SERVER_HPP
+#ifndef USER_HPP
+#define USER_HPP
 
 #include <string>
-#include <netdb.h>
 
-# define BUF_SIZE 4096 //Size max du buffer de lecture pour le message client
-
-class Server
+class User
 {
     private:
-        std::string     _Pass;
-        uint16_t	    _Port;
-        struct in_addr  _Ip;
-
-        std::string     _RecvBuffer; 
-        int             _Listening;
-        int			    _ClientSocket;
-        bool            _ServeurOn;
-
+        std::string _Name;
+        std::string _Nick;
+        int _Grade;
 
     public:
         //=================
         //Constructeur
         //=================
-        Server(std::string port, std::string pass);
-        ~Server();
+        User(std::string name, std::string nick, int grade);
+        ~User();
+
 
         //===============
         //Fonctions public
         //===============
-        void Shutdown();
+        std::string GetName();
+        void SetName(std::string name);
+
+        std::string GetNick();
+        void SetNick(std::string nick);
+
+        int GetGrad();
+        void SetGrade(int grade);
+
 
         //===============
         //Fonctions private
         //===============
-        void Init();
-        void AcceptClient();
-        void Run();
-
-        bool PassCont();
+        
 };
 
-#endif //SERVER.HPP
+#endif //USER.HPP
