@@ -15,7 +15,7 @@
 ################################################################################
 
 CCXX		=	c++
-FLAGWSXX	=	-Wall -Wextra -Werror -std=c++98
+FLAGWSXX	=	-Wall -Wextra -Werror -std=c++98 -g
 AR			=	ar rcs
 RM			=	/bin/rm -f
 
@@ -35,6 +35,7 @@ FILES		=	main.cpp\
 				server.cpp\
 				error.cpp\
 				utils.cpp\
+				user.cpp\
 				
 ################################################################################
 #	Colors

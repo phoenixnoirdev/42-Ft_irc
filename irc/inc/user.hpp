@@ -24,7 +24,7 @@ typedef struct	s_user
 	int				grade;
 	struct s_user	*next;
 
-	t_user(	const std::string& uuid_,
+	s_user(	const std::string& uuid_,
 			const std::string& name_,
 			const std::string& nick_,
 			const std::string& pass_,
@@ -36,7 +36,7 @@ typedef struct	s_user
 		grade(grade_),
 		next(NULL)
 	{}
-	t_user(const t_user& other):
+	s_user(const s_user& other):
 		uuid(other.uuid),
 		name(other.name),
 		nick(other.nick),
@@ -56,6 +56,7 @@ class User
 		//===============
 		//Fonctions private
 		//===============
+		std::string	generateUUID(const std::string& name, const std::string& nick);
 
 	public:
 		//=================
@@ -75,8 +76,7 @@ class User
 		//===============
 		//Fonctions public
 		//===============
-		void	addUser(const std::string& uuid_,
-						const std::string& name_,
+		void	addUser(const std::string& name_,
 						const std::string& nick_,
 						const std::string& pass_,
 						int grade_);
@@ -90,12 +90,12 @@ class User
 		size_t	getSize() const;
 		t_user	*getTop() const;
 		t_user	*getBot() const;
-		t_user	*getUserByIndex(int index) const;
+		t_user	*getUserByIndex(size_t index) const;
 		t_user	*getUserByUUID(const std::string& uuid) const;
 		t_user	*getUserByName(const std::string& name) const;
 		t_user	*getUserByNick(const std::string& nick) const;
 		t_user	*getUserByPass(const std::string& pass) const;
-		t_user	*getUserByUUID(const std::string& uuid, int *id) const;
+		t_user	*getUserByUUID(const std::string& uuid, size_t *id) const;
 
 		//Information Verification
 		bool	empty() const;

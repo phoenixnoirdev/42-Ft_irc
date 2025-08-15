@@ -63,6 +63,33 @@ void SigHandler(int signum)
 
 int main(int argc, char** argv)
 {
+	if (argc == 1)
+	{
+		User	userDB = User();
+
+		std::cout << (userDB.empty() ? "Is empty" : "Is not empty") << std::endl;
+		std::cout << userDB.hasPass("Skombadi") << std::endl;
+		userDB.addUser("Name1", "Nickname1", "123456", 5);
+		userDB.addUser("Name2", "Nickname2", "Pipipoupou", 127);
+		userDB.addUser("Name3", "Nickname34", "Skibidi", 2);
+		userDB.addUser("Name4", "Nickname567", "Skombadi", 29);
+		std::cout << (userDB.empty() ? "Is empty" : "Is not empty") << std::endl;
+		std::cout << "Size: " << userDB.getSize() << std::endl;
+		std::cout << userDB.hasUUID("Hello") << std::endl;
+		std::cout << userDB.getUserByPass("Pipipoupou")->grade << std::endl;
+		std::cout << userDB.getUserByIndex(2)->name << std::endl;
+		userDB.removeUserByUUID(userDB.getUserByIndex(2)->uuid);
+		std::cout << userDB.getUserByIndex(2)->name << std::endl;
+		std::cout << userDB.hasPass("Skombadi") << std::endl;
+		std::cout << userDB.hasPass("Skombady") << std::endl;
+		std::cout << userDB.getUserByNick("Nickname567")->uuid << std::endl;
+		userDB.removeUserByUUID(userDB.getTop()->uuid);
+		userDB.removeUserByUUID(userDB.getTop()->uuid);
+		userDB.removeUserByUUID(userDB.getTop()->uuid);
+		std::cout << (userDB.empty() ? "Is empty" : "Is not empty") << std::endl;
+
+		return (0);
+	}
 	if (argc != 3)
 	{
 		std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
