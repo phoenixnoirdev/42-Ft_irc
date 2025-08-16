@@ -63,6 +63,7 @@ void SigHandler(int signum)
 
 int main(int argc, char** argv)
 {
+	//Teste bdd user
 	if (argc == 1)
 	{
 		User	userDB = User();
@@ -90,6 +91,8 @@ int main(int argc, char** argv)
 
 		return (0);
 	}
+
+	//Retourn l'usage 
 	if (argc != 3)
 	{
 		std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
