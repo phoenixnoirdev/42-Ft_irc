@@ -22,5 +22,6 @@
 #include "error.hpp"
 #include "utils.hpp"
 #include "user.hpp"
+#include "channel.hpp"
 
 #endif //INC.HPP

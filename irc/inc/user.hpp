@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   user.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
+/*   By: kelevequ <kelevequ@student.42.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 11:21:29 by phkevin           #+#    #+#             */
-/*   Updated: 2025/04/12 11:21:29 by phkevin          ###   ########.fr       */
+/*   Updated: 2025/08/19 07:51:17 by kelevequ         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef USER_HPP
-#define USER_HPP
+# define USER_HPP
 
-#include <string>
+# include <string>
 
 typedef struct	s_user
 {
