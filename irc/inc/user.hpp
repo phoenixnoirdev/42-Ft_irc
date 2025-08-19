@@ -6,7 +6,7 @@
 /*   By: kelevequ <kelevequ@student.42.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 11:21:29 by phkevin           #+#    #+#             */
-/*   Updated: 2025/08/19 07:51:17 by kelevequ         ###   ########.fr       */
+/*   Updated: 2025/08/19 13:41:55 by kelevequ         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,7 @@ class User
 		//Constructeur
 		//=================
 		User(t_user *list);
-		User(const std::string& json);
+		User(const std::string& json); //Not implemented
 
 		//===============
 		//Fonctions public
@@ -103,6 +103,12 @@ class User
 		bool	hasName(const std::string& name) const;
 		bool	hasNick(const std::string& nick) const;
 		bool	hasPass(const std::string& pass) const;
+
+		//Information Utility
+		void	printUserDB() const; //Not implemented
+		void	printUser(t_user *user) const; //Not implemented
+		void	saveUserDB(const std::string& filepath) const; //Not implemented
+		void	saveUser(t_user *user, const std::string& filepath) const; //Not implemented
 };
 
 #endif //USER.HPP

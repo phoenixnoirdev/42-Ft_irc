@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+         #
+#    By: kelevequ <kelevequ@student.42.lu>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/19 12:48:38 by phkevin           #+#    #+#              #
-#    Updated: 2025/07/29 11:48:49 by phkevin          ###   ########.fr        #
+#    Updated: 2025/08/19 13:09:54 by kelevequ         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -36,6 +36,7 @@ FILES		=	main.cpp\
 				error.cpp\
 				utils.cpp\
 				user.cpp\
+				channel.cpp\
 				
 ################################################################################
 #	Colors

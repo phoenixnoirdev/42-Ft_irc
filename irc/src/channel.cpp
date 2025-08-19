@@ -6,7 +6,7 @@
 /*   By: kelevequ <kelevequ@student.42.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 08:36:42 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/08/19 12:59:12 by kelevequ         ###   ########.fr       */
+/*   Updated: 2025/08/19 13:36:14 by kelevequ         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 
 Channel::Channel(): _top(NULL), _bot(NULL), _size(0) {}
 
-Channel::Channel(const User& other): _top(NULL), _bot(NULL), _size(0)
+Channel::Channel(const Channel& other): _top(NULL), _bot(NULL), _size(0)
 {
 	t_channel	*tmp;
 	size_t		len;
@@ -193,7 +193,7 @@ bool	Channel::removeChannelByID(int id)
 	return (true);
 }
 
-bool	Channel::removeChannelByName(int name)
+bool	Channel::removeChannelByName(const std::string& name)
 {
 	t_channel	*tmp;
 	t_channel	*prev;
@@ -254,12 +254,12 @@ t_channel	*Channel::getChannelByID(int id) const
 	return (NULL);
 }
 
-t_channel	*Channel::getChannelByID(int id, int *i) const
+t_channel	*Channel::getChannelByID(int id, size_t *i) const
 {
 	t_channel	*tmp;
 
 	tmp = getTop();
-	while (i < _size)
+	while (*i < _size)
 	{
 		if (id == tmp->id)
 			return (tmp);
@@ -305,12 +305,12 @@ t_channel	*Channel::getChannelByName(const std::string& name) const
 	return (NULL);
 }
 
-t_channel	*Channel::getChannelByName(const std::string& name, int *i) const
+t_channel	*Channel::getChannelByName(const std::string& name, size_t *i) const
 {
 	t_channel	*tmp;
 
 	tmp = getTop();
-	while (i < _size)
+	while (*i < _size)
 	{
 		if (name == tmp->name)
 			return (tmp);
@@ -320,9 +320,12 @@ t_channel	*Channel::getChannelByName(const std::string& name, int *i) const
 	return (NULL);
 }
 
-std::string&	getChannelUserDisplayName(t_channel *channel, t_user *user)
+std::string&	Channel::getChannelUserDisplayName(t_channel *channel, t_user *user) const
 {
-	return (channel->grade_0[user]);
+	if (channel->grade_3[user] != "default")
+		return (channel->grade_3[user]);
+	else
+		return (user->name);
 }
 
 bool	Channel::setChannelUserDisplayName(t_channel *channel, t_user *user, const std::string& displayName)
@@ -366,6 +369,7 @@ bool	Channel::promoteChannelUser(t_channel *channel, t_user *user, int grade)
 			std::cerr << "Invalid grade: " << grade << std::endl;
 			return (false);
 	}
+	return (true);
 }
 
 bool	Channel::demoteChannelUser(t_channel *channel, t_user *user, int grade)
@@ -408,7 +412,7 @@ bool	Channel::banChannelUser(t_channel *channel, t_user *user, const std::string
 
 bool	Channel::empty() const
 {
-	return (_top == NULL):
+	return (_top == NULL);
 }
 
 bool	Channel::hasID(int id) const
@@ -453,19 +457,20 @@ bool	Channel::channelHasUser(t_channel *channel, t_user *user, int grade) const
 {
 	if (grade > 3 || grade < 0)
 		return (false);
+	std::map<s_user*, std::string>::iterator	it;
 	switch (grade)
 	{
 		case 0:
-			std::map<s_user*, std::string>::iterator	it = channel->grade_0.find(user);
+			it = channel->grade_0.find(user);
 			return (it != channel->grade_0.end());
 		case 1:
-			std::map<s_user*, std::string>::iterator	it = channel->grade_1.find(user);
+			it = channel->grade_1.find(user);
 			return (it != channel->grade_1.end());
 		case 2:
-			std::map<s_user*, std::string>::iterator	it = channel->grade_2.find(user);
+			it = channel->grade_2.find(user);
 			return (it != channel->grade_2.end());
 		case 3:
-			std::map<s_user*, std::string>::iterator	it = channel->grade_3.find(user);
+			it = channel->grade_3.find(user);
 			return (it != channel->grade_3.end());
 		default:
 			std::cerr << "Invalid grade: " << grade << std::endl;
