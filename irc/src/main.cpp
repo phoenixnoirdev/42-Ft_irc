@@ -63,17 +63,17 @@ void SigHandler(int signum)
 
 int main(int argc, char** argv)
 {
-	//Teste bdd user
-	if (argc == 1)
+	//Teste bdd user et channel
+	/*if (argc == 1)
 	{
 		User	userDB = User();
 
 		std::cout << (userDB.empty() ? "Is empty" : "Is not empty") << std::endl;
 		std::cout << userDB.hasPass("Skombadi") << std::endl;
-		userDB.addUser("Name1", "Nickname1", "123456", 5);
-		userDB.addUser("Name2", "Nickname2", "Pipipoupou", 127);
-		userDB.addUser("Name3", "Nickname34", "Skibidi", 2);
-		userDB.addUser("Name4", "Nickname567", "Skombadi", 29);
+		userDB.addUser("Name1", "Nickname1", "123456", 5, 4);
+		userDB.addUser("Name2", "Nickname2", "Pipipoupou", 127, 5);
+		userDB.addUser("Name3", "Nickname34", "Skibidi", 2, 6);
+		userDB.addUser("Name4", "Nickname567", "Skombadi", 29, 7);
 		std::cout << (userDB.empty() ? "Is empty" : "Is not empty") << std::endl;
 		std::cout << "Size: " << userDB.getSize() << std::endl;
 		std::cout << userDB.hasUUID("Hello") << std::endl;
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
 		std::cout << channelDB.getChannelUserDisplayName(general, skibidi) << std::endl;
 
 		return (0);
-	}
+	}*/
 
 	//Retourn l'usage 
 	if (argc != 3)

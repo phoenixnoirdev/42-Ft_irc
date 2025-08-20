@@ -21,19 +21,24 @@ typedef struct	s_user
 	std::string		name;
 	std::string		nick;
 	std::string		pass;
+    char    		buffer[512];    // buffer de réception (IRC limite souvent à 512 chars)
+    int     		buf_len;        // longueur actuelle du buffer
 	int				grade;
+	int 			socket;
 	struct s_user	*next;
 
 	s_user(	const std::string& uuid_,
 			const std::string& name_,
 			const std::string& nick_,
 			const std::string& pass_,
-			int grade_):
+			int grade_,
+			int socket_):
 		uuid(uuid_),
 		name(name_),
 		nick(nick_),
 		pass(pass_),
 		grade(grade_),
+		socket(socket_),
 		next(NULL)
 	{}
 	s_user(const s_user& other):
@@ -79,7 +84,8 @@ class User
 		void	addUser(const std::string& name_,
 						const std::string& nick_,
 						const std::string& pass_,
-						int grade_);
+						int grade,
+						int socket);
 		void	addUser(const t_user& other);
 
 		//Deletion
@@ -109,6 +115,7 @@ class User
 		void	printUser(t_user *user) const; //Not implemented
 		void	saveUserDB(const std::string& filepath) const; //Not implemented
 		void	saveUser(t_user *user, const std::string& filepath) const; //Not implemented
+		void	closeAllSockets(); //Close all socket
 };
 
 #endif //USER.HPP

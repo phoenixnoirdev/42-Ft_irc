@@ -23,9 +23,10 @@ Server::Server(std::string port, std::string pass)
     this->_Ip = Utils::IpConvert("localhost");
     this->_Pass = pass;
     this->_ServeurOn = true;
+    this->_User = User();
 
     Init();
-    AcceptClient();
+    //AcceptClient();
     Run();
     
     return ;
@@ -43,20 +44,15 @@ Server::~Server()
 //Fonctions public
 //===============
 
-/**
- * @brief Arrête proprement le serveur en fermant les sockets ouverts.
- *
- * Met le flag _ServeurOn à false pour signaler l'arrêt. Ferme la socket
- * client si elle est ouverte (_ClientSocket != -1), puis ferme la socket
- * d'écoute (_Listening) si elle est également ouverte. Affiche un message
- * indiquant que le serveur a été arrêté proprement.
- */
 void Server::Shutdown()
 {
     this->_ServeurOn = false;
 
-    if (this->_ClientSocket != -1)
-        close(this->_ClientSocket);
+
+    this->_User.closeAllSockets();
+
+    this->_User.clear();
+
 
     if (this->_Listening != -1)
         close(this->_Listening);
@@ -115,46 +111,166 @@ void Server::Init()
     std::cout << YELLOW << "------------------------------------" << RESET << std::endl;      
 }
 
-/**
- * @brief Accepte une connexion entrante d'un client sur le socket serveur.
- *
- * Cette fonction bloque jusqu'à ce qu'un client tente de se connecter.
- * Elle accepte la connexion, ferme le socket d'écoute pour empêcher
- * d'autres connexions (à retirer pour supporter plusieurs clients), puis
- * récupère et affiche le nom d'hôte et le service (port) du client.
- *
- * En cas d'erreur lors de l'acceptation, une erreur est levée via
- * Error::ErrorServ(8, "").
- */
+
 void Server::AcceptClient()
 {
-	sockaddr_in	client;
-	socklen_t	clientSize;
-    char		host[NI_MAXHOST];   //1024
-	char		svc[NI_MAXSERV];    //32 	
+    sockaddr_in client;
+    socklen_t clientSize = sizeof(client);
+    int clientSocket = accept(this->_Listening, (sockaddr*)&client, &clientSize);
+    if (clientSocket == -1)
+    {
+        Error::ErrorServ(8, "accept failed");
+        return;
+    }
 
-    clientSize = sizeof(client);
-
-	this->_ClientSocket = accept(this->_Listening,  (sockaddr*)&client, &clientSize);
-	close (this->_Listening); //Ferme le port d'ecoute a la connexion de l'utilisateur (a suprimer pour le multiple user)
-
-	if (this->_ClientSocket == -1)
-        Error::ErrorServ(8, "");
-
-    memset (host, 0, NI_MAXHOST);
-	memset (svc, 0, NI_MAXSERV);
-
-    int result = getnameinfo((sockaddr*)&client, clientSize, host, NI_MAXHOST, svc, NI_MAXSERV, 0);
-
+    this->_ClientsInfo[clientSocket] = ClientInfo();
+    this->_PendingData[clientSocket] = "";
 
     std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
-    if (result == 0)
-		std::cout << GREEN << host << YELLOW << " connected on " << GREEN << svc << RESET << std::endl;
-	else
-		std::cout << GREEN << inet_ntoa(client.sin_addr) << YELLOW << " connected on port " << GREEN << ntohs(client.sin_port) << RESET << std::endl;
+    std::cout << GREEN << inet_ntoa(client.sin_addr) << YELLOW
+              << " connected on port " << GREEN << ntohs(client.sin_port)
+              << RESET << std::endl;
     std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
 }
 
+void Server::HandleClientData(int clientSocket)
+{
+    char buf[BUF_SIZE];
+    int bytesRecv = recv(clientSocket, buf, BUF_SIZE, 0);
+
+    if (bytesRecv <= 0)
+    {
+        if (bytesRecv == 0)
+            std::cerr << "Client disconnected" << std::endl;
+        else
+            std::cerr << "recv failed" << std::endl;
+
+        close(clientSocket);
+        this->_ClientsInfo.erase(clientSocket);
+        this->_PendingData.erase(clientSocket);
+        return;
+    }
+
+
+    this->_PendingData[clientSocket] += std::string(buf, bytesRecv);
+    std::string &data = this->_PendingData[clientSocket];
+    ClientInfo &info = this->_ClientsInfo[clientSocket];
+
+    size_t pos;
+    while ((pos = data.find("\r\n")) != std::string::npos)
+    {
+        std::string line = data.substr(0, pos);
+        data.erase(0, pos + 2);
+
+        if (line.find("NICK ") == 0)
+        {
+            info.nick = GetNick(line);
+            info.gotNick = true;
+            std::cout << "[DEBUG] NICK: " << info.nick << std::endl;
+        }
+        else if (line.find("USER ") == 0)
+        {
+            info.user = GetName(line);
+            info.gotUser = true;
+            std::cout << "[DEBUG] USER: " << info.user << std::endl;
+        }
+        else if (line.find("PASS ") == 0)
+        {
+            info.pass = GetPwd(line);
+            info.gotPass = true;
+            std::cout << "[DEBUG] PASS: " << info.pass << std::endl;
+        }
+    }
+
+    if (info.gotNick && info.gotUser && info.gotPass)
+    {
+        if (!PassCont(info.pass))
+        {
+            send(clientSocket, "Invalid password\n", 17, 0);
+            close(clientSocket);
+        }
+        else
+        {
+            this->_User.addUser(info.user, info.nick, info.pass, 5, clientSocket);
+        }
+
+        _ClientsInfo.erase(clientSocket);
+        _PendingData.erase(clientSocket);
+    }
+}
+
+//Version tmp
+void Server::Run()
+{
+    fd_set readfds;
+    int maxFd;
+
+    while (true)
+    {
+        FD_ZERO(&readfds);
+        FD_SET(this->_Listening, &readfds);
+        maxFd = this->_Listening;
+
+        // Ajouter les clients en handshake
+        for (std::map<int, ClientInfo>::iterator it = _ClientsInfo.begin();
+             it != _ClientsInfo.end(); ++it)
+        {
+            FD_SET(it->first, &readfds);
+            if (it->first > maxFd)
+                maxFd = it->first;
+        }
+
+        // Ajouter les clients authentifiés (_User)
+        const std::map<int, UserInfo>& activeUsers = this->_User.getUsers();
+        for (std::map<int, UserInfo>::const_iterator it = activeUsers.begin();
+             it != activeUsers.end(); ++it)
+        {
+            FD_SET(it->first, &readfds);
+            if (it->first > maxFd)
+                maxFd = it->first;
+        }
+
+        // Attente d'activité (lecture uniquement)
+        if (select(maxFd + 1, &readfds, NULL, NULL, NULL) < 0)
+        {
+            Error::ErrorServ(9, "select failed");
+            continue;
+        }
+
+        // Nouveau client en attente ?
+        if (FD_ISSET(this->_Listening, &readfds))
+        {
+            AcceptClient();
+        }
+
+        // Données sur un client en handshake ?
+        for (std::map<int, ClientInfo>::iterator it = _ClientsInfo.begin();
+             it != _ClientsInfo.end(); )
+        {
+            int clientSock = it->first;
+            ++it; // avancer avant potentielle suppression
+
+            if (FD_ISSET(clientSock, &readfds))
+            {
+                HandleClientData(clientSock);
+            }
+        }
+
+        // Données sur un client authentifié ?
+        for (std::map<int, UserInfo>::const_iterator it = activeUsers.begin();
+             it != activeUsers.end(); ++it)
+        {
+            int clientSock = it->first;
+            if (FD_ISSET(clientSock, &readfds))
+            {
+                this->_User.HandleUserData(clientSock);
+            }
+        }
+    }
+}
+
+
+/*
 void Server::Run()
 {
     char buf[BUF_SIZE];
@@ -181,9 +297,8 @@ void Server::Run()
         //IRC envoie par packet
         this->_RecvBuffer.append(buf, bytesRecv);
 
-        /*
-        * fonction controle du password
-        */
+        
+        //fonction controle du password
         if (PassCont() == false)
         {
 			std::cerr << "Wrong Password " << std::endl;
@@ -193,8 +308,8 @@ void Server::Run()
 
 		std::cout << "Received: " << std::string(buf, 0, bytesRecv) << std::endl; 
 		
-		/*resend message*/
-		/*send(this->clientSocket, buf, bytesRecv , 0);*/
+		//resend message
+		//send(this->clientSocket, buf, bytesRecv , 0);
 		send(this->_ClientSocket, "Hello, world!\n", 14, 0) ;
 
 		if (send(this->_ClientSocket, buf, bytesRecv , 0) == -1)
@@ -207,34 +322,57 @@ void Server::Run()
 
     Shutdown();
 }
+*/
 
-/**
- * @brief Traite le buffer reçu pour détecter et valider la commande PASS.
- *
- * Cette fonction lit le contenu du buffer `_RecvBuffer` ligne par ligne
- * (délimité par "\r\n"). Si une ligne commence par "PASS", elle extrait
- * la valeur du mot de passe et la compare au mot de passe attendu `_Pass`.
- *
- * @return true si le mot de passe est correct ou si la commande PASS
- *         n’a pas encore été reçue, false si la commande PASS est
- *         reçue mais invalide.
- */
-bool Server::PassCont()
+bool Server::PassCont(const std::string& str)
 {
-    std::string::size_type pos;
+    if (str == this->_Pass)
+        return true;
+    
+    return false;
+}
 
-    while ((pos = this->_RecvBuffer.find("\r\n")) != std::string::npos)
+std::string Server::GetPwd(const std::string& str)
+{
+    if (str.substr(0, 4) == "PASS")
     {
-        std::string line = this->_RecvBuffer.substr(0, pos);
-        this->_RecvBuffer.erase(0, pos + 2);
-
-        if (line.substr(0, 4) == "PASS")
+        std::string::size_type spacePos = str.find(' ');
+        if (spacePos != std::string::npos)
         {
-            std::string passValue = line.size() > 5 ? line.substr(5) : "";
-            //std::cout << "[DEBUG] PASS trouvé: " << passValue << std::endl;
-            return passValue == this->_Pass;
+            std::string pass = str.substr(spacePos + 1);
+            //std::cout << "[DEBUG] PASS trouvé: " << pass << std::endl;
+            return pass;
         }
     }
+    return "";
+}
 
-    return true;
+std::string Server::GetNick(const std::string& str)
+{
+    if (str.substr(0, 4) == "NICK")
+    {
+        std::string::size_type spacePos = str.find(' ');
+        if (spacePos != std::string::npos)
+        {
+            std::string nick = str.substr(spacePos + 1);
+            //std::cout << "[DEBUG] NICK trouvé: " << nick << std::endl;
+            return nick;
+        }
+    }
+    return "";
+}
+
+std::string Server::GetName(const std::string& str)
+{
+    if (str.substr(0, 4) == "USER")
+    {
+        std::string::size_type colonPos = str.find(':');
+        if (colonPos != std::string::npos)
+        {
+            std::string user = str.substr(colonPos + 1);
+            //std::cout << "[DEBUG] USER trouvé: " << user << std::endl;
+            return user;
+        }
+    }
+    return "";
 }

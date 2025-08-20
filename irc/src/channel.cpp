@@ -134,10 +134,13 @@ bool	Channel::addUserChannel(t_channel *channel, t_user *user, int grade)
 	{
 		case 0:
 			channel->grade_0[user] = "owner";
+			break;
 		case 1:
 			channel->grade_1[user] = "admin";
+			break;
 		case 2:
 			channel->grade_2[user] = "user";
+			break;
 		case 3:
 			channel->grade_3[user] = "default";
 			break ;
@@ -360,8 +363,10 @@ bool	Channel::promoteChannelUser(t_channel *channel, t_user *user, int grade)
 	{
 		case 0:
 			channel->grade_0[user] = "owner";
+			break;
 		case 1:
 			channel->grade_1[user] = "admin";
+			break;
 		case 2:
 			channel->grade_2[user] = "user";
 			break ;
@@ -383,8 +388,10 @@ bool	Channel::demoteChannelUser(t_channel *channel, t_user *user, int grade)
 	{
 		case 3:
 			channel->grade_2.erase(user);
+			break;
 		case 2:
 			channel->grade_1.erase(user);
+			break;
 		case 1:
 			channel->grade_0.erase(user);
 			break ;

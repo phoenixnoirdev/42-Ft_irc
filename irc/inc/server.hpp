@@ -15,8 +15,27 @@
 
 #include <string>
 #include <netdb.h>
+#include <cerrno>
+#include <map>
+#include "user.hpp" 
 
 # define BUF_SIZE 4096 //Size max du buffer de lecture pour le message client
+
+// Petite structure pour stocker les infos d’un client
+struct ClientInfo
+{
+    std::string nick;
+    std::string user;
+    std::string pass;
+
+    bool gotNick;
+    bool gotUser;
+    bool gotPass;
+
+    ClientInfo()
+        : nick(""), user(""), pass(""),
+          gotNick(false), gotUser(false), gotPass(false) {}
+};
 
 class Server
 {
@@ -27,8 +46,13 @@ class Server
 
         std::string     _RecvBuffer; 
         int             _Listening;
-        int			    _ClientSocket;
+        //int			    _ClientSocket;
         bool            _ServeurOn;
+        
+        std::map<int, ClientInfo> _ClientsInfo;
+        std::map<int, std::string> _PendingData; // buffer par client
+
+        User            _User;
 
 
     public:
@@ -50,7 +74,13 @@ class Server
         void AcceptClient();
         void Run();
 
-        bool PassCont();
+        bool PassCont(const std::string& str);
+
+        std::string GetPwd(const std::string& str);
+        std::string GetNick(const std::string& str);
+        std::string GetName(const std::string& str);
+
+        void HandleClientData(int clientSocket);
 };
 
 #endif //SERVER.HPP
