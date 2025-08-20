@@ -6,7 +6,7 @@
 /*   By: kelevequ <kelevequ@student.42.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 08:36:42 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/08/19 13:36:14 by kelevequ         ###   ########.fr       */
+/*   Updated: 2025/08/20 08:09:08 by kelevequ         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,23 @@
 //Canonical Form
 //=================
 
+/**
+ * @brief Constructeur par défaut de la classe Channel.
+ *
+ * Initialise un objet Channel vide, avec une liste chaînée vide (_top et _bot à NULL)
+ * et une taille (_size) égale à 0.
+ */
 Channel::Channel(): _top(NULL), _bot(NULL), _size(0) {}
 
+/**
+ * @brief Constructeur de copie pour la classe Channel.
+ *
+ * Crée un nouvel objet Channel en dupliquant tous les channels
+ * de l'objet source. Chaque channel est copié individuellement
+ * et ajouté à la liste chaînée de l'objet courant.
+ *
+ * @param other L'objet Channel source à copier.
+ */
 Channel::Channel(const Channel& other): _top(NULL), _bot(NULL), _size(0)
 {
 	t_channel	*tmp;
@@ -33,6 +48,15 @@ Channel::Channel(const Channel& other): _top(NULL), _bot(NULL), _size(0)
 	}
 }
 
+/**
+ * @brief Opérateur d'affectation pour la classe Channel.
+ *
+ * Copie la liste chaînée de channels depuis un autre objet Channel.
+ * Chaque channels est dupliqué et ajouté à la liste de l'objet courant.
+ *
+ * @param other L'objet Channel source à copier.
+ * @return Référence à l'objet Channel courant après copie.
+ */
 Channel&	Channel::operator=(const Channel& other)
 {
 	if (this != &other)
@@ -53,6 +77,12 @@ Channel&	Channel::operator=(const Channel& other)
 	return (*this);
 }
 
+/**
+ * @brief Destructeur de la classe User.
+ *
+ * Libère toute la mémoire allouée pour la liste chaînée d'utilisateurs
+ * en appelant la fonction clear().
+ */
 Channel::~Channel()
 {
 	clear();
@@ -62,6 +92,14 @@ Channel::~Channel()
 //Constructeur
 //=================
 
+/**
+ * @brief Constructeur de Channel à partir d'une liste chaînée existante.
+ *
+ * Initialise la liste de channels vide puis copie chaque channels
+ * de la liste fournie dans la nouvelle instance.
+ *
+ * @param list Pointeur vers le premier élément d'une liste chaînée de t_channel.
+ */
 Channel::Channel(t_channel *list): _top(NULL), _bot(NULL), _size(0)
 {
 	t_channel	*tmp;
@@ -75,6 +113,14 @@ Channel::Channel(t_channel *list): _top(NULL), _bot(NULL), _size(0)
 	}
 }
 
+/**
+ * @brief Constructeur de User à partir d'une chaîne JSON.
+ *
+ * Initialise la liste chaînée de channels vide (_top et _bot à NULL,
+ * _size à 0). Actuellement, le paramètre json n'est pas utilisé.
+ *
+ * @param json Chaîne JSON supposée contenir des données de channels.
+ */
 Channel::Channel(const std::string& json): _top(NULL), _bot(NULL), _size(0)
 {
 	(void)json;
