@@ -147,9 +147,10 @@ void	User::addUser(
 	const std::string& name_,
 	const std::string& nick_,
 	const std::string& pass_,
-	int grade_)
+	int grade_,
+	int socket_)
 {
-	t_user	*tmp = new t_user(generateUUID(name_, nick_), name_, nick_, pass_, grade_);
+	t_user	*tmp = new t_user(generateUUID(name_, nick_), name_, nick_, pass_, grade_, socket_);
 
 	if (empty())
 		_top = tmp;
@@ -604,6 +605,29 @@ bool	User::hasPass(const std::string& pass) const
 		i++;
 	}
 	return (false);
+}
+
+void User::closeAllSockets()
+{
+	t_user	*tmp;
+	size_t	i;
+
+	if (empty())
+		return ;
+	tmp = getTop();
+	i = 0;
+	while (i < _size)
+	{
+		if (tmp->socket != -1)
+        {
+            close(tmp->socket);
+            tmp->socket = -1;
+        }
+
+		tmp = tmp->next;
+
+		i++;
+	}
 }
 
 //===============

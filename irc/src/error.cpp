@@ -52,6 +52,8 @@ void Error::ErrorServ(int err, std::string str)
         std::cerr << RED << "Error " << Error::GetValErr(err) << ": Can't Listen." << str << RESET << std::endl;
     else if (err == 8)
         std::cerr << RED << "Error " << Error::GetValErr(err) << ": Problem with client connecting." << str << RESET << std::endl;  
+    else if (err == 9)
+        std::cerr << RED << "Error " << Error::GetValErr(err) << ": Data NULL: " << str << RESET << std::endl;
     else
         std::cerr << RED << "Error " << Error::GetValErr(-1) << ": A mystical error has occurred, we must dig or pray to the god of code for the answer." << RESET << std::endl;
    
