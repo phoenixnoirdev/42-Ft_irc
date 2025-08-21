@@ -6,7 +6,7 @@
 /*   By: kelevequ <kelevequ@student.42.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 08:36:42 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/08/21 09:40:27 by kelevequ         ###   ########.fr       */
+/*   Updated: 2025/08/21 09:48:46 by kelevequ         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -223,10 +223,13 @@ bool	Channel::addUserChannel(t_channel *channel, t_user *user, int grade)
 	{
 		case 0:
 			channel->grade_0[user] = "owner";
+			//fallthrough
 		case 1:
 			channel->grade_1[user] = "admin";
+			//fallthrough
 		case 2:
 			channel->grade_2[user] = "user";
+			//fallthrough
 		case 3:
 			channel->grade_3[user] = "default";
 			break ;
@@ -602,10 +605,13 @@ bool	Channel::promoteChannelUser(t_channel *channel, t_user *user, int grade)
 	{
 		case 0:
 			channel->grade_0[user] = "owner";
+			//fallthrough
 		case 1:
 			channel->grade_1[user] = "admin";
+			//fallthrough
 		case 2:
 			channel->grade_2[user] = "user";
+			//fallthrough
 			break ;
 		default:
 			std::cerr << "Invalid grade: " << grade << std::endl;
@@ -639,8 +645,10 @@ bool	Channel::demoteChannelUser(t_channel *channel, t_user *user, int grade)
 	{
 		case 3:
 			channel->grade_2.erase(user);
+			//fallthrough
 		case 2:
 			channel->grade_1.erase(user);
+			//fallthrough
 		case 1:
 			channel->grade_0.erase(user);
 			break ;
