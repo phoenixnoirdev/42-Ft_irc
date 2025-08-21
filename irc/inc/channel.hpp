@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kelevequ <kelevequ@student.42.lu>          +#+  +:+       +#+        */
+/*   By: luis-fif <luis-fif@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 11:21:29 by phkevin           #+#    #+#             */
-/*   Updated: 2025/08/19 13:42:08 by kelevequ         ###   ########.fr       */
+/*   Updated: 2025/08/21 13:27:17 by luis-fif         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,16 +17,17 @@
 # include <map>
 # include "user.hpp"
 
+
 typedef struct	s_channel
 {
 	int					id;
 	std::string			name;
 	int					view_grade;
 
-	std::map<s_user*, std::string>	grade_0;
-	std::map<s_user*, std::string>	grade_1;
-	std::map<s_user*, std::string>	grade_2;
-	std::map<s_user*, std::string>	grade_3;
+	std::map<s_user*, std::string>	grade_0; //Root, Owner
+	std::map<s_user*, std::string>	grade_1; //Admin
+	std::map<s_user*, std::string>	grade_2; //User
+	std::map<s_user*, std::string>	grade_3; //Viewer
 	std::map<s_user*, std::string>	ban;
 
 	struct s_channel	*next;
