@@ -220,6 +220,7 @@ void Server::Run()
                 maxFd = it->first;
         }
 
+        /*
         // Ajouter les clients authentifiés (_User)
         const std::map<int, UserInfo>& activeUsers = this->_User.getUsers();
         for (std::map<int, UserInfo>::const_iterator it = activeUsers.begin();
@@ -229,7 +230,8 @@ void Server::Run()
             if (it->first > maxFd)
                 maxFd = it->first;
         }
-
+        */
+       
         // Attente d'activité (lecture uniquement)
         if (select(maxFd + 1, &readfds, NULL, NULL, NULL) < 0)
         {
@@ -255,7 +257,7 @@ void Server::Run()
                 HandleClientData(clientSock);
             }
         }
-
+        /*
         // Données sur un client authentifié ?
         for (std::map<int, UserInfo>::const_iterator it = activeUsers.begin();
              it != activeUsers.end(); ++it)
@@ -266,6 +268,7 @@ void Server::Run()
                 this->_User.HandleUserData(clientSock);
             }
         }
+            */
     }
 }
 
