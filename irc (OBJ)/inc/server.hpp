@@ -22,23 +22,6 @@
 
 # define BUF_SIZE 4096 //Size max du buffer de lecture pour le message client
 
-// Petite structure pour stocker les infos d’un client
-/*
-struct ClientInfo
-{
-    std::string nick;
-    std::string user;
-    std::string pass;
-
-    bool gotNick;
-    bool gotUser;
-    bool gotPass;
-
-    ClientInfo()
-        : nick(""), user(""), pass(""),
-          gotNick(false), gotUser(false), gotPass(false) {}
-};*/
-
 class Server
 {
     private:
@@ -50,8 +33,7 @@ class Server
         int             _Listening;
         bool            _ServeurOn;
         
-        //std::map<int, ClientInfo> _ClientsInfo;
-        std::map<int, std::string> _PendingData; // buffer par client
+        std::map<int, std::string> _PendingData;
 
         std::map<int, User> _User;
         std::map<int, Channel> _Chan;
