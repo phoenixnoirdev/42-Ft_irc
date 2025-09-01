@@ -16,6 +16,12 @@
 //Constructeur
 //=================
 
+/**
+ * @brief Constructeur du serveur : initialise, crée un canal par défaut et lance le serveur.
+ *
+ * @param port Port d'écoute du serveur.
+ * @param pass Mot de passe du serveur.
+ */
 Server::Server(std::string port, std::string pass)
 {
 
@@ -32,7 +38,9 @@ Server::Server(std::string port, std::string pass)
     return ;
 }
 
-
+/**
+ * @brief Destructeur par défaut de la classe Server.
+ */
 Server::~Server()
 {
     return ;
@@ -43,6 +51,9 @@ Server::~Server()
 //Fonctions public
 //===============
 
+/**
+ * @brief Arrête le serveur en mettant le drapeau _ServeurOn à false.
+ */
 void Server::ShutSign()
 {
     if (!_ServeurOn)
@@ -51,6 +62,9 @@ void Server::ShutSign()
     this->_ServeurOn = false;
 }
 
+/**
+ * @brief Ferme proprement le serveur en nettoyant utilisateurs, canaux et sockets.
+ */
 void Server::Shutdown()
 {
     std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
@@ -88,16 +102,14 @@ void Server::Shutdown()
 //===============
 
 /**
- * @brief Initialise le socket du serveur pour l'écoute des connexions.
+ * @brief Initialise le serveur en créant la socket, configurant les options et
+ *        en liant l'adresse IP et le port. Met ensuite la socket en mode écoute.
  *
- * Crée un socket IPv4 en mode TCP, configure les options pour permettre
- * la réutilisation de l'adresse, puis lie le socket à l'adresse IP locale
- * et au port stocké dans l'attribut _Port. Enfin, le socket est mis en
- * écoute pour accepter les connexions entrantes.
- *
- * En cas d'erreur lors de la création, configuration, liaison ou mise
- * en écoute du socket, une erreur est levée via Error::ErrorServ avec
- * un code spécifique (4 à 7 selon l'étape échouée).
+ * - Crée une socket TCP.
+ * - Configure SO_REUSEADDR pour réutiliser l'adresse rapidement.
+ * - Lie la socket à l'adresse IP et au port définis.
+ * - Passe la socket en écoute pour accepter les connexions entrantes.
+ * - Affiche les informations du serveur (port, IP, mot de passe) sur la console.
  */
 void Server::Init()
 {
@@ -131,6 +143,15 @@ void Server::Init()
     std::cout << YELLOW << "------------------------------------" << RESET << std::endl;      
 }
 
+/**
+ * @brief Accepte une nouvelle connexion client et l'ajoute à la liste des utilisateurs.
+ *
+ * - Attend une connexion entrante sur la socket d'écoute.
+ * - Crée un objet User associé au descripteur de socket du client.
+ * - Ajoute le client dans la map _User pour le gérer.
+ * - Affiche l'adresse IP et le port du client connecté.
+ * - En mode DEBUG, affiche le descripteur de socket du client.
+ */
 
 void Server::AcceptClient()
 {
@@ -145,9 +166,13 @@ void Server::AcceptClient()
         return;
     }
 
+
     this->_User.insert(std::make_pair(clientSocket, User(clientSocket)));
 
-    std::cout << "[DEBUG] getSocket: " << this->_UserObj.getSocket() << std::endl;
+
+    if (DEBUG == true)
+        std::cout << "[DEBUG] getSocket: " << this->_UserObj.getSocket() << std::endl;
+
 
     std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
     std::cout << GREEN << inet_ntoa(client.sin_addr) << YELLOW
@@ -156,6 +181,20 @@ void Server::AcceptClient()
     std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
 }
 
+/**
+ * @brief Traite les données reçues d'un client spécifique.
+ *
+ * - Lit les données depuis le socket du client.
+ * - Gère la déconnexion ou les erreurs de réception.
+ * - Concatène les nouvelles données au buffer de réception de l'utilisateur.
+ * - Analyse les commandes IRC : NICK, USER, PASS, PRIVMSG.
+ * - Authentifie l'utilisateur si NICK, USER et PASS sont reçus.
+ * - Ajoute l'utilisateur au canal par défaut après authentification.
+ * - Diffuse les messages privés (PRIVMSG) aux membres du canal.
+ * - Affiche des informations et messages DEBUG sur la console.
+ *
+ * @param clientSocket Descripteur de socket du client à traiter.
+ */
 void Server::HandleClientData(int clientSocket)
 {
     char buf[BUF_SIZE];
@@ -177,13 +216,10 @@ void Server::HandleClientData(int clientSocket)
         return;
     }
 
-    // Récupère une référence vers ton User
     User &user = this->_User[clientSocket];
-
-    // Concatène dans son buffer
     user.setRcvBuff(user.getRcvBuff() + std::string(buf, bytesRecv));
 
-    // Cherche des lignes terminées par \r\n
+
     std::string &data = user.getRcvBuff();
     size_t pos;
     while ((pos = data.find("\r\n")) != std::string::npos)
@@ -194,17 +230,20 @@ void Server::HandleClientData(int clientSocket)
         if (line.find("NICK ") == 0)
         {
             user.setNick(GetNick(line));
-            std::cout << "[DEBUG] NICK: " << user.getNick() << std::endl;
+            if (DEBUG == true)
+                std::cout << "[DEBUG] NICK: " << user.getNick() << std::endl;
         }
         else if (line.find("USER ") == 0)
         {
             user.setName(GetName(line));
-            std::cout << "[DEBUG] USER: " << user.getName() << std::endl;
+            if (DEBUG == true)
+                std::cout << "[DEBUG] USER: " << user.getName() << std::endl;
         }
         else if (line.find("PASS ") == 0)
         {
             user.setPass(GetPwd(line));
-            std::cout << "[DEBUG] PASS: " << user.getPass() << std::endl;
+            if (DEBUG == true)
+                std::cout << "[DEBUG] PASS: " << user.getPass() << std::endl;
         }
         else if (line.find("PRIVMSG ") == 0)
         {
@@ -212,11 +251,11 @@ void Server::HandleClientData(int clientSocket)
 
             size_t pos = line.find(" :");
             std::string msg;
+
             if (pos != std::string::npos)
                 msg = line.substr(pos + 2);
             else
                 msg = "";
-
 
             std::string ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + chanIt->second.GetName() + " :" + msg + "\r\n";
 
@@ -226,7 +265,7 @@ void Server::HandleClientData(int clientSocket)
         }
     }
 
-    // Vérifie si l'utilisateur est authentifié
+
     if (!user.getNick().empty() && !user.getName().empty() && !user.getPass().empty())
     {
         if (!user.getAuth())
@@ -245,30 +284,33 @@ void Server::HandleClientData(int clientSocket)
     
             std::cout << "[INFO] User " << user.getNick() << "@" << user.getName() << " authentifié !" << std::endl;
 
-            // → Ajout automatique dans le channel "default"
+
             std::map<int, Channel>::iterator chanIt = this->_Chan.find(0);
             if (chanIt != this->_Chan.end())
             {
                 chanIt->second.AddUser(user);
                 std::cout << "[INFO] User " << user.getNick() << " ajouté au channel " << chanIt->second.GetName() << std::endl;
                 
-                // Préparer le JOIN message
                 std::string joinMsg = ":" + user.getNick() + "!" + user.getName() + " JOIN #" + chanIt->second.GetName() + "\r\n";
 
-                // Envoyer à tous les users du channel
                 chanIt->second.BroadcastJoin(joinMsg);
             }
-
-
-        }
-        else
-        {
 
         }
     }
 }
 
-//Version tmp
+/**
+ * @brief Boucle principale du serveur pour gérer les connexions et données clients.
+ *
+ * - Initialise le set de sockets à surveiller (fd_set).
+ * - Ajoute la socket d'écoute et toutes les sockets clients au fd_set.
+ * - Utilise select() pour attendre l'activité sur les sockets.
+ * - Accepte les nouvelles connexions entrantes.
+ * - Traite les données reçues des clients actifs.
+ * - Continue la boucle tant que le serveur est actif (_ServeurOn).
+ * - Ferme proprement le serveur à la sortie de la boucle.
+ */
 void Server::Run()
 {
     int maxFd;
@@ -286,22 +328,22 @@ void Server::Run()
                 maxFd = it->second.getSocket();
         }
 
-        // select bloquant
+
         int ret = select(maxFd + 1, &_Readfds, NULL, NULL, NULL);
 
         if (ret < 0)
         {
-            if (errno == EINTR) // signal reçu → sortir de la boucle
+            if (errno == EINTR)
                 break;
             std::cerr << "select failed: " << strerror(errno) << std::endl;
             break;
         }
 
-        // Nouveau client ?
+
         if (FD_ISSET(this->_Listening, &_Readfds))
             AcceptClient();
 
-        // Données sur les clients
+
         for (std::map<int, User>::iterator it = this->_User.begin(); it != this->_User.end();)
         {
             int clientSock = it->second.getSocket();
@@ -314,7 +356,12 @@ void Server::Run()
     Shutdown();
 }
 
-
+/**
+ * @brief Vérifie si le mot de passe fourni correspond à celui du serveur.
+ *
+ * @param str Mot de passe à vérifier.
+ * @return true si le mot de passe est correct, false sinon.
+ */
 bool Server::PassCont(const std::string& str)
 {
     if (str == this->_Pass)
@@ -323,6 +370,16 @@ bool Server::PassCont(const std::string& str)
     return false;
 }
 
+/**
+ * @brief Extrait le mot de passe d'une commande PASS IRC.
+ *
+ * - Vérifie que la commande commence par "PASS".
+ * - Récupère la chaîne après le premier espace comme mot de passe.
+ * - Affiche le mot de passe en mode DEBUG.
+ *
+ * @param str Ligne de commande reçue.
+ * @return Mot de passe extrait ou chaîne vide si non trouvé.
+ */
 std::string Server::GetPwd(const std::string& str)
 {
     if (str.substr(0, 4) == "PASS")
@@ -331,13 +388,26 @@ std::string Server::GetPwd(const std::string& str)
         if (spacePos != std::string::npos)
         {
             std::string pass = str.substr(spacePos + 1);
-            //std::cout << "[DEBUG] PASS trouvé: " << pass << std::endl;
+
+            if (DEBUG == true)
+                std::cout << "[DEBUG] PASS trouvé: " << pass << std::endl;
+            
             return pass;
         }
     }
     return "";
 }
 
+/**
+ * @brief Extrait le pseudonyme (NICK) d'une commande IRC.
+ *
+ * - Vérifie que la commande commence par "NICK".
+ * - Récupère la chaîne après le premier espace comme pseudonyme.
+ * - Affiche le pseudonyme en mode DEBUG.
+ *
+ * @param str Ligne de commande reçue.
+ * @return Pseudonyme extrait ou chaîne vide si non trouvé.
+ */
 std::string Server::GetNick(const std::string& str)
 {
     if (str.substr(0, 4) == "NICK")
@@ -346,13 +416,26 @@ std::string Server::GetNick(const std::string& str)
         if (spacePos != std::string::npos)
         {
             std::string nick = str.substr(spacePos + 1);
-            //std::cout << "[DEBUG] NICK trouvé: " << nick << std::endl;
+
+            if (DEBUG == true)
+                std::cout << "[DEBUG] NICK trouvé: " << nick << std::endl;
+            
             return nick;
         }
     }
     return "";
 }
 
+/**
+ * @brief Extrait le nom d'utilisateur (USER) d'une commande IRC.
+ *
+ * - Vérifie que la commande commence par "USER".
+ * - Récupère la chaîne après le caractère ':' comme nom d'utilisateur.
+ * - Affiche le nom en mode DEBUG.
+ *
+ * @param str Ligne de commande reçue.
+ * @return Nom d'utilisateur extrait ou chaîne vide si non trouvé.
+ */
 std::string Server::GetName(const std::string& str)
 {
     if (str.substr(0, 4) == "USER")
@@ -361,7 +444,10 @@ std::string Server::GetName(const std::string& str)
         if (colonPos != std::string::npos)
         {
             std::string user = str.substr(colonPos + 1);
-            //std::cout << "[DEBUG] USER trouvé: " << user << std::endl;
+
+            if (DEBUG == true)
+                std::cout << "[DEBUG] USER trouvé: " << user << std::endl;
+
             return user;
         }
     }
