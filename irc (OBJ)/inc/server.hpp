@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kelevequ <kelevequ@student.42.lu>          +#+  +:+       +#+        */
+/*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 07:46:19 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/08/19 07:49:32 by kelevequ         ###   ########.fr       */
+/*   Updated: 2025/09/05 13:58:43 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,7 @@ class Server
 
         std::string GetPwd(const std::string& str);
         std::string GetNick(const std::string& str);
-        std::string GetName(const std::string& str);
+        std::string GetName(const std::string&  str, bool auth);
 
         void HandleClientData(int clientSocket);
 };
