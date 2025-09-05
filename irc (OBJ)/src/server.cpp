@@ -222,6 +222,9 @@ void Server::HandleClientData(int clientSocket)
 
     std::string &data = user.getRcvBuff();
     size_t pos;
+
+    std::cout << "[DEBUG] data: " << data << std::endl;
+
     while ((pos = data.find("\r\n")) != std::string::npos)
     {
         std::string line = data.substr(0, pos);
@@ -235,9 +238,15 @@ void Server::HandleClientData(int clientSocket)
         }
         else if (line.find("USER ") == 0)
         {
-            user.setName(GetName(line));
+            user.setName(GetName(line, user.getAuth()));
             if (DEBUG == true)
                 std::cout << "[DEBUG] USER: " << user.getName() << std::endl;
+        }
+        else if (line.find("NAMES ") == 0)
+        {
+            user.setName(GetName(line, user.getAuth()));
+            if (DEBUG == true)
+                std::cout << "[DEBUG] NAMES: " << user.getName() << std::endl;
         }
         else if (line.find("PASS ") == 0)
         {
@@ -258,6 +267,8 @@ void Server::HandleClientData(int clientSocket)
                 msg = "";
 
             std::string ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + chanIt->second.GetName() + " :" + msg + "\r\n";
+
+            std::cout << "[DEBUG] ircMsg: " << ircMsg << std::endl;
 
             chanIt->second.Broadcast(ircMsg, clientSocket);
 
@@ -333,7 +344,7 @@ void Server::Run()
 
         if (ret < 0)
         {
-            if (errno == EINTR)
+            if (errno == EINTR)///////////////////////////////////////a remplacer.
                 break;
             std::cerr << "select failed: " << strerror(errno) << std::endl;
             break;
@@ -436,20 +447,40 @@ std::string Server::GetNick(const std::string& str)
  * @param str Ligne de commande reçue.
  * @return Nom d'utilisateur extrait ou chaîne vide si non trouvé.
  */
-std::string Server::GetName(const std::string& str)
+std::string Server::GetName(const std::string& str, bool auth)
 {
-    if (str.substr(0, 4) == "USER")
+    if (auth == false)
     {
-        std::string::size_type colonPos = str.find(':');
-        if (colonPos != std::string::npos)
+        if (str.substr(0, 4) == "USER")
         {
-            std::string user = str.substr(colonPos + 1);
-
-            if (DEBUG == true)
-                std::cout << "[DEBUG] USER trouvé: " << user << std::endl;
-
-            return user;
+            std::string::size_type colonPos = str.find(':');
+            if (colonPos != std::string::npos)
+            {
+                std::string user = str.substr(colonPos + 1);
+    
+                if (DEBUG == true)
+                    std::cout << "[DEBUG] USER trouvé INIT: " << user << std::endl;
+    
+                return user;
+            }
         }
     }
+    else
+    {
+        if (str.substr(0, 4) == "USER" || str.substr(0, 5) == "NAMES")
+        {
+            std::string::size_type colonPos = str.find(' ');
+
+            if (colonPos != std::string::npos)
+            {
+                std::string user = str.substr(colonPos + 1);
+                std::cout << "[DEBUG] recepe names EDITE: " << user << std::endl;
+
+                return user;
+            }
+    
+        }
+    }
+
     return "";
 }
