@@ -43,7 +43,7 @@ void separator(std::string str)
  * @brief Gère les signaux pour effectuer un arrêt propre du serveur.
  *
  * Affiche un message indiquant qu'un signal a été reçu, puis appelle
- * la méthode Shutdown() via le pointeur global ServPtr si celui-ci est
+ * la méthode Shutdown() via le pointeur global BotPtr si celui-ci est
  * non nul. Termine ensuite le programme avec le code du signal reçu.
  *
  * @param signum Numéro du signal reçu (ex: SIGINT, SIGTERM).
@@ -68,9 +68,6 @@ void SigHandler(int signum)
 
 int main(int argc, char** argv)
 {
-    (void) argv;
-
-	//Retourn l'usage 
 	if (argc != 4)
 	{
 		std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
@@ -83,10 +80,8 @@ int main(int argc, char** argv)
 	}
 
 	
-	// Ignore SIGPIPE pour éviter crash sur socket fermé
 	signal(SIGPIPE, SIG_IGN);
 
-	// Capture SIGINT (CTRL+C)
 	signal(SIGINT, SigHandler);
     
 	
