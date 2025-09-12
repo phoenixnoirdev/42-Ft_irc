@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../inc/inc.hpp"
+# include "../inc/inc.hpp"
 
 //=================
 //Constructeur
@@ -340,15 +340,17 @@ void Server::Run()
         }
 
 
-        int ret = select(maxFd + 1, &_Readfds, NULL, NULL, NULL);
+        struct timeval tv;
+        tv.tv_sec = 1;
+        tv.tv_usec = 0;
+
+        int ret = select(maxFd + 1, &_Readfds, NULL, NULL, &tv);
 
         if (ret < 0)
-        {
-            if (errno == EINTR)///////////////////////////////////////a remplacer.
-                break;
-            std::cerr << "select failed: " << strerror(errno) << std::endl;
             break;
-        }
+
+        if (ret == 0)
+            continue;
 
 
         if (FD_ISSET(this->_Listening, &_Readfds))

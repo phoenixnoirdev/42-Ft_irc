@@ -11,14 +11,14 @@
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
-#define SERVER_HPP
+# define SERVER_HPP
 
-#include <string>
-#include <netdb.h>
-#include <cerrno>
-#include <map>
-#include "user.hpp"
-#include "channel.hpp"
+# include <string>
+# include <netdb.h>
+# include <cerrno>
+# include <map>
+# include "user.hpp"
+# include "channel.hpp"
 
 # define BUF_SIZE 4096 //Size max du buffer de lecture pour le message client
 
@@ -43,6 +43,11 @@ class Server
 
         fd_set _Readfds;
 
+        
+        //===============
+        //Fonctions private
+        //===============
+
 
     public:
         //=================
@@ -56,21 +61,16 @@ class Server
         //===============
         void Shutdown();
         void ShutSign();
-
-        //===============
-        //Fonctions private
-        //===============
+        void Run();
         void Init();
         void AcceptClient();
-        void Run();
+        void HandleClientData(int clientSocket);
 
         bool PassCont(const std::string& str);
 
         std::string GetPwd(const std::string& str);
         std::string GetNick(const std::string& str);
         std::string GetName(const std::string&  str, bool auth);
-
-        void HandleClientData(int clientSocket);
 };
 
 #endif //SERVER.HPP

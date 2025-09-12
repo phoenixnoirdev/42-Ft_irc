@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../inc/inc.hpp"
+# include "../inc/botinc.hpp"
 
 //=================
 //Constructeur
@@ -40,10 +40,10 @@ uint16_t Utils::PortConvert(const std::string& arg)
 	std::stringstream ss(arg);
 
 	if (!(ss >> port) || !ss.eof())
-        Error::ErrorServ(1, "");
+        std::cerr << RED << "Error: port conversion fail." << RESET << std::endl; 
 
-	if (port < 1 || port > PORT_MAX)// 
-        Error::ErrorServ(2, "");
+	if (port < 1 || port > PORT_MAX)
+        std::cerr << RED << "Error: Port out of range." << RESET << std::endl; 
     
 	return static_cast<uint16_t>(port);
 }
@@ -73,7 +73,7 @@ struct in_addr Utils::IpConvert(const std::string& ipStr)
 
     int status = getaddrinfo(ipStr.c_str(), NULL, &hints, &res);
     if (status != 0 || !res)
-        Error::ErrorServ(3, gai_strerror(status));	
+        std::cerr << RED << "Error: Getaddrinfo error: " << gai_strerror(status) << RESET << std::endl;
 
     struct sockaddr_in* ipv4 = (struct sockaddr_in*)res->ai_addr;
     outAddr = ipv4->sin_addr;
