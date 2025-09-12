@@ -41,8 +41,7 @@ class Utils
         
         //===============
         //Fonctions private
-        //===============
-        
+        //===============    
 };
 
 #endif //BOTUTILS.HPP

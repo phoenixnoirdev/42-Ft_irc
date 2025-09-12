@@ -56,8 +56,7 @@ class Bot
         void shutdown();
         void sendMessage();
         void initMsgFr();
-        void initMsgEng();
-        
+        void initMsgEng();     
 };
 
 #endif //BOT.HPP
