@@ -11,10 +11,10 @@
 /* ************************************************************************** */
 
 #ifndef UTILS_HPP
-#define UTILS_HPP
+# define UTILS_HPP
 
-#include <string>
-#include <netdb.h>
+# include <string>
+# include <netdb.h>
 
 //==============================
 // PORT

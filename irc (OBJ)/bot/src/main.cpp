@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../inc/botinc.hpp"
+# include "../inc/botinc.hpp"
 
 Bot* BotPtr = NULL;
 
@@ -62,6 +62,8 @@ void SigHandler(int signum)
 	std::cout << YELLOW << "\n[Signal " << GREEN << signum << YELLOW << "] Fermeture propre du Bot..." << RESET << std::endl;
 	std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
 
+	if (BotPtr != NULL)
+		BotPtr->shutSign();
 }
 
 int main(int argc, char** argv)
@@ -90,8 +92,8 @@ int main(int argc, char** argv)
 	
     try
 	{
-		Bot bot(argv[1], argv[2], argv[3]);
-		BotPtr = &bot;
+		Bot Bot(argv[1], argv[2], argv[3]);
+		BotPtr = &Bot;
 	}
 	catch (const std::exception& e)
 	{

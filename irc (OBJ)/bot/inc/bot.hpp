@@ -15,29 +15,48 @@
 
 # include <string>
 # include <netdb.h>
+# include <vector>
+# include <cstdlib>
+# include <ctime>
 # include "botutils.hpp"
+# include "botinc.hpp"
 
 class Bot
 {
     private:
-        uint16_t	    _Port;
-        struct in_addr  _Ip;
-        std::string     _Pass;
+        uint16_t	                _Port;
+        struct in_addr              _Ip;
+        std::string                 _Pass;
+        int                         _Sock;
+        bool                        _BotOn;
+        std::vector<std::string>    _MsgFR;
+        std::vector<std::string>    _MsgENG;
+
+        //===============
+        //Fonctions private
+        //===============
+
+    
 
     public:
         //=================
         //Constructeur
         //=================
         Bot(std::string ip, std::string port, std::string pass);
+        ~Bot();
 
         //===============
         //Fonctions public
         //===============
-
-
-        //===============
-        //Fonctions private
-        //===============
+        void shutSign();
+        void run();
+        void connectToServer();
+        void loginBot();
+        void sendRaw(const std::string& msg);
+        void shutdown();
+        void sendMessage();
+        void initMsgFr();
+        void initMsgEng();
         
 };
 

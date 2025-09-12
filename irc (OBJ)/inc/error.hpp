@@ -11,11 +11,16 @@
 /* ************************************************************************** */
 
 #ifndef ERROR_HPP
-#define ERROR_HPP
+# define ERROR_HPP
 
 class Error
 {
     private:
+
+        //===============
+        //Fonctions private
+        //===============
+        static std::string GetValErr(int err);
 
 
     public:
@@ -28,12 +33,6 @@ class Error
         //Fonctions public
         //===============
         static void ErrorServ(int err,  std::string str);
-
-
-        //===============
-        //Fonctions private
-        //===============
-        static std::string GetValErr(int err);
         
 };
 

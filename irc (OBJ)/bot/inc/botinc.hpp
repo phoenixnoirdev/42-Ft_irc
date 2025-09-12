@@ -5,15 +5,12 @@
 # include "botparam.hpp"
 # include "botcolor.hpp"
 
+//LIB
 # include <iostream>
-//#include <iomanip>
-//#include <string>
-//#include <limits>
-//#include <cstring>
-//#include <arpa/inet.h>
-//#include <sstream>
-//#include <unistd.h>
-//#include <cstdlib>
+# include <cstring>
+# include <arpa/inet.h>
+# include <sstream>
+# include <ctime> 
 # include <signal.h>
 
 //Lib custom
