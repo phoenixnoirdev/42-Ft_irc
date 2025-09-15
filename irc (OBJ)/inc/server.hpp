@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
+/*   By: luis-fif <luis-fif@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 07:46:19 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/09/05 13:58:43 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/09/15 16:14:47 by luis-fif         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,11 @@
 # include <netdb.h>
 # include <cerrno>
 # include <map>
+# include <vector>
 # include "user.hpp"
 # include "channel.hpp"
+# include "param.hpp"
+
 
 # define BUF_SIZE 4096 //Size max du buffer de lecture pour le message client
 
@@ -42,6 +45,8 @@ class Server
         Channel         _ChanObj;
 
         fd_set _Readfds;
+
+        std::vector<std::string> _BanList; // List of banned nicks
 
         
         //===============
