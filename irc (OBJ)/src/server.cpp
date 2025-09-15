@@ -311,37 +311,34 @@ void Server::HandleClientData(int clientSocket)
             if (!found)
                 std::cout << "[INFO] User " << nickToKick << " not found for kick." << std::endl;
         }
-            else if (line.rfind("MODE ", 0) == 0)
+        else if (line.rfind("MODE ", 0) == 0)
+        {
+            size_t pos = line.find_last_of(' ');
+            if (pos != std::string::npos)
             {
-                size_t pos = line.find_last_of(' ');
-                if (pos != std::string::npos)
-                {
                 std::string arg = line.substr(pos + 1);   // "Filipe"
                  if (!arg.empty() && arg[0] == ':')
                 arg.erase(0, 1); // remove ':' inicial
-
-        // remove possíveis \r ou \n no final
-            while (!arg.empty() && (arg[arg.size()-1] == '\r' || arg[arg.size()-1] == '\n'))
-            arg.erase(arg.size()-1);
-            std::cout << "NIck to unban: " << arg << std::endl;
-            bool unbanned = false;
-            for (size_t i = 0; i < this->_BanList.size(); ++i)
-            {
-                if (this->_BanList[i] == arg)
-                {
-                    this->_BanList.erase(this->_BanList.begin() + i);
-                    std::cout << "[INFO] User " << arg << " was unbanned by " << user.getNick() << std::endl;
-                    unbanned = true;
-                    break;
-                }
+        		// remove possíveis \r ou \n no final
+                while (!arg.empty() && (arg[arg.size()-1] == '\r' || arg[arg.size()-1] == '\n'))
+            	arg.erase(arg.size()-1);
+            	std::cout << "NIck to unban: " << arg << std::endl;
+            	bool unbanned = false;
+            	for (size_t i = 0; i < this->_BanList.size(); ++i)
+        		{
+                	if (this->_BanList[i] == arg)
+                	{
+                    	this->_BanList.erase(this->_BanList.begin() + i);
+                    	std::cout << "[INFO] User " << arg << " was unbanned by " << user.getNick() << std::endl;
+                   		unbanned = true;
+                    	break;
+                	}
             }
             if (!unbanned)
                 std::cout << "[INFO] User " << arg << " not found in ban list." << std::endl;
-   
-    }
-    }
-}
-
+    		}
+    	}
+	}
 
     if (!user.getNick().empty() && !user.getName().empty() && !user.getPass().empty())
     {
