@@ -6,25 +6,22 @@
 /*   By: luis-fif <luis-fif@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 07:46:19 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/09/15 16:14:47 by luis-fif         ###   ########.fr       */
+/*   Updated: 2025/09/17 14:26:44 by luis-fif         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
-# define SERVER_HPP
+#define SERVER_HPP
+#pragma once
 
-# include "Commands.hpp"
-
-# include <string>
-# include <netdb.h>
-# include <cerrno>
-# include <map>
-# include <vector>
-# include "user.hpp"
-# include "channel.hpp"
-# include "param.hpp"
-
-class Kick;
+#include "Commands.hpp"   // aqui DEVE haver a definição de Kick (e NUNCA incluir server.hpp)
+#include <string>
+#include <netdb.h>
+#include <cerrno>
+#include <map>
+#include <vector>
+#include "user.hpp"
+#include "channel.hpp"
 
 
 
@@ -55,7 +52,7 @@ class Server
 
         //std::vector<std::string> _BanList; // List of banned nicks
        // BanNick banList;
-       Kick* banList;
+        Kick _kick;
 
         
         //===============
@@ -87,8 +84,10 @@ class Server
         std::string GetName(const std::string&  str, bool auth);
 
         Kick& getBanList();
-
         void kickUser(const std::string& nickToKick, int clientSocket, const std::string& kicker);
+
+        void handleKickCommand(int clientSocket, const std::string& line);
+        void handleUnbanCommand(int clientSocket, const std::string& line);
 
 };
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kelevequ <kelevequ@student.42.lu>          +#+  +:+       +#+        */
+/*   By: luis-fif <luis-fif@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 08:36:42 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/08/21 09:51:34 by kelevequ         ###   ########.fr       */
+/*   Updated: 2025/09/17 13:10:11 by luis-fif         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -244,4 +244,11 @@ void Channel::Broadcast(const std::string &msg, int sender)
 		if (it->second.getSocket() != sender)
         	send(it->first, msg.c_str(), msg.size(), 0);
 	}
+}
+
+void Channel::RemoveUser(int sock) {
+    _grade_0.erase(sock);
+    _grade_1.erase(sock);
+    _grade_2.erase(sock);
+    _grade_3.erase(sock);
 }

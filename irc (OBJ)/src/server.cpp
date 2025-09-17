@@ -175,8 +175,8 @@ void Server::AcceptClient()
     // ...existing code...
 
 
-    if (DEBUG == true)
-        std::cout << "[DEBUG] getSocket: " << this->_UserObj.getSocket() << std::endl;
+   // if (DEBUG == true)
+    //    std::cout << "[DEBUG] getSocket: " << this->_UserObj.getSocket() << std::endl;
 
 
     std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
@@ -238,9 +238,23 @@ void Server::HandleClientData(int clientSocket)
         if (line.find("NICK ") == 0)
         {
             user.setNick(GetNick(line));
+
+            if (getBanList().isBanned(user.getNick()))
+            {
+                std::string msg = ":" + std::string("server") +
+                                " 465 " + user.getNick() +
+                                " :You're banned from this server\r\n";
+                send(clientSocket, msg.c_str(), msg.size(), 0);
+                user.closeSocket();
+                FD_CLR(clientSocket, &_Readfds);
+                _User.erase(clientSocket);
+                return;
+            }
+
             if (DEBUG == true)
                 std::cout << "[DEBUG] NICK: " << user.getNick() << "-----" << user.getName()  << std::endl;
         }
+
         else if (line.find("USER ") == 0)
         {
             user.setName(GetName(line, user.getAuth()));
@@ -281,13 +295,15 @@ void Server::HandleClientData(int clientSocket)
         }
         else if (line.find("KICK ") == 0)
         {
-            std::cout << "[INFO] KICK command received from " << user.getNick() << std::endl;
-            std::istringstream iss(line.substr(5));
-            std::string channel, nickToKick;
-            iss >> channel >> nickToKick;
+            handleKickCommand(clientSocket, line);
+            continue;
+        }
+        else if (line.find("UNBAN ") == 0) // se quiser também mover o UNBAN
+        {
+            handleUnbanCommand(clientSocket, line);
+            continue;
+        }
 
-            kickUser(nickToKick, clientSocket, user.getNick());
-    	}
 	}
 
     if (!user.getNick().empty() && !user.getName().empty() && !user.getPass().empty())
@@ -514,9 +530,13 @@ std::string Server::GetName(const std::string& str, bool auth)
 }
 
 
-Kick& Server::getBanList()
-{
-    return *this->banList;
+
+Kick& Server::getBanList() {
+    return _kick;
 }
 
+/*
+/KICK <Nickname>
+/quote UNBAN <Nickname>
+*/
 

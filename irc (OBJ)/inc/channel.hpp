@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kelevequ <kelevequ@student.42.lu>          +#+  +:+       +#+        */
+/*   By: luis-fif <luis-fif@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 11:21:29 by phkevin           #+#    #+#             */
-/*   Updated: 2025/08/19 13:42:08 by kelevequ         ###   ########.fr       */
+/*   Updated: 2025/09/17 13:09:54 by luis-fif         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,8 @@ class Channel
 
 		void BroadcastJoin(const std::string &msg);
 		void Broadcast(const std::string &msg, int sender);
+
+		void RemoveUser(int socket);
 };
 
 #endif //channel.HPP

@@ -1,58 +1,49 @@
 #include "Commands.hpp"
 # include "../inc/inc.hpp"
 
-Kick::Kick()
-{
+Kick::Kick(){}
 
-}
-
-Kick::Kick(const std::string& nick)
-{
-    addBan(nick);
-}
-
-Kick::~Kick()
-{
-
-}
+Kick::~Kick(){}
 
 bool Kick::isBanned(const std::string& nick) const
 {
-    for(std::vector<std::string>::const_iterator it = BanNick.begin(); it != BanNick.end(); ++it)
-        if (*it == nick) return true;
-    return false;
+    for (size_t i = 0; i < _banNick.size(); ++i)
+    {
+            if (_banNick[i] == nick)
+                return true;
+        }
+        return false;
 }
 
 void Kick::addBan(const std::string& nick)
 {
-    if (!isBanned(nick))
-        BanNick.push_back(nick);
+     for (size_t i = 0; i < _banNick.size(); ++i)
+     {
+            if (_banNick[i] == nick)
+                return;
+    }
+        _banNick.push_back(nick);
 }
 
 void Kick::printBanList() const
 {
-    for(std::vector<std::string>::const_iterator it = BanNick.begin(); it != BanNick.end(); ++it)
-    {
-        std::cout << YELLOW << "- " << *it << RESET << std::endl;
-    }
+    for (size_t i = 0; i < _banNick.size(); ++i)
+            std::cout << _banNick[i] << std::endl;
 }
 
 bool Kick::removeBan(const std::string& nick)
 {
-    for (std::vector<std::string>::iterator it = BanNick.begin(); it != BanNick.end(); ++it)
-    {
-        if (*it == nick)
-        {
-            BanNick.erase(it);
-            return true;
+    for (std::vector<std::string>::iterator it = _banNick.begin(); it != _banNick.end(); ++it) {
+            if (*it == nick) {
+                _banNick.erase(it);
+                return true;
+            }
         }
-    }
-    return false;
+        return false;
 }
 
+
 /*
-const std::vector<std::string>& Kick::getBAn const
-{
-    return (BanNick);
-}
+/KICK <Nickname>
+/quote UNBAN <Nickname>
 */
