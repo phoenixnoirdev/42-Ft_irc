@@ -14,7 +14,7 @@
 #	Makefile variables
 ################################################################################
 
-CCXX		=	c++
+CCXX		=	g++
 FLAGWSXX	=	-Wall -Wextra -Werror -std=c++98 -g
 AR			=	ar rcs
 RM			=	/bin/rm -f
@@ -37,6 +37,8 @@ FILES		=	main.cpp\
 				utils.cpp\
 				user.cpp\
 				channel.cpp\
+				serverUtils.cpp\
+				Commands.cpp\
 				
 ################################################################################
 #	Colors

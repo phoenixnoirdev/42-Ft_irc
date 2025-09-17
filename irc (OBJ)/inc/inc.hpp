@@ -23,5 +23,6 @@
 # include "utils.hpp"
 # include "user.hpp"
 # include "channel.hpp"
+# include "Commands.hpp"
 
 #endif //INC.HPP

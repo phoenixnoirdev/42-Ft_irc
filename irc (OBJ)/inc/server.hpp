@@ -13,6 +13,8 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
+# include "Commands.hpp"
+
 # include <string>
 # include <netdb.h>
 # include <cerrno>
@@ -21,6 +23,11 @@
 # include "user.hpp"
 # include "channel.hpp"
 # include "param.hpp"
+
+class Kick;
+
+
+
 
 
 # define BUF_SIZE 4096 //Size max du buffer de lecture pour le message client
@@ -46,7 +53,9 @@ class Server
 
         fd_set _Readfds;
 
-        std::vector<std::string> _BanList; // List of banned nicks
+        //std::vector<std::string> _BanList; // List of banned nicks
+       // BanNick banList;
+       Kick* banList;
 
         
         //===============
@@ -76,6 +85,13 @@ class Server
         std::string GetPwd(const std::string& str);
         std::string GetNick(const std::string& str);
         std::string GetName(const std::string&  str, bool auth);
+
+        Kick& getBanList();
+
+        void kickUser(const std::string& nickToKick, int clientSocket, const std::string& kicker);
+
 };
+
+
 
 #endif //SERVER.HPP
