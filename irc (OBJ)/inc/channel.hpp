@@ -22,12 +22,12 @@ class Channel
 	private:
 		int					_id;
 		std::string			_name;
-		int					_view_grade;
+		int					_Mode;
 		
-		std::map<int, User> _grade_0;
-		std::map<int, User> _grade_1;
-		std::map<int, User> _grade_2;
-		std::map<int, User> _grade_3;
+		std::map<int, User> _grade_0; // OP IRC SERV = operateur serveur
+		std::map<int, User> _grade_1; // Op = Operateur channel
+		std::map<int, User> _grade_2; // Voix = peu discuter si le chan est en mode moderer
+		std::map<int, User> _grade_3; // User = Peu discuter si le chan est en mode normal
 		std::map<int, User> _ban;
 
 		//===============
@@ -57,13 +57,17 @@ class Channel
 		void SetName(const std::string& str);
 		std::string GetName() const;
 
-		//View Grade
-		void SetViewGrad(int i);
-		int GetViewGradd() const;
+		//Mode Gest
+		void SetMode(const User& user);
+		void GetMode(const User& user);
 
 		void AddUser(const User& user);
+		int GetGradeUser(const User& user);
 
-		void BroadcastJoin(const std::string &msg);
+		void AddUserBan(const User& user);
+		bool GetUserBan(const User& user);
+
+		void BroadcastAll(const std::string &msg);
 		void Broadcast(const std::string &msg, int sender);
 
 		void RemoveUser(int socket);

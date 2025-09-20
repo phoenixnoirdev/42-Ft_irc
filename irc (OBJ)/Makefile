@@ -37,7 +37,8 @@ FILES		=	main.cpp\
 				utils.cpp\
 				user.cpp\
 				channel.cpp\
-				serverUtils.cpp\
+				cmdKick.cpp\
+				cmdBan.cpp\
 				Commands.cpp\
 				
 ################################################################################
