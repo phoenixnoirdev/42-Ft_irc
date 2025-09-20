@@ -14,7 +14,7 @@
 #	Makefile variables
 ################################################################################
 
-CCXX		=	g++
+CCXX		=	c++
 FLAGWSXX	=	-Wall -Wextra -Werror -std=c++98 -g
 AR			=	ar rcs
 RM			=	/bin/rm -f

@@ -336,13 +336,6 @@ void Server::HandleClientData(int clientSocket)
         
             continue;
         }
-        //unban = -b
-        /*else if (line.find(-b ") == 0) // se quiser também mover o UNBAN
-        {
-            handleUnbanCommand(clientSocket, line);
-            continue;
-        }*/
-        //banlist = +b 
         else if (line.find("PRIVMSG ") == 0)
         {
             if (user.getIdChan() >= 0)
@@ -421,6 +414,7 @@ void Server::HandleClientData(int clientSocket)
             std::map<int, Channel>::iterator chanIt = this->_Chan.find(0);
             if (chanIt != this->_Chan.end())
             {
+                // Gestion du ban a la tentative de join le chan par default
                 if (chanIt->second.GetUserBan(user) == true)
                 {
                     send(clientSocket, "You are banned from this channel.\n", 30, 0);
