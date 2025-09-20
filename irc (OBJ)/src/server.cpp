@@ -30,6 +30,7 @@ Server::Server(std::string port, std::string pass)
     this->_Pass = pass;
     this->_ServeurOn = true;
 
+    /*insertion of channel*/
     this->_Chan.insert(std::make_pair(0, Channel(0, "default")));
 
     Init();
@@ -166,12 +167,16 @@ void Server::AcceptClient()
         return;
     }
 
-
+    // Check ban list by nick (can be improved to check by IP or username)
+    std::string incomingNick = ""; // Will be set after NICK command
+    // Add user temporarily
     this->_User.insert(std::make_pair(clientSocket, User(clientSocket)));
+    // Wait for NICK command in HandleClientData, then check ban list before authenticating
+    // ...existing code...
 
 
-    if (DEBUG == true)
-        std::cout << "[DEBUG] getSocket: " << this->_UserObj.getSocket() << std::endl;
+   // if (DEBUG == true)
+    //    std::cout << "[DEBUG] getSocket: " << this->_UserObj.getSocket() << std::endl;
 
 
     std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
@@ -223,7 +228,12 @@ void Server::HandleClientData(int clientSocket)
     std::string &data = user.getRcvBuff();
     size_t pos;
 
-    std::cout << "[DEBUG] data: " << data << std::endl;
+    if (DEBUG == true)
+    {
+        std::cout << "------- [DEBUG] data recep -------" << std::endl;
+        std::cout << data;
+        std::cout << "---------------------------------- " << std::endl;
+    }
 
     while ((pos = data.find("\r\n")) != std::string::npos)
     {
@@ -233,9 +243,23 @@ void Server::HandleClientData(int clientSocket)
         if (line.find("NICK ") == 0)
         {
             user.setNick(GetNick(line));
+            /*
+            if (getBanList().isBanned(user.getNick()))
+            {
+                std::string msg = ":" + std::string("server") +
+                                " 465 " + user.getNick() +
+                                " :You're banned from this server\r\n";
+                send(clientSocket, msg.c_str(), msg.size(), 0);
+                user.closeSocket();
+                FD_CLR(clientSocket, &_Readfds);
+                _User.erase(clientSocket);
+                return;
+            }
+            */
             if (DEBUG == true)
-                std::cout << "[DEBUG] NICK: " << user.getNick() << std::endl;
+                std::cout << "[DEBUG] NICK: " << user.getNick() << "-----" << user.getName()  << std::endl;
         }
+
         else if (line.find("USER ") == 0)
         {
             user.setName(GetName(line, user.getAuth()));
@@ -254,31 +278,129 @@ void Server::HandleClientData(int clientSocket)
             if (DEBUG == true)
                 std::cout << "[DEBUG] PASS: " << user.getPass() << std::endl;
         }
+        else if (line.find("KICK ") == 0)
+        {
+            handleKickCommand(clientSocket, line);
+            continue;
+        }
+        //Ban = +b mask
+        else if (line.find("MODE ") == 0)
+        {
+            std::string rest = line.substr(5); // tout après "MODE "
+    
+            // 1) Extraire le channel
+            size_t sp = rest.find(' ');
+            std::string chanName;
+            std::string param;
+            
+            if (sp == std::string::npos)
+            {
+                chanName = rest;
+                param = "";
+            }
+            else
+            {
+                chanName = rest.substr(0, sp);
+                param = rest.substr(sp + 1);
+            }
+        
+            std::cout << "Channel: " << chanName << std::endl;
+            std::cout << "Param: " << param << std::endl;
+        
+            // 2) Extraire le mode et éventuellement le mask
+            sp = param.find(' ');
+            std::string mode;
+            std::string mask;
+        
+            if (sp == std::string::npos)
+            {
+                mode = param;
+                mask = "";
+            } 
+            else
+            {
+                mode = param.substr(0, sp);
+                mask = param.substr(sp + 1);
+            }
+        
+            std::cout << "Mode: " << mode << std::endl;
+            std::cout << "Mask: " << mask << std::endl;
+        
+            // 3) Gestion +b / -b
+            if (mode == "+b" && !mask.empty()) 
+                handleBanCommand(clientSocket, chanName, mask);
+            /*else if (mode == "-b" && !mask.empty())
+                handleUnbanCommand(clientSocket, chanName, mask);
+            else if (mode == "+b" && mask.empty())
+                sendBanList(clientSocket, chanName);*/
+        
+            continue;
+        }
+        //unban = -b
+        /*else if (line.find(-b ") == 0) // se quiser também mover o UNBAN
+        {
+            handleUnbanCommand(clientSocket, line);
+            continue;
+        }*/
+        //banlist = +b 
         else if (line.find("PRIVMSG ") == 0)
         {
-            std::map<int, Channel>::iterator chanIt = this->_Chan.find(user.getIdChan());
+            if (user.getIdChan() >= 0)
+            {
+                std::map<int, Channel>::iterator chanIt = this->_Chan.find(user.getIdChan());
 
-            size_t pos = line.find(" :");
-            std::string msg;
-
-            if (pos != std::string::npos)
-                msg = line.substr(pos + 2);
+                size_t pos = line.find(" :");
+                std::string msg;
+    
+                if (pos != std::string::npos)
+                    msg = line.substr(pos + 2);
+                else
+                    msg = "";
+    
+                std::string ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + chanIt->second.GetName() + " :" + msg + "\r\n";
+    
+                if (DEBUG == true)
+                    std::cout << "[DEBUG] ircMsg: " << ircMsg << std::endl;
+    
+                chanIt->second.Broadcast(ircMsg, clientSocket);
+    
+                std::cout << CYAN << chanIt->second.GetName() << " / " << YELLOW << user.getName() << RESET << ": " << msg << std::endl;
+            }
             else
-                msg = "";
+            {
+                size_t pos = line.find(" :");
+                std::string msg;
+    
+                if (pos != std::string::npos)
+                    msg = line.substr(pos + 2);
+                else
+                    msg = "";
+            
+                std::string ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG " + user.getNick() + " :Vous avez été kick ou ban. Le message n'a pas été envoyer (" + msg + ")\r\n";
+                send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
 
-            std::string ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + chanIt->second.GetName() + " :" + msg + "\r\n";
-
-            std::cout << "[DEBUG] ircMsg: " << ircMsg << std::endl;
-
-            chanIt->second.Broadcast(ircMsg, clientSocket);
-
-            std::cout << CYAN << chanIt->second.GetName() << " / " << YELLOW << user.getName() << RESET << ": " << msg << std::endl;
+                std::cout << CYAN << "USER KICKED/BAN MSG RECEP" << " / " << YELLOW << user.getName() << RESET << ": " << msg << std::endl;
+            }
         }
-    }
-
+	}
 
     if (!user.getNick().empty() && !user.getName().empty() && !user.getPass().empty())
     {
+        // Ban check before authentication
+        /*
+        for (size_t i = 0; i < this->_BanList.size(); ++i)
+        {
+            if (user.getNick() == this->_BanList[i])
+            {
+                send(clientSocket, "You are banned from this server.\n", 30, 0);
+                user.closeSocket();
+                FD_CLR(clientSocket, &_Readfds);
+                this->_User.erase(clientSocket);
+                std::cout << "[INFO] Banned user " << user.getNick() << " tried to connect." << std::endl;
+                return;
+            }
+        }
+        */
         if (!user.getAuth())
         {
             if (!PassCont(user.getPass()))
@@ -299,12 +421,21 @@ void Server::HandleClientData(int clientSocket)
             std::map<int, Channel>::iterator chanIt = this->_Chan.find(0);
             if (chanIt != this->_Chan.end())
             {
+                if (chanIt->second.GetUserBan(user) == true)
+                {
+                    send(clientSocket, "You are banned from this channel.\n", 30, 0);
+                    
+                    std::cout << RED << "[INFO] Banned user " << user.getNick() << " tried to connect to chan: " << chanIt->second.GetName() << std::endl;
+                    
+                    return;
+                }
+
                 chanIt->second.AddUser(user);
                 std::cout << "[INFO] User " << user.getNick() << " ajouté au channel " << chanIt->second.GetName() << std::endl;
                 
                 std::string joinMsg = ":" + user.getNick() + "!" + user.getName() + " JOIN #" + chanIt->second.GetName() + "\r\n";
 
-                chanIt->second.BroadcastJoin(joinMsg);
+                chanIt->second.BroadcastAll(joinMsg);
             }
 
         }
@@ -486,3 +617,16 @@ std::string Server::GetName(const std::string& str, bool auth)
 
     return "";
 }
+
+
+/*
+Kick& Server::getBanList() {
+    return _kick;
+}
+*/
+
+/*
+/KICK <Nickname>
+/quote UNBAN <Nickname>
+*/
+

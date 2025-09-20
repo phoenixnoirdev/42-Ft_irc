@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kelevequ <kelevequ@student.42.lu>          +#+  +:+       +#+        */
+/*   By: luis-fif <luis-fif@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 08:36:42 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/08/21 09:51:34 by kelevequ         ###   ########.fr       */
+/*   Updated: 2025/09/17 13:10:11 by luis-fif         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,9 +21,9 @@
  *
  * Initialise l'ID, le nom et le grade de visibilité à 0 ou vide.
  */
-Channel::Channel(): _id(0), _name(""), _view_grade(0) {}
+Channel::Channel(): _id(0), _name(""), _Mode(0) {}
 
-Channel::Channel(int id, std::string name): _view_grade(0) 
+Channel::Channel(int id, std::string name): _Mode(0) 
 {
 	this->_id = id;
 	this->_name = name;
@@ -42,7 +42,7 @@ Channel::Channel(const Channel& other)
 {
 	this->_id = other._id;
 	this->_name = other._name;
-	this->_view_grade = other._view_grade;
+	this->_Mode = other._Mode;
 	this->_grade_0 = other._grade_0;
 	this->_grade_1 = other._grade_1;
 	this->_grade_2 = other._grade_2;
@@ -65,7 +65,7 @@ Channel&	Channel::operator=(const Channel& other)
 	{
 		this->_id = other._id;
 		this->_name = other._name;
-		this->_view_grade = other._view_grade;
+		this->_Mode = other._Mode;
 		this->_grade_0 = other._grade_0;
 		this->_grade_1 = other._grade_1;
 		this->_grade_2 = other._grade_2;
@@ -136,25 +136,55 @@ std::string Channel::GetName() const
 }
 
 
-/**
- * @brief Définit le grade minimal requis pour voir le canal.
- *
- * @param i Nouveau grade de visibilité.
- */
-void Channel::SetViewGrad(int i)
+
+void Channel::SetMode(const User& user)
 {
-	this->_view_grade = i;
+	std::string ircMsg = "";
+	std::string msg = "";
+
+	if (this->_Mode == 0)
+	{
+		this->_Mode = 1;
+
+		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " +m\r\n";
+		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
+
+		msg = "Le channel vient de passer en mode: Moderer";
+	}
+	else
+	{
+		this->_Mode = 0;
+
+		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " -m\r\n";
+		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
+
+		msg = "Le channel vient de passer en mode: Normal";
+	}
+
+
+	std::string ircMsgUser = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + GetName() + " :" + msg + "\r\n";
+	BroadcastAll(ircMsgUser);
 }
 
-/**
- * @brief Retourne le grade minimal requis pour voir le canal.
- *
- * @return Grade de visibilité du canal.
- */
 
-int Channel::GetViewGradd() const
+void Channel::GetMode(const User& user)
 {
-	return this->_view_grade;
+	std::string ircMsg = "";
+
+	if (this->_Mode == 0)
+	{
+		std::string msg = "Le channel est en mode: Normal";
+		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + GetName() + " :" + msg + "\r\n";
+
+		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
+	}
+	else
+	{
+		std::string msg = "Le channel est en mode: Moderer";
+		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " -m\r\n";
+
+		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
+	}
 }
 
 
@@ -180,6 +210,36 @@ void Channel::AddUser(const User& user)
 		this->_grade_3.insert(std::make_pair(user.getSocket(), user));
 }
 
+int Channel::GetGradeUser(const User& user)
+{
+    for (std::map<int, User>::iterator it = this->_grade_0.begin(); it != this->_grade_0.end(); it++)
+    {
+        if (user.getName().compare(it->second.getName()) == 0)
+            return 0;
+    }
+
+	for (std::map<int, User>::iterator it = this->_grade_1.begin(); it != this->_grade_1.end(); it++)
+    {
+        if (user.getName().compare(it->second.getName()) == 0)
+            return 1;
+    }
+
+	for (std::map<int, User>::iterator it = this->_grade_2.begin(); it != this->_grade_2.end(); it++)
+    {
+        if (user.getName().compare(it->second.getName()) == 0)
+            return 2;
+    }
+
+	for (std::map<int, User>::iterator it = this->_grade_3.begin(); it != this->_grade_3.end(); it++)
+    {
+        if (user.getName().compare(it->second.getName()) == 0)
+            return 3;
+    }
+
+	return -1;
+}
+
+
 /**
  * @brief Diffuse un message de type JOIN à tous les utilisateurs du canal.
  *
@@ -187,7 +247,7 @@ void Channel::AddUser(const User& user)
  *
  * @param msg Message à diffuser aux utilisateurs.
  */
-void Channel::BroadcastJoin(const std::string &msg)
+void Channel::BroadcastAll(const std::string &msg)
 {
 	for (std::map<int, User>::iterator it = this->_grade_0.begin(); it != this->_grade_0.end(); ++it)
 	{
@@ -244,4 +304,30 @@ void Channel::Broadcast(const std::string &msg, int sender)
 		if (it->second.getSocket() != sender)
         	send(it->first, msg.c_str(), msg.size(), 0);
 	}
+}
+
+void Channel::RemoveUser(int sock) 
+{
+    _grade_0.erase(sock);
+    _grade_1.erase(sock);
+    _grade_2.erase(sock);
+    _grade_3.erase(sock);
+}
+
+void Channel::AddUserBan(const User& user)
+{
+	this->_ban.insert(std::make_pair(user.getSocket(), user));
+	
+}
+
+bool Channel::GetUserBan(const User& user)
+{
+	for (size_t i = 0; i < this->_ban.size(); ++i)
+	{
+		if (this->_ban[i].getName().compare(user.getName()) == 0)
+			return true;
+	}
+
+	return false;
+	
 }
