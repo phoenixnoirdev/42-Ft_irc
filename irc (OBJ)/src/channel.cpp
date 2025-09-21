@@ -308,16 +308,20 @@ void Channel::Broadcast(const std::string &msg, int sender)
 
 void Channel::RemoveUser(int sock) 
 {
-    _grade_0.erase(sock);
-    _grade_1.erase(sock);
-    _grade_2.erase(sock);
-    _grade_3.erase(sock);
+    this->_grade_0.erase(sock);
+    this->_grade_1.erase(sock);
+	this-> _grade_2.erase(sock);
+    this->_grade_3.erase(sock);
 }
 
 void Channel::AddUserBan(const User& user)
 {
 	this->_ban.insert(std::make_pair(user.getSocket(), user));
-	
+}
+
+void Channel::RemoveUserBan(int sock)
+{
+	this->_ban.erase(sock);
 }
 
 bool Channel::GetUserBan(const User& user)
@@ -329,5 +333,9 @@ bool Channel::GetUserBan(const User& user)
 	}
 
 	return false;
-	
+}
+
+std::map<int, User> Channel::GetBanMap()
+{
+	return this->_ban;
 }

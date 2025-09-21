@@ -26,6 +26,9 @@ class Utils
 {
     private:
 
+        //===============
+        //Fonctions private
+        //===============
 
     public:
         //=================
@@ -38,11 +41,7 @@ class Utils
         static uint16_t PortConvert(const std::string& arg);
         static struct in_addr IpConvert(const std::string& ipStr);
         static std::string IntToString(int i);
-        
-        //===============
-        //Fonctions private
-        //===============
-        
+             
 };
 
 #endif //SERVER.HPP

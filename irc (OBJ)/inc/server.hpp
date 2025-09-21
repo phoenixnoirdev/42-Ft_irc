@@ -14,7 +14,6 @@
 #define SERVER_HPP
 #pragma once
 
-#include "Commands.hpp"   // aqui DEVE haver a definição de Kick (e NUNCA incluir server.hpp)
 #include <string>
 #include <netdb.h>
 #include <cerrno>
@@ -50,14 +49,11 @@ class Server
 
         fd_set _Readfds;
 
-        //std::vector<std::string> _BanList; // List of banned nicks
-       // BanNick banList;
-        Kick _kick;
-
         
         //===============
         //Fonctions private
         //===============
+        bool NickIsList(std::string nick);
 
 
     public:
@@ -85,7 +81,8 @@ class Server
 
         void handleKickCommand(int clientSocket, const std::string& line);
         void handleBanCommand(int clientSocket, const std::string& chanName, const std::string mask);
-        //void handleUnbanCommand(int clientSocket, const std::string& line);
+        void handleBanlistCommand(int clientSocket, const std::string& chanName);
+        void handleUnbanCommand(int clientSocket, const std::string& chanName, const std::string mask);
 
 };
 

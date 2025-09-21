@@ -304,9 +304,6 @@ void Server::HandleClientData(int clientSocket)
                 param = rest.substr(sp + 1);
             }
         
-            std::cout << "Channel: " << chanName << std::endl;
-            std::cout << "Param: " << param << std::endl;
-        
             // 2) Extraire le mode et éventuellement le mask
             sp = param.find(' ');
             std::string mode;
@@ -322,18 +319,19 @@ void Server::HandleClientData(int clientSocket)
                 mode = param.substr(0, sp);
                 mask = param.substr(sp + 1);
             }
-        
-            std::cout << "Mode: " << mode << std::endl;
+
+            std::cout << "Channel: " << chanName << std::endl;
+            std::cout << "Param: " << param << std::endl;
             std::cout << "Mask: " << mask << std::endl;
-        
+
             // 3) Gestion +b / -b
             if (mode == "+b" && !mask.empty()) 
                 handleBanCommand(clientSocket, chanName, mask);
-            /*else if (mode == "-b" && !mask.empty())
+            else if (mode == "-b" && !mask.empty())
                 handleUnbanCommand(clientSocket, chanName, mask);
             else if (mode == "+b" && mask.empty())
-                sendBanList(clientSocket, chanName);*/
-        
+                handleBanlistCommand(clientSocket, chanName);
+            
             continue;
         }
         else if (line.find("PRIVMSG ") == 0)
@@ -379,26 +377,20 @@ void Server::HandleClientData(int clientSocket)
 
     if (!user.getNick().empty() && !user.getName().empty() && !user.getPass().empty())
     {
-        // Ban check before authentication
-        /*
-        for (size_t i = 0; i < this->_BanList.size(); ++i)
-        {
-            if (user.getNick() == this->_BanList[i])
-            {
-                send(clientSocket, "You are banned from this server.\n", 30, 0);
-                user.closeSocket();
-                FD_CLR(clientSocket, &_Readfds);
-                this->_User.erase(clientSocket);
-                std::cout << "[INFO] Banned user " << user.getNick() << " tried to connect." << std::endl;
-                return;
-            }
-        }
-        */
         if (!user.getAuth())
         {
             if (!PassCont(user.getPass()))
             {
                 send(clientSocket, "Invalid password\n", 17, 0);
+                close(clientSocket);
+                this->_User.erase(clientSocket);
+                return;
+            }
+
+            if (NickIsList(user.getNick()) == true)
+            {
+                std::cout << "[INFO] User " << user.getNick() << "@" << user.getName() << " deconnecter nick doublon !" << std::endl;
+                send(clientSocket, "Nickname use\n", 13, 0);
                 close(clientSocket);
                 this->_User.erase(clientSocket);
                 return;
@@ -612,15 +604,18 @@ std::string Server::GetName(const std::string& str, bool auth)
     return "";
 }
 
+//controle les doublon nickname
+bool Server::NickIsList(std::string nick)
+{
+    int i = 0;
 
-/*
-Kick& Server::getBanList() {
-    return _kick;
+    for (std::map<int, User>::iterator it = this->_User.begin(); it != this->_User.end(); it++)
+    {
+        if (nick.compare(it->second.getNick()) == 0)
+            i++;
+
+        if (i > 1)
+            return true;
+    }
+    return false;
 }
-*/
-
-/*
-/KICK <Nickname>
-/quote UNBAN <Nickname>
-*/
-

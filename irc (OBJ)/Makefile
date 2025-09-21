@@ -39,7 +39,6 @@ FILES		=	main.cpp\
 				channel.cpp\
 				cmdKick.cpp\
 				cmdBan.cpp\
-				Commands.cpp\
 				
 ################################################################################
 #	Colors

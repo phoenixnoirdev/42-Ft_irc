@@ -65,7 +65,9 @@ class Channel
 		int GetGradeUser(const User& user);
 
 		void AddUserBan(const User& user);
+		void RemoveUserBan(int sock);
 		bool GetUserBan(const User& user);
+		std::map<int, User> GetBanMap();
 
 		void BroadcastAll(const std::string &msg);
 		void Broadcast(const std::string &msg, int sender);
