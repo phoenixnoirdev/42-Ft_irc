@@ -39,6 +39,8 @@ FILES		=	main.cpp\
 				channel.cpp\
 				cmdKick.cpp\
 				cmdBan.cpp\
+				cmdJoin.cpp\
+				msg.cpp\
 				
 ################################################################################
 #	Colors

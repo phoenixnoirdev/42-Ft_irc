@@ -74,6 +74,7 @@ class Server
         void HandleClientData(int clientSocket);
 
         bool PassCont(const std::string& str);
+        bool IsNickIsList(std::string nick);
 
         std::string GetPwd(const std::string& str);
         std::string GetNick(const std::string& str);
@@ -84,6 +85,11 @@ class Server
         void handleBanlistCommand(int clientSocket, const std::string& chanName);
         void handleUnbanCommand(int clientSocket, const std::string& chanName, const std::string mask);
 
+        void handleBrodcastMsgKB(User& user, std::string line);
+        void handleBrodcastPrivateMsg(User& user, std::string line);
+        void handleBrodcastMsgChann(int clientSocket, User& user, std::string line);
+
+        void handleJoin(int clientSocket, User& user, const std::string& line);
 };
 
 

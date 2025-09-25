@@ -1,0 +1,8 @@
+🔹 Les préfixes possibles pour les noms de canaux
+Préfixe	Signification
+#	Canal global (le plus courant, visible sur tout le réseau IRC).
+&	Canal local au serveur uniquement (n’existe pas sur d’autres serveurs).
++	Canal sans modes (un « modeless channel » : pas d’ops, pas de voix, tout le monde est égal).
+!	Canal unique (rare, utilisé pour éviter les collisions de noms ; souvent suivi d’une clé aléatoire).
+
+

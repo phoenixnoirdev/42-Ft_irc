@@ -69,11 +69,6 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
 
     if (chan.GetGradeUser(kicker) == 0 || chan.GetGradeUser(kicker) == 1)
     {
-
-        // -) Ajout l'user au BAN Global
-        //getBanList().addBan(targetNick);
-
-
         // 2) Cherche l'utilisateur dans la liste
         int targetFd = -1;
         std::map<int, User>::iterator targetUs = _User.end();
