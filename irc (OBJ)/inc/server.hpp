@@ -87,9 +87,11 @@ class Server
 
         void handleBrodcastMsgKB(User& user, std::string line);
         void handleBrodcastPrivateMsg(User& user, std::string line);
-        void handleBrodcastMsgChann(int clientSocket, User& user, std::string line);
+        void handleBrodcastMsgChann(int clientSocket, User& user, std::string line, int idchan);
 
         void handleJoin(int clientSocket, User& user, const std::string& line);
+
+        void handleQuit(int clientSocket, User& user, const std::string& line);
 };
 
 

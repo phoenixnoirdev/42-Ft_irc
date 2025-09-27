@@ -1,12 +1,7 @@
-
-//#include "Commands.hpp"
 # include "../inc/inc.hpp"
-
-
-// cmdBan.cpp
-#include "../inc/server.hpp"   // garante a declaração do Server
-#include "../inc/utils.hpp"
-#include <sstream>
+# include "../inc/server.hpp"
+# include "../inc/utils.hpp"
+# include <sstream>
 
 void Server::handleBanCommand(int clientSocket, const std::string& chanName, const std::string maskTarg)
 {
@@ -119,7 +114,7 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
             if (chanName.compare("#" + it->second.GetName()) == 0)
             {
                 User &target = targetUs->second;
-                target.setIdChan(-1);
+                target.removeIdChan(it->second.GetId());
 
                 it->second.RemoveUser(targetFd);
                 it->second.AddUserBan(target);

@@ -14,6 +14,8 @@
 # define USER_HPP
 
 # include <string>
+# include <set>
+
 
 class User
 {
@@ -26,7 +28,8 @@ class User
 
 		int				_grade;
 		int 			_socket;
-		int				_idChan;
+		//int				_idChan;
+		std::set<int> _idChan;
 
 		bool 			_auth;
 
@@ -80,8 +83,9 @@ class User
 		int getSocket() const;
 
 		//User in chan
-		void setIdChan(int i);
-		int getIdChan() const;
+		void addIdChan(int id);
+		void removeIdChan(int id);
+		bool getIdChan(int id);
 
 		//Authentification
 		void setAuth(bool e);

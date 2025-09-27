@@ -1,15 +1,8 @@
-//#include "Commands.hpp"
 # include "../inc/inc.hpp"
-
-
-// cmdKick.cpp
-#include "../inc/server.hpp"   // garante a declaração do Server
+# include "../inc/server.hpp"
 
 void Server::handleJoin(int clientSocket, User& user, const std::string& line)
 {
-    (void) user;
-    (void) clientSocket;
-
     size_t pos0 = line.find(" ");
 
     char c = line[pos0 + 1];
@@ -56,11 +49,6 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
         return;
     }
 
-    //Deconenct user du chan
-    std::map<int, Channel>::iterator chanItLast = this->_Chan.find(user.getIdChan());
-    std::cout << "[INFO] User " << user.getNick() << " sortie du channel " << chanItLast->second.GetName() << std::endl;
-    chanItLast->second.RemoveUser(user.getSocket());
-
 
     bool existe = false;
 
@@ -80,17 +68,17 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
         int idNeChan = this->_Chan.size();
 
         this->_Chan.insert(std::make_pair(idNeChan, Channel(idNeChan, chanName)));
-        user.setIdChan(idNeChan);
+        user.addIdChan(idNeChan);
         std::map<int, Channel>::iterator chanIt = this->_Chan.find(idNeChan);
         chanIt->second.AddUser(user);
-        std::cout << "[INFO] User " << user.getNick() << " ajouté au channel " << chanIt->second.GetName() << "qu'il a cree" << std::endl;
+        std::cout << "[INFO] User " << user.getNick() << " ajouté au channel " << chanIt->second.GetName() << " qu'il a cree" << std::endl;
         
         std::string joinMsg = ":" + user.getNick() + "!" + user.getName() + " JOIN #" + chanIt->second.GetName() + "\r\n";
         chanIt->second.BroadcastAll(joinMsg);
     }
     else
     {
-        user.setIdChan(idChan);
+        user.addIdChan(idChan);
         std::map<int, Channel>::iterator chanIt = this->_Chan.find(idChan);
         chanIt->second.AddUser(user);
 

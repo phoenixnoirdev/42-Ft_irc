@@ -339,3 +339,15 @@ std::map<int, User> Channel::GetBanMap()
 {
 	return this->_ban;
 }
+
+int Channel::GetPop()
+{
+	int pop = 0;
+
+	pop += this->_grade_0.size();
+	pop += this->_grade_1.size();
+	pop += this->_grade_2.size();
+	pop += this->_grade_3.size();
+
+	return pop;
+}

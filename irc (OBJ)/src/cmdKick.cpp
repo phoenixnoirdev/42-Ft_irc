@@ -1,11 +1,6 @@
-
-//#include "Commands.hpp"
 # include "../inc/inc.hpp"
-
-
-// cmdKick.cpp
-#include "../inc/server.hpp"   // garante a declaração do Server
-#include <sstream>
+# include "../inc/server.hpp"
+# include <sstream>
 
 void Server::handleKickCommand(int clientSocket, const std::string& line)
 {
@@ -128,7 +123,7 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
                 it->second.RemoveUser(targetFd);
 
                 User &target = targetUs->second;
-                target.setIdChan(-1);
+                target.removeIdChan(it->second.GetId());
 
                 return;
             }

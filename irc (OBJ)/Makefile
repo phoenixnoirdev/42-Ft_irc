@@ -40,6 +40,7 @@ FILES		=	main.cpp\
 				cmdKick.cpp\
 				cmdBan.cpp\
 				cmdJoin.cpp\
+				cmdPart.cpp\
 				msg.cpp\
 				
 ################################################################################

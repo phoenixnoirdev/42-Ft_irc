@@ -29,7 +29,7 @@
  * - `_socket`     : 0
  * - `_idChan`     : 0
  */
-User::User(): _uuid(""), _name(""), _nick(""), _pass(""), _recvBuffer(""), _grade(0), _socket(0), _idChan(0) {}
+User::User(): _uuid(""), _name(""), _nick(""), _pass(""), _recvBuffer(""), _grade(0), _socket(0), _idChan() {}
 
 /**
  * @brief Constructeur de la classe User avec un socket.
@@ -47,7 +47,7 @@ User::User(): _uuid(""), _name(""), _nick(""), _pass(""), _recvBuffer(""), _grad
  *
  * @param socket Descripteur de socket associé à l'utilisateur.
  */
-User::User(int socket): _uuid(""), _name(""), _nick(""), _pass(""), _recvBuffer(""), _grade(0), _idChan(0)
+User::User(int socket): _uuid(""), _name(""), _nick(""), _pass(""), _recvBuffer(""), _grade(0), _idChan()
 {
 	this->_socket = socket;
 	this->_auth = false;
@@ -265,24 +265,22 @@ int User::getSocket() const
 }
 
 
-/**
- * @brief Définit l'identifiant du canal de l'utilisateur.
- *
- * @param i Nouvel identifiant de canal.
- */
-void User::setIdChan(int i)
+// Ajoute un chan a la liste
+void User::addIdChan(int id)
 {
-	this->_idChan = i;
+	this->_idChan.insert(id);
 }
 
-/**
- * @brief Retourne l'identifiant du canal de l'utilisateur.
- *
- * @return Identifiant du canal.
- */
-int User::getIdChan() const
+// Retire un chan de la liste
+void User::removeIdChan(int id)
 {
-	return this->_idChan;
+	this->_idChan.erase(id);
+}
+
+// Retourn si le chan est dans la liste
+bool User::getIdChan(int id)
+{
+	return _idChan.find(id) != _idChan.end();
 }
 
 

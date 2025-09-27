@@ -240,7 +240,7 @@ void Server::HandleClientData(int clientSocket)
         std::string line = data.substr(0, pos);
         data.erase(0, pos + 2);
         
-        //td::cout << line << std::endl;
+        //std::cout << line << std::endl;
 
         if (line.find("NICK ") == 0)
         {
@@ -343,20 +343,40 @@ void Server::HandleClientData(int clientSocket)
             size_t pos3 = line.find(" +");
             size_t pos4 = line.find(" !");
 
-            if (user.getIdChan() >= 0)
-            {
-                if (pos1 > pos0 && pos2 > pos0 && pos3 > pos0 && pos4 > pos0)
-                    handleBrodcastPrivateMsg(user,line);
-                else
-                    handleBrodcastMsgChann(clientSocket, user,line);
-            }
+            if (pos1 > pos0 && pos2 > pos0 && pos3 > pos0 && pos4 > pos0)
+                handleBrodcastPrivateMsg(user,line);
             else
-                handleBrodcastMsgKB(user, line);
+            {
+                //extrait le nom du channel
+                std::string chanName = "";
+                size_t posSpNa = line.find(" ");
+                for(size_t i = posSpNa + 2; i < pos0; i++)
+                    chanName += line[i];
+
+                int ref = -1;
+                for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
+                {
+                    if (it->second.GetName().compare(chanName) == 0)
+                    {
+                        ref = it->second.GetId();
+                        break;
+                    }
+                }
+
+                // Uniquementis le channel a ete trouver
+                if (ref > -1 && user.getIdChan(ref) == true)
+                    handleBrodcastMsgChann(clientSocket, user,line, ref);
+            }
         }
         //JOIN
         else if (line.find("JOIN ") == 0)
         {
             handleJoin(clientSocket, user, line);
+        }
+        //LEAVE
+        else if (line.find("PART ") == 0)
+        {
+            handleQuit(clientSocket, user, line);
         }
 	}
 
@@ -384,7 +404,6 @@ void Server::HandleClientData(int clientSocket)
     
             user.setGrade(0);
             user.setAuth(true);
-            user.setIdChan(0);
     
             std::cout << "[INFO] User " << user.getNick() << "@" << user.getName() << " authentifié !" << std::endl;
 
@@ -392,6 +411,9 @@ void Server::HandleClientData(int clientSocket)
             std::map<int, Channel>::iterator chanIt = this->_Chan.find(0);
             if (chanIt != this->_Chan.end())
             {
+                //Ajout le chan a l'user
+                user.addIdChan(chanIt->second.GetId());
+
                 // Gestion du ban a la tentative de join le chan par default
                 if (chanIt->second.GetUserBan(user) == true)
                 {

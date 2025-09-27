@@ -73,6 +73,8 @@ class Channel
 		void Broadcast(const std::string &msg, int sender);
 
 		void RemoveUser(int socket);
+
+		int GetPop();
 };
 
 #endif //channel.HPP

@@ -6,9 +6,13 @@
 #include "../inc/server.hpp"   // garante a declaração do Server
 
 
-void Server::handleBrodcastMsgChann(int clientSocket, User& user, std::string line)
+void Server::handleBrodcastMsgChann(int clientSocket, User& user, std::string line, int idchan)
 {
-    std::map<int, Channel>::iterator chanIt = this->_Chan.find(user.getIdChan());
+    //(void) clientSocket;
+    //(void) user;
+    //(void) line;
+    
+    std::map<int, Channel>::iterator chanIt = this->_Chan.find(idchan);
 
     size_t pos = line.find(" :");
     std::string msg;
@@ -26,6 +30,7 @@ void Server::handleBrodcastMsgChann(int clientSocket, User& user, std::string li
     chanIt->second.Broadcast(ircMsg, clientSocket);
 
     std::cout << CYAN << chanIt->second.GetName() << " / " << YELLOW << user.getName() << RESET << ": " << msg << std::endl;
+    
 }
 
 void Server::handleBrodcastPrivateMsg(User& user, std::string line)
