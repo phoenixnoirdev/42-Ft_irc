@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   cmdJoin.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/09/29 11:47:00 by phkevin           #+#    #+#             */
+/*   Updated: 2025/09/29 12:47:16 by phkevin          ###   Luxembourg.lu     */
+/*                                                                            */
+/* ************************************************************************** */
+
 # include "../inc/inc.hpp"
 # include "../inc/server.hpp"
 
@@ -21,7 +33,6 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
             multi = true;
             break;
         }
-        i++;
     }
 
     if (multi == true)
@@ -41,7 +52,7 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
     
     if (c != '#' && c != '&' && c != '+' && c != '!')
     {
-        std::string err = ":server 479 " + user.getNick() + " " + chanName + " :Illegal channel name\r\n";
+        std::string err = ":" + this->_ServName + " 479 " + user.getNick() + " " + chanName + " :Illegal channel name\r\n";
         ::send(clientSocket, err.c_str(), err.size(), 0);
 
         std::cout << RED << "[JOIN]: " << user.getNick() << " a tenter d'utiliser la commande JOIN pour cree le chan : " << chanName << RESET << std::endl;

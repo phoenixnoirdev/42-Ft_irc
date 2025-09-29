@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   cmdKick.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/09/29 11:47:09 by phkevin           #+#    #+#             */
+/*   Updated: 2025/09/29 12:46:08 by phkevin          ###   Luxembourg.lu     */
+/*                                                                            */
+/* ************************************************************************** */
+
 # include "../inc/inc.hpp"
 # include "../inc/server.hpp"
 # include <sstream>
@@ -22,7 +34,7 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
     std::string::size_type sp1 = tmp.find(' ');
     if (sp1 == std::string::npos)
     {
-        std::string err = ":server 461 " + kicker.getNick() + " KICK :Not enough parameters\r\n";
+        std::string err = ":" + this->_ServName + " 461 " + kicker.getNick() + " KICK :Not enough parameters\r\n";
         ::send(clientSocket, err.c_str(), err.size(), 0);
         return;
     }
@@ -45,7 +57,7 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
 
     if (targetNick.empty())
     {
-        std::string err = ":server 461 " + kicker.getNick() + " KICK :Not enough parameters\r\n";
+        std::string err = ":" + this->_ServName + " 461 " + kicker.getNick() + " KICK :Not enough parameters\r\n";
         ::send(clientSocket, err.c_str(), err.size(), 0);
     }
 
@@ -95,7 +107,7 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
         // 6) Si l'utilisateur cible n'es pas en ligne informe l'utilisateur et sort de la commande
         if (targetFd == -1)
         {
-            std::string note = ":server NOTICE " + kicker.getNick() + " :User " + targetNick + " not online.\r\n";
+            std::string note = ":" + this->_ServName + " NOTICE " + kicker.getNick() + " :User " + targetNick + " not online.\r\n";
             ::send(clientSocket, note.c_str(), note.size(), 0);
             return;
         }
@@ -108,7 +120,7 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
         {
             const User &target = targetUs->second;
 
-            std::string bye = ":server NOTICE " + target.getNick() + " :You were KICK (" + (reason.empty() ? "no reason" : reason) + ")\r\n";
+            std::string bye = ":" + this->_ServName + " NOTICE " + target.getNick() + " :You were KICK (" + (reason.empty() ? "no reason" : reason) + ")\r\n";
             ::send(targetFd, bye.c_str(), bye.size(), 0);
 
             std::string byeMp = "SERVER:" + target.getNick() + "!~" + target.getName() + "@localhost PRIVMSG " + target.getNick() + " :You were KICK (" + (reason.empty() ? "no reason" : reason) + ")\r\n";

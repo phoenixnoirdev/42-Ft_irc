@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   cmdBan.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/09/29 11:47:01 by phkevin           #+#    #+#             */
+/*   Updated: 2025/09/29 12:47:01 by phkevin          ###   Luxembourg.lu     */
+/*                                                                            */
+/* ************************************************************************** */
+
 # include "../inc/inc.hpp"
 # include "../inc/server.hpp"
 # include "../inc/utils.hpp"
@@ -84,7 +96,7 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
         // 6) Si l'utilisateur cible n'es pas en ligne informe l'utilisateur et sort de la commande
         if (targetFd == -1)
         {
-            std::string note = ":server NOTICE " + op.getNick() + " :User " + target.getName() + " not online.\r\n";
+            std::string note = ":" + this->_ServName + " NOTICE " + op.getNick() + " :User " + target.getName() + " not online.\r\n";
             ::send(clientSocket, note.c_str(), note.size(), 0);
             return;
         }
@@ -100,7 +112,7 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
         {
             const User &target = targetUs->second;
 
-            std::string bye = ":server NOTICE " + target.getNick() + " :You were BAN \r\n";
+            std::string bye = ":" + this->_ServName + " NOTICE " + target.getNick() + " :You were BAN \r\n";
             ::send(targetFd, bye.c_str(), bye.size(), 0);
 
             std::string byeMp = "SERVER:" + target.getNick() + "!~" + target.getName() + "@localhost PRIVMSG " + target.getNick() + " :You were BAN \r\n";
@@ -125,7 +137,7 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
     }
     else
     {
-        std::string err = ":server 482 " + op.getNick() + " " + chanName + " :You're not channel operator\r\n";
+        std::string err = ":" + this->_ServName + " 482 " + op.getNick() + " " + chanName + " :You're not channel operator\r\n";
         ::send(clientSocket, err.c_str(), err.size(), 0);
 
         std::cout << RED << "[BAN]: " << chanName << " " << op.getName() << " a tenter d'utiliser la commande BAN sur l'user " << target.getName() << std::endl;
@@ -183,7 +195,7 @@ void Server::handleBanlistCommand(int clientSocket, const std::string& chanName)
     }
     else
     {
-        std::string err = ":server 482 " + op.getNick() + " " + chanName + " :You're not channel operator\r\n";
+        std::string err = ":" + this->_ServName + " 482 " + op.getNick() + " " + chanName + " :You're not channel operator\r\n";
         ::send(clientSocket, err.c_str(), err.size(), 0);
 
         std::cout << RED << "[BAN]: " << chanName << " " << op.getName() << " a tenter d'utiliser la commande BANLIST." << std::endl;
@@ -220,7 +232,7 @@ void Server::handleUnbanCommand(int clientSocket, const std::string& chanName, c
             std::map<int, User> banl = chan.GetBanMap();
             for (std::map<int, User>::iterator it = banl.begin(); it != banl.end(); it++)
             {
-                if (target.compare(it->second.getNick()) == 0 && !op.getNick().compare(it->second.getNick()) == 0)
+                if (target.compare(it->second.getNick()) == 0 && op.getNick().compare(it->second.getNick()) == 1)
                 {
                     chan.RemoveUserBan(it->second.getSocket());
 
@@ -236,7 +248,7 @@ void Server::handleUnbanCommand(int clientSocket, const std::string& chanName, c
         }
         else
         {
-            std::string err = ":server 482 " + op.getNick() + " " + chanName + " :You're not channel operator\r\n";
+            std::string err = ":" + this->_ServName + " 482 " + op.getNick() + " " + chanName + " :You're not channel operator\r\n";
             ::send(clientSocket, err.c_str(), err.size(), 0);
     
 

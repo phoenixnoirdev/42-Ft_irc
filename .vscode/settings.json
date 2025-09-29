@@ -58,6 +58,18 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "set": "cpp",
-        "cmdpart": "cpp"
+        "cmdpart": "cpp",
+        "bitset": "cpp",
+        "codecvt": "cpp",
+        "complex": "cpp",
+        "condition_variable": "cpp",
+        "list": "cpp",
+        "mutex": "cpp",
+        "ranges": "cpp",
+        "stop_token": "cpp",
+        "thread": "cpp",
+        "cfenv": "cpp",
+        "typeindex": "cpp",
+        "semaphore": "cpp"
     }
 }

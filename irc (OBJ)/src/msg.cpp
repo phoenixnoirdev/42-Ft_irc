@@ -1,17 +1,21 @@
-//#include "Commands.hpp"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   msg.cpp                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/09/29 11:47:19 by phkevin           #+#    #+#             */
+/*   Updated: 2025/09/29 11:47:36 by phkevin          ###   Luxembourg.lu     */
+/*                                                                            */
+/* ************************************************************************** */
+
 # include "../inc/inc.hpp"
-
-
-// cmdKick.cpp
-#include "../inc/server.hpp"   // garante a declaração do Server
+# include "../inc/server.hpp"
 
 
 void Server::handleBrodcastMsgChann(int clientSocket, User& user, std::string line, int idchan)
 {
-    //(void) clientSocket;
-    //(void) user;
-    //(void) line;
-    
     std::map<int, Channel>::iterator chanIt = this->_Chan.find(idchan);
 
     size_t pos = line.find(" :");
@@ -29,8 +33,7 @@ void Server::handleBrodcastMsgChann(int clientSocket, User& user, std::string li
 
     chanIt->second.Broadcast(ircMsg, clientSocket);
 
-    std::cout << CYAN << chanIt->second.GetName() << " / " << YELLOW << user.getName() << RESET << ": " << msg << std::endl;
-    
+    std::cout << CYAN << chanIt->second.GetName() << " / " << YELLOW << user.getName() << RESET << ": " << msg << std::endl; 
 }
 
 void Server::handleBrodcastPrivateMsg(User& user, std::string line)

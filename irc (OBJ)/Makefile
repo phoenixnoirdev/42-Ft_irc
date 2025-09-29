@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: kelevequ <kelevequ@student.42.lu>          +#+  +:+       +#+         #
+#    By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/19 12:48:38 by phkevin           #+#    #+#              #
-#    Updated: 2025/08/19 13:09:54 by kelevequ         ###   ########.fr        #
+#    Updated: 2025/09/29 12:02:44 by phkevin          ###   Luxembourg.lu      #
 #                                                                              #
 # **************************************************************************** #
 
@@ -41,6 +41,8 @@ FILES		=	main.cpp\
 				cmdBan.cpp\
 				cmdJoin.cpp\
 				cmdPart.cpp\
+				cmdList.cpp\
+				cmdNames.cpp\
 				msg.cpp\
 				
 ################################################################################

@@ -33,6 +33,8 @@ Server::Server(std::string port, std::string pass)
     /*insertion of channel*/
     this->_Chan.insert(std::make_pair(0, Channel(0, "default")));
 
+    this->_ServName = "IRC_42";
+    
     Init();
     Run();
     
@@ -240,7 +242,7 @@ void Server::HandleClientData(int clientSocket)
         std::string line = data.substr(0, pos);
         data.erase(0, pos + 2);
         
-        //std::cout << line << std::endl;
+        std::cout << line << std::endl;
 
         if (line.find("NICK ") == 0)
         {
@@ -377,6 +379,11 @@ void Server::HandleClientData(int clientSocket)
         else if (line.find("PART ") == 0)
         {
             handleQuit(clientSocket, user, line);
+        }
+        //LIST
+        else if (line.find("LIST ") == 0)
+        {
+            handleList(user);
         }
 	}
 

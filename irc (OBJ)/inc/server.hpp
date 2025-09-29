@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: luis-fif <luis-fif@student.42.fr>          +#+  +:+       +#+        */
+/*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 07:46:19 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/09/17 14:26:44 by luis-fif         ###   ########.fr       */
+/*   Updated: 2025/09/29 12:43:37 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,8 @@
 class Server
 {
     private:
+        std::string     _ServName;
+        
         std::string     _Pass;
         uint16_t	    _Port;
         struct in_addr  _Ip;
@@ -92,6 +94,10 @@ class Server
         void handleJoin(int clientSocket, User& user, const std::string& line);
 
         void handleQuit(int clientSocket, User& user, const std::string& line);
+
+        void handleNames(User& user, const std::string& line);
+
+        void handleList(User& user);
 };
 
 

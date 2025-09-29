@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   cmdPart.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/09/29 11:46:56 by phkevin           #+#    #+#             */
+/*   Updated: 2025/09/29 12:48:12 by phkevin          ###   Luxembourg.lu     */
+/*                                                                            */
+/* ************************************************************************** */
+
 # include "../inc/inc.hpp"
 # include "../inc/server.hpp"
 
@@ -21,7 +33,6 @@ void Server::handleQuit(int clientSocket, User& user, const std::string& line)
             multi = true;
             break;
         }
-        i++;
     }
 
 
@@ -43,7 +54,7 @@ void Server::handleQuit(int clientSocket, User& user, const std::string& line)
     
     if (c != '#' && c != '&' && c != '+' && c != '!')
     {
-        std::string err = ":server 479 " + user.getNick() + " " + chanName + " :Illegal channel name\r\n";
+        std::string err = ":" + this->_ServName + " 479 " + user.getNick() + " " + chanName + " :Illegal channel name\r\n";
         ::send(clientSocket, err.c_str(), err.size(), 0);
 
         std::cout << RED << "[PART]: " << user.getNick() << " a tenter d'utiliser la commande PART pour quitter le chan : " << chanName << RESET << std::endl;
@@ -70,7 +81,7 @@ void Server::handleQuit(int clientSocket, User& user, const std::string& line)
     {
         std::cout << "[INFO] User " << user.getNick() << " a essayer de quitter le channel " << chanName << " mais le channel n'existe pas." << std::endl;
         
-        std::string err = ":server 403 " + user.getNick() + " " + chanName + " :You're not on that channel\r\n";
+        std::string err = ":" + this->_ServName + " 403 " + user.getNick() + " " + chanName + " :You're not on that channel\r\n";
         ::send(clientSocket, err.c_str(), err.size(), 0);
     }
     else

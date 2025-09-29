@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 11:21:29 by phkevin           #+#    #+#             */
-/*   Updated: 2025/04/12 11:21:29 by phkevin          ###   ########.fr       */
+/*   Updated: 2025/09/29 12:47:34 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ uint16_t Utils::PortConvert(const std::string& arg)
 	if (!(ss >> port) || !ss.eof())
         Error::ErrorServ(1, "");
 
-	if (port < 1 || port > PORT_MAX)// 
+	if (port < 1 || port > PORT_MAX) 
         Error::ErrorServ(2, "");
     
 	return static_cast<uint16_t>(port);
