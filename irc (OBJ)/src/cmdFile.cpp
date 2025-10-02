@@ -71,7 +71,7 @@ void	Server::handleFileSend(User& user, const std::string& line)
 		return ;
 	}
 
-	User	*target;
+	User	*target = NULL;
 	for (std::map<int, User>::iterator it = this->_User.begin(); it != this->_User.end(); it++)
 	{
 		if (targetNick.compare(it->second.getNick()) == 0)
@@ -81,7 +81,7 @@ void	Server::handleFileSend(User& user, const std::string& line)
 		}
 	}
 
-	if (it == this->_User.end())
+	if (target == NULL)
 	{	//User doesn't exist
 		std::cout << "FSEND: Target user not found" << std::endl;
 		return ;
