@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cmdPart.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
+/*   By: luis-fif <luis-fif@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 11:46:56 by phkevin           #+#    #+#             */
-/*   Updated: 2025/09/29 12:48:12 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/10/02 17:17:43 by luis-fif         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,11 +95,12 @@ void Server::handleQuit(int clientSocket, User& user, const std::string& line)
         std::string joinMsg = ":" + user.getNick() + "!" + user.getName() + " QUIT #" + chanIt->second.GetName() + "\r\n";
         chanIt->second.BroadcastAll(joinMsg);
 
+        // Canal persistente - não remove quando vazio (para aparecer no LIST)
         if (chanIt->second.GetPop() == 0)
         {
-            std::cout << "[INFO] Suppression du channel " << chanIt->second.GetName() << " car le channel est vide " << std::endl;
-
-            this->_Chan.erase(idChan);
+            std::cout << "[INFO] Canal " << chanIt->second.GetName() << " ficou vazio mas será mantido" << std::endl;
+            // Comentado: this->_Chan.erase(idChan);
+            // Os canais agora permanecem mesmo quando vazios
         }
     }
 }

@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+         #
+#    By: luis-fif <luis-fif@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/19 12:48:38 by phkevin           #+#    #+#              #
-#    Updated: 2025/09/29 12:02:44 by phkevin          ###   Luxembourg.lu      #
+#    Updated: 2025/10/02 15:08:37 by luis-fif         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,7 +15,7 @@
 ################################################################################
 
 CCXX		=	c++
-FLAGWSXX	=	-Wall -Wextra -Werror -std=c++98 -g
+FLAGWSXX	=	-Wall -Wextra -Werror -std=c++98 -g -fPIE
 AR			=	ar rcs
 RM			=	/bin/rm -f
 
@@ -43,6 +43,8 @@ FILES		=	main.cpp\
 				cmdPart.cpp\
 				cmdList.cpp\
 				cmdNames.cpp\
+				cmdMode.cpp\
+				admin.cpp\
 				msg.cpp\
 				
 ################################################################################

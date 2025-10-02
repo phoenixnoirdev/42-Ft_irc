@@ -1,0 +1,48 @@
+
+
+Comando /REHASH para recarregar config sem reiniciar servidor
+Comando /KILL para admins expulsarem usuários
+Logs de ações administrativas
+Interface web para gerenciar admins
+
+mypassword123 
+
+OPER_PASSWORD=admin123
+OPERATORS=luis-fif,kevin,maria,joao
+
+
+
+by default     user   luis-fif  c'est GRADE 0
+les outres users pour devenir GRADE 0 -taper- /ADMIN luis-fif admin123
+******commands*******
+GRADES - Ver grades de todos os usuários
+SETGRADE <nick> <grade> - Alterar grade de alguém (só admin)
+
+SETGRADE Sanic 1 → Sanic vira Operador
+SETGRADE maria 2 → maria vira Voice
+SETGRADE joao 3 → joao vira Usuário Normal
+
+Digite /raw GRADES para ver todos os grades
+Digite /raw SETGRADE Sanic 1 para promover Sanic
+
+///tester  sans password, pass vide ' ' ,  etc
+
+	/JOIN #keyChannel			-pour creer channel
+	/MODE #keyChannel +k 123		-definir key
+	
+-autre client entree dans #test1
+
+	/JOIN #keyChannel 123		- si pas de key fornie - "Cannot join keyChannel (Requires keyword)"
+	
+********************************************************************************************************
+	
+	/JOIN #invitedChannel
+	/MODE +i				-active mode invitation
+	/INVITE <nick>	#invitedChannel
+
+-aoutre cliente
+	/JOIN #invitedChannel			-si non " Cannot join test2 (Channel is invite only)"
+	
+*******************************************************************************************************
+
+

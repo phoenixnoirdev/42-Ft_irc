@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   msg.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
+/*   By: luis-fif <luis-fif@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 11:47:19 by phkevin           #+#    #+#             */
-/*   Updated: 2025/09/29 11:47:36 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/10/02 13:54:28 by luis-fif         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,14 @@
 void Server::handleBrodcastMsgChann(int clientSocket, User& user, std::string line, int idchan)
 {
     std::map<int, Channel>::iterator chanIt = this->_Chan.find(idchan);
+
+    // Verificar se o usuário pode falar no canal (modo moderado +m)
+    if (!chanIt->second.canSpeak(user))
+    {
+        std::string err = ":localhost 404 " + user.getNick() + " " + chanIt->second.GetName() + " :Cannot send to channel (moderated)\r\n";
+        ::send(clientSocket, err.c_str(), err.size(), 0);
+        return;
+    }
 
     size_t pos = line.find(" :");
     std::string msg;

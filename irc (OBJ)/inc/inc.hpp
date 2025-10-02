@@ -16,6 +16,8 @@
 # include <unistd.h>
 # include <cstdlib>
 # include <signal.h>
+# include <vector>
+# include <set>
 
 //Lib custom
 # include "server.hpp"

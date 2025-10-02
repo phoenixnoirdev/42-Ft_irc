@@ -32,8 +32,16 @@ Server::Server(std::string port, std::string pass)
 
     /*insertion of channel*/
     this->_Chan.insert(std::make_pair(0, Channel(0, "default")));
+    // Definir topic específico para o canal default  
+    this->_Chan[0].setTopic("Canal principal - Bem-vindos ao IRC_42");
 
     this->_ServName = "IRC_42";
+    
+    // Initialize admin system
+    this->_hasMainAdmin = false;
+    this->_mainAdminNick = "";
+    loadAdminConfig();
+    displayAdminInfo();
     
     Init();
     Run();
@@ -247,10 +255,11 @@ void Server::HandleClientData(int clientSocket)
         if (line.find("NICK ") == 0)
         {
             user.setNick(GetNick(line));
-            /*
-            if (getBanList().isBanned(user.getNick()))
+            
+            // Check if user is banned in admin config
+            if (checkUserBanned(user.getNick()))
             {
-                std::string msg = ":" + std::string("server") +
+                std::string msg = ":" + _ServName +
                                 " 465 " + user.getNick() +
                                 " :You're banned from this server\r\n";
                 send(clientSocket, msg.c_str(), msg.size(), 0);
@@ -259,7 +268,6 @@ void Server::HandleClientData(int clientSocket)
                 _User.erase(clientSocket);
                 return;
             }
-            */
             if (DEBUG == true)
                 std::cout << "[DEBUG] NICK: " << user.getNick() << "-----" << user.getName()  << std::endl;
         }
@@ -290,9 +298,10 @@ void Server::HandleClientData(int clientSocket)
             handleKickCommand(clientSocket, line);
             continue;
         }
-        // BAN - UBAN - BANLIST
+        // MODE - Suporte completo para modos IRC
         else if (line.find("MODE ") == 0)
         {
+            // Primeiro verificar se é um comando de ban (manter compatibilidade)
             std::string rest = line.substr(5); // tout après "MODE "
     
             // 1) Extraire le channel
@@ -327,13 +336,68 @@ void Server::HandleClientData(int clientSocket)
                 mask = param.substr(sp + 1);
             }
 
+            // Verificar se é comando de ban (manter compatibilidade)
             if (mode == "+b" && !mask.empty()) 
+            {
                 handleBanCommand(clientSocket, chanName, mask);
+            }
             else if (mode == "-b" && !mask.empty())
+            {
                 handleUnbanCommand(clientSocket, chanName, mask);
+            }
             else if (mode == "+b" && mask.empty())
+            {
                 handleBanlistCommand(clientSocket, chanName);
+            }
+            else
+            {
+                // Usar novo sistema de modos
+                handleModeCommand(clientSocket, line, this->_User, this->_Chan);
+            }
             
+            continue;
+        }
+        // INVITE - Convidar usuário para canal invite-only
+        else if (line.find("INVITE ") == 0)
+        {
+            handleInviteCommand(clientSocket, line, this->_User, this->_Chan);
+            continue;
+        }
+        // TOPIC - Definir/consultar tópico do canal
+        else if (line.find("TOPIC ") == 0)
+        {
+            handleTopicCommand(clientSocket, line, this->_User, this->_Chan);
+            continue;
+        }
+        // OPER - Comando para obter privilégios de operador
+        else if (line.find("OPER ") == 0)
+        {
+            handleOperCommand(clientSocket, line);
+            continue;
+        }
+        // ADMIN - Comando para autenticar como administrador
+        else if (line.find("ADMIN ") == 0)
+        {
+            handleAdminCommand(clientSocket, line);
+            continue;
+        }
+        // GRADES - Ver grades de todos os usuários
+        else if (line.find("GRADES") == 0)
+        {
+            handleGradesCommand(clientSocket, line);
+            continue;
+        }
+        // SETGRADE - Alterar grade de usuário (só admin)
+        else if (line.find("SETGRADE ") == 0)
+        {
+            handleSetGradeCommand(clientSocket, line);
+            continue;
+        }
+        // LIST - Listar canais (usuário autenticado)
+        else if (line.find("LIST") == 0 && (line.size() == 4 || line[4] == ' '))
+        {
+            std::cout << "[DEBUG] Comando LIST detectado de usuário autenticado: " << user.getNick() << std::endl;
+            handleList(user);
             continue;
         }
         // MSG
@@ -380,11 +444,6 @@ void Server::HandleClientData(int clientSocket)
         {
             handleQuit(clientSocket, user, line);
         }
-        //LIST
-        else if (line.find("LIST ") == 0)
-        {
-            handleList(user);
-        }
 	}
 
     
@@ -409,10 +468,32 @@ void Server::HandleClientData(int clientSocket)
                 return;
             }
     
-            user.setGrade(0);
+            // Sistema de privilégios baseado na configuração
+            int userGrade = _AdminConfig.getUserGrade(user.getNick());
+            user.setGrade(userGrade);
+            
+            switch(userGrade) {
+                case 0:
+                    std::cout << "[INFO] " << user.getNick() << " conectou como ADMIN PRINCIPAL (Grade 0)" << std::endl;
+                    break;
+                case 1:
+                    std::cout << "[INFO] " << user.getNick() << " conectou como OPERADOR (Grade 1)" << std::endl;
+                    break;
+                case 2:
+                    std::cout << "[INFO] " << user.getNick() << " conectou como VOICE (Grade 2)" << std::endl;
+                    break;
+                case 3:
+                default:
+                    std::cout << "[INFO] " << user.getNick() << " conectou como usuário normal (Grade 3)" << std::endl;
+                    break;
+            }
+            
             user.setAuth(true);
     
             std::cout << "[INFO] User " << user.getNick() << "@" << user.getName() << " authentifié !" << std::endl;
+            
+            // Enviar mensagem de boas-vindas com informações de privilégio
+            sendWelcomeMessage(clientSocket, user);
 
 
             std::map<int, Channel>::iterator chanIt = this->_Chan.find(0);
@@ -644,4 +725,416 @@ bool Server::IsNickIsList(std::string nick)
             return true;
     }
     return false;
+}
+
+//==============
+// ADMIN SYSTEM METHODS
+//==============
+
+void Server::loadAdminConfig() {
+    if (!_AdminConfig.loadFromFile("admin.conf")) {
+        std::cerr << "Warning: Admin config not loaded, using default settings" << std::endl;
+    }
+}
+
+bool Server::checkUserBanned(const std::string& nickname) {
+    return _AdminConfig.isBannedUser(nickname);
+}
+
+void Server::giveAutoOpPrivileges(int clientSocket, const std::string& channelName) {
+    // Check if this channel should give auto-op
+    if (_AdminConfig.isAutoOpChannel(channelName)) {
+        std::map<int, User>::iterator userIt = _User.find(clientSocket);
+        if (userIt != _User.end()) {
+            std::string nickname = userIt->second.getNick();
+            
+            // Give op if user has operator privileges
+            if (_AdminConfig.hasOperatorPrivs(nickname)) {
+                // Find the channel
+                for (std::map<int, Channel>::iterator chanIt = _Chan.begin(); chanIt != _Chan.end(); ++chanIt) {
+                    if (chanIt->second.GetName() == channelName) {
+                        chanIt->second.giveOp(nickname);
+                        
+                        // Send mode change notification
+                        std::string modeMsg = ":" + _ServName + " MODE " + channelName + " +o " + nickname + "\r\n";
+                        send(clientSocket, modeMsg.c_str(), modeMsg.length(), 0);
+                        
+                        std::cout << "Auto-op granted to " << nickname << " in " << channelName << std::endl;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void Server::handleOperCommand(int clientSocket, const std::string& line) {
+    std::vector<std::string> tokens = splitString(line);
+    
+    if (tokens.size() < 3) {
+        std::string errorMsg = ":" + _ServName + " 461 * OPER :Not enough parameters\r\n";
+        send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+        return;
+    }
+    
+    std::string username = tokens[1];
+    std::string password = tokens[2];
+    
+    // Check if password matches and user is authorized
+    std::map<int, User>::iterator userIt = _User.find(clientSocket);
+    if (userIt == _User.end()) {
+        return;
+    }
+    
+    std::string nickname = userIt->second.getNick();
+    
+    // Verificar se a senha está correta
+    if (password == _AdminConfig.getOperPassword()) {
+        // Qualquer usuário pode se tornar operador com a senha correta
+        int currentGrade = userIt->second.getGrade();
+        
+        if (currentGrade == 0) {
+            // Já é admin principal
+            std::string msg1 = ":" + _ServName + " NOTICE " + nickname + " :👑 Você já é o ADMINISTRADOR PRINCIPAL!\r\n";
+            send(clientSocket, msg1.c_str(), msg1.length(), 0);
+            
+            std::string msg2 = ":" + _ServName + " NOTICE " + nickname + " :⚡ Grade 0 é superior ao Grade 1 (Operador)\r\n";
+            send(clientSocket, msg2.c_str(), msg2.length(), 0);
+        } else {
+            // Promover para operador (grade 1)
+            userIt->second.setGrade(1);
+            
+            std::string separator = ":" + _ServName + " NOTICE " + nickname + " :═══════════════════════════════════\r\n";
+            send(clientSocket, separator.c_str(), separator.length(), 0);
+            
+            std::string successMsg1 = ":" + _ServName + " NOTICE " + nickname + " :🎉 PROMOÇÃO REALIZADA COM SUCESSO!\r\n";
+            send(clientSocket, successMsg1.c_str(), successMsg1.length(), 0);
+            
+            std::string successMsg2 = ":" + _ServName + " NOTICE " + nickname + " :⚡ Você agora é OPERADOR (Grade 1)\r\n";
+            send(clientSocket, successMsg2.c_str(), successMsg2.length(), 0);
+            
+            std::string successMsg3 = ":" + _ServName + " NOTICE " + nickname + " :📋 Pode usar: MODE +o, KICK, BAN\r\n";
+            send(clientSocket, successMsg3.c_str(), successMsg3.length(), 0);
+            
+            send(clientSocket, separator.c_str(), separator.length(), 0);
+            
+            std::cout << "OPER: " << nickname << " promoted from Grade " << currentGrade << " to Grade 1 (Operator)" << std::endl;
+        }
+    } else {
+        std::string errorMsg = ":" + _ServName + " NOTICE " + nickname + " :❌ Senha incorreta para OPER\r\n";
+        send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+        std::cout << "OPER: Failed attempt by " << nickname << " with wrong password" << std::endl;
+    }
+}
+
+void Server::sendWelcomeMessage(int clientSocket, const User& user) {
+    std::string nickname = user.getNick();
+    int grade = user.getGrade();
+    
+    // Message de bienvenue IRC standard
+    std::string welcomeMsg = ":" + _ServName + " 001 " + nickname + " :Bienvenue sur " + _ServName + "!\r\n";
+    send(clientSocket, welcomeMsg.c_str(), welcomeMsg.length(), 0);
+    
+    // Envoyer comme messages du serveur (pas NOTICE)
+    std::string separator = ":" + _ServName + " 002 " + nickname + " :═══════════════════════════════════\r\n";
+    send(clientSocket, separator.c_str(), separator.length(), 0);
+    
+    // Statut de l'utilisateur avec emoji et couleur
+    std::string statusMsg = ":" + _ServName + " 003 " + nickname + " :";
+    
+    switch(grade) {
+        case 0:
+            statusMsg += "👑 ADMINISTRATEUR PRINCIPAL (Grade 0)";
+            break;
+        case 1:
+            statusMsg += "⚡ OPÉRATEUR (Grade 1)";
+            break;
+        case 2:
+            statusMsg += "🔊 VOIX (Grade 2)";
+            break;
+        case 3:
+            statusMsg += "👤 UTILISATEUR NORMAL (Grade 3)";
+            break;
+        default:
+            statusMsg += "❓ INCONNU";
+    }
+    statusMsg += "\r\n";
+    send(clientSocket, statusMsg.c_str(), statusMsg.length(), 0);
+    
+    // Description des privilèges
+    std::string privMsg = ":" + _ServName + " 004 " + nickname + " :Privilèges: ";
+    
+    switch(grade) {
+        case 0:
+            privMsg += "Contrôle total du serveur";
+            break;
+        case 1:
+            privMsg += "Modérer canaux, donner OP, kick/ban";
+            break;
+        case 2:
+            privMsg += "Parler dans les canaux modérés (+m)";
+            break;
+        case 3:
+            privMsg += "Accès de base aux canaux";
+            break;
+        default:
+            privMsg += "Aucun";
+    }
+    privMsg += "\r\n";
+    send(clientSocket, privMsg.c_str(), privMsg.length(), 0);
+    
+    // Instructions spécifiques par grade
+    if (grade == 0) {
+        std::string adminMsg1 = ":" + _ServName + " 005 " + nickname + " :🎯 Vous avez le CONTRÔLE TOTAL du serveur!\r\n";
+        send(clientSocket, adminMsg1.c_str(), adminMsg1.length(), 0);
+        
+        std::string adminMsg2 = ":" + _ServName + " 006 " + nickname + " :📋 Commandes: MODE, KICK, BAN, INVITE, TOPIC\r\n";
+        send(clientSocket, adminMsg2.c_str(), adminMsg2.length(), 0);
+    }
+    else if (grade == 1) {
+        std::string operMsg1 = ":" + _ServName + " 005 " + nickname + " :⚡ Vous êtes OPÉRATEUR du serveur!\r\n";
+        send(clientSocket, operMsg1.c_str(), operMsg1.length(), 0);
+        
+        std::string operMsg2 = ":" + _ServName + " 006 " + nickname + " :📋 Commandes: MODE +o, KICK, BAN dans les canaux\r\n";
+        send(clientSocket, operMsg2.c_str(), operMsg2.length(), 0);
+    }
+    else if (grade == 2) {
+        std::string voiceMsg = ":" + _ServName + " 005 " + nickname + " :🔊 Vous avez la VOIX - vous pouvez parler dans les canaux modérés\r\n";
+        send(clientSocket, voiceMsg.c_str(), voiceMsg.length(), 0);
+    }
+    else if (grade == 3) {
+        std::string userMsg1 = ":" + _ServName + " 005 " + nickname + " :📈 Pour obtenir plus de privilèges:\r\n";
+        send(clientSocket, userMsg1.c_str(), userMsg1.length(), 0);
+        
+        std::string userMsg2 = ":" + _ServName + " 006 " + nickname + " :   💼 OPER " + nickname + " <motdepasse> → Devenir Opérateur\r\n";
+        send(clientSocket, userMsg2.c_str(), userMsg2.length(), 0);
+        
+        if (nickname == _AdminConfig.getMainAdmin()) {
+            std::string adminHint = ":" + _ServName + " 007 " + nickname + " :   👑 ADMIN " + nickname + " <motdepasse> → Devenir Admin Principal\r\n";
+            send(clientSocket, adminHint.c_str(), adminHint.length(), 0);
+        }
+    }
+    
+    // Ligne séparatrice finale
+    std::string separator2 = ":" + _ServName + " 008 " + nickname + " :═══════════════════════════════════\r\n";
+    send(clientSocket, separator2.c_str(), separator2.length(), 0);
+    
+    // Message additionnel qui apparaît comme privmsg du serveur (plus visible)
+    std::string visibleMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + nickname + " :";
+    
+    switch(grade) {
+        case 0:
+            visibleMsg += "👑 Você é ADMINISTRADOR PRINCIPAL (Grade 0) - Controle total!";
+            break;
+        case 1:
+            visibleMsg += "⚡ Você é OPERADOR (Grade 1) - Pode moderar canais";
+            break;
+        case 2:
+            visibleMsg += "🔊 Você tem VOZ (Grade 2) - Pode falar em canais +m";
+            break;
+        case 3:
+            visibleMsg += "👤 Usuário normal (Grade 3) - Use OPER para privilégios";
+            break;
+    }
+    visibleMsg += "\r\n";
+    send(clientSocket, visibleMsg.c_str(), visibleMsg.length(), 0);
+}
+
+void Server::handleAdminCommand(int clientSocket, const std::string& line) {
+    std::vector<std::string> tokens = splitString(line);
+    
+    if (tokens.size() < 3) {
+        std::string errorMsg = ":" + _ServName + " 461 * ADMIN :Not enough parameters\r\n";
+        send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+        return;
+    }
+    
+    std::string username = tokens[1];
+    std::string password = tokens[2];
+    
+    // Check if user exists
+    std::map<int, User>::iterator userIt = _User.find(clientSocket);
+    if (userIt == _User.end()) {
+        return;
+    }
+    
+    std::string nickname = userIt->second.getNick();
+    
+    // Validate admin credentials
+    if (_AdminConfig.validateAdminCredentials(username, password)) {
+        // Grant admin privileges
+        userIt->second.setGrade(0);
+        
+        std::string separator = ":" + _ServName + " NOTICE " + nickname + " :═══════════════════════════════════\r\n";
+        send(clientSocket, separator.c_str(), separator.length(), 0);
+        
+        std::string successMsg1 = ":" + _ServName + " NOTICE " + nickname + " :🎉 AUTENTICAÇÃO ADMIN REALIZADA!\r\n";
+        send(clientSocket, successMsg1.c_str(), successMsg1.length(), 0);
+        
+        std::string successMsg2 = ":" + _ServName + " NOTICE " + nickname + " :👑 Você agora é ADMINISTRADOR PRINCIPAL\r\n";
+        send(clientSocket, successMsg2.c_str(), successMsg2.length(), 0);
+        
+        std::string successMsg3 = ":" + _ServName + " NOTICE " + nickname + " :⚡ Grade 0 - CONTROLE TOTAL DO SERVIDOR\r\n";
+        send(clientSocket, successMsg3.c_str(), successMsg3.length(), 0);
+        
+        std::string successMsg4 = ":" + _ServName + " NOTICE " + nickname + " :📋 Todos os comandos disponíveis!\r\n";
+        send(clientSocket, successMsg4.c_str(), successMsg4.length(), 0);
+        
+        send(clientSocket, separator.c_str(), separator.length(), 0);
+        
+        std::cout << "ADMIN: " << nickname << " authenticated as server administrator" << std::endl;
+    } else {
+        std::string errorMsg = ":" + _ServName + " NOTICE " + nickname + " :❌ Credenciais de admin inválidas\r\n";
+        send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+        std::cout << "ADMIN: Failed authentication attempt by " << nickname << std::endl;
+    }
+}
+
+void Server::displayAdminInfo() {
+    std::cout << "=====================================" << std::endl;
+    std::cout << "📋 CONFIGURAÇÕES DE ADMINISTRAÇÃO" << std::endl;
+    std::cout << "=====================================" << std::endl;
+    std::cout << "🔑 Admin Principal: " << _AdminConfig.getMainAdmin() << std::endl;
+    std::cout << "   └─ Comando: ADMIN " << _AdminConfig.getMainAdmin() << " " << _AdminConfig.getAdminPassword() << std::endl;
+    std::cout << std::endl;
+    std::cout << "👥 Para Operadores (Grade 1):" << std::endl;
+    std::cout << "   └─ Comando: OPER <nickname> " << _AdminConfig.getOperPassword() << std::endl;
+    std::cout << std::endl;
+    std::cout << "📊 Grades do Sistema:" << std::endl;
+    std::cout << "   Grade 0: Admin Principal (controle total)" << std::endl;
+    std::cout << "   Grade 1: Operador (moderar canais)" << std::endl;
+    std::cout << "   Grade 2: Voice (falar em canais +m)" << std::endl;
+    std::cout << "   Grade 3: Usuário normal" << std::endl;
+    std::cout << "=====================================" << std::endl;
+}
+
+void Server::handleGradesCommand(int clientSocket, const std::string& /* line */) {
+    std::map<int, User>::iterator userIt = _User.find(clientSocket);
+    if (userIt == _User.end()) {
+        return;
+    }
+    
+    std::string nickname = userIt->second.getNick();
+    
+    // Cabeçalho
+    std::string header = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + nickname + " :📊 GRADES DOS USUÁRIOS CONECTADOS\r\n";
+    send(clientSocket, header.c_str(), header.length(), 0);
+    
+    std::string separator = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + nickname + " :═════════════════════════════════════\r\n";
+    send(clientSocket, separator.c_str(), separator.length(), 0);
+    
+    // Lista todos os usuários conectados
+    for (std::map<int, User>::iterator it = _User.begin(); it != _User.end(); ++it) {
+        std::string userNick = it->second.getNick();
+        int grade = it->second.getGrade();
+        
+        std::string gradeMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + nickname + " :";
+        
+        switch(grade) {
+            case 0:
+                gradeMsg += "👑 " + userNick + " - Administrateur Principal (Grade 0)";
+                break;
+            case 1:
+                gradeMsg += "⚡ " + userNick + " - Opérateur (Grade 1)";
+                break;
+            case 2:
+                gradeMsg += "🔊 " + userNick + " - Voix (Grade 2)";
+                break;
+            case 3:
+                gradeMsg += "👤 " + userNick + " - Utilisateur Normal (Grade 3)";
+                break;
+            default:
+                gradeMsg += "❓ " + userNick + " - Desconhecido";
+        }
+        gradeMsg += "\r\n";
+        send(clientSocket, gradeMsg.c_str(), gradeMsg.length(), 0);
+    }
+    
+    // Rodapé
+    send(clientSocket, separator.c_str(), separator.length(), 0);
+    
+    std::string footer = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + nickname + " :💡 Use: SETGRADE <nick> <0-3> para alterar\r\n";
+    send(clientSocket, footer.c_str(), footer.length(), 0);
+}
+
+void Server::handleSetGradeCommand(int clientSocket, const std::string& line) {
+    std::vector<std::string> tokens = splitString(line);
+    
+    if (tokens.size() < 3) {
+        std::string errorMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG * :❌ Uso: SETGRADE <nickname> <grade>\r\n";
+        send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+        return;
+    }
+    
+    // Verificar se quem executa tem privilégios
+    std::map<int, User>::iterator adminIt = _User.find(clientSocket);
+    if (adminIt == _User.end()) {
+        return;
+    }
+    
+    std::string adminNick = adminIt->second.getNick();
+    int adminGrade = adminIt->second.getGrade();
+    
+    if (adminGrade != 0) {
+        std::string errorMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + adminNick + " :❌ Seul l'Admin Principal (Grade 0) peut utiliser SETGRADE\r\n";
+        send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+        return;
+    }
+    
+    std::string targetNick = tokens[1];
+    std::string gradeParam = tokens[2];
+    
+    // Remover # se estiver presente (usuário pode digitar #1 por engano)
+    if (!gradeParam.empty() && gradeParam[0] == '#') {
+        gradeParam = gradeParam.substr(1);
+    }
+    
+    int newGrade = atoi(gradeParam.c_str());
+    
+    if (newGrade < 0 || newGrade > 3) {
+        std::string errorMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + adminNick + " :❌ Le grade doit être 0, 1, 2 ou 3\r\n";
+        send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+        return;
+    }
+    
+    // Chercher l'utilisateur cible
+    bool found = false;
+    for (std::map<int, User>::iterator it = _User.begin(); it != _User.end(); ++it) {
+        if (it->second.getNick() == targetNick) {
+            int oldGrade = it->second.getGrade();
+            it->second.setGrade(newGrade);
+            
+            // Convertir int en char (compatible C++98)
+            char oldGradeChar = '0' + oldGrade;
+            char newGradeChar = '0' + newGrade;
+            
+            // Message pour l'admin
+            std::string successMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + adminNick + " :✅ " + targetNick + " modifié du Grade " + 
+                                    oldGradeChar + " au Grade " + newGradeChar + "\r\n";
+            send(clientSocket, successMsg.c_str(), successMsg.length(), 0);
+            
+            // Notifier l'utilisateur cible avec switch
+            std::string gradeName;
+            switch(newGrade) {
+                case 0: gradeName = "👑 Administrateur Principal"; break;
+                case 1: gradeName = "⚡ Opérateur"; break;
+                case 2: gradeName = "🔊 Voix"; break;
+                case 3: gradeName = "👤 Utilisateur Normal"; break;
+                default: gradeName = "❓ Inconnu"; break;
+            }
+            
+            std::string notifyMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + targetNick + " :🎉 Votre grade a été modifié en: " + 
+                                   gradeName + " (Grade " + newGradeChar + ")\r\n";
+            send(it->first, notifyMsg.c_str(), notifyMsg.length(), 0);
+            
+            std::cout << "SETGRADE: " << adminNick << " changed " << targetNick << " from Grade " << oldGrade << " to Grade " << newGrade << std::endl;
+            found = true;
+            break;
+        }
+    }
+    
+    if (!found) {
+        std::string errorMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + adminNick + " :❌ Usuário '" + targetNick + "' não encontrado\r\n";
+        send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+    }
 }
