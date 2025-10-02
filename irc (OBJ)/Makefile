@@ -37,12 +37,14 @@ FILES		=	main.cpp\
 				utils.cpp\
 				user.cpp\
 				channel.cpp\
+				cmdLogin.cpp\
 				cmdKick.cpp\
 				cmdBan.cpp\
 				cmdJoin.cpp\
 				cmdPart.cpp\
 				cmdList.cpp\
 				cmdNames.cpp\
+				cmdTopic.cpp\
 				msg.cpp\
 				
 ################################################################################

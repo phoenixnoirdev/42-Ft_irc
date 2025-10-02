@@ -82,6 +82,7 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
         user.addIdChan(idNeChan);
         std::map<int, Channel>::iterator chanIt = this->_Chan.find(idNeChan);
         chanIt->second.AddUser(user);
+        chanIt->second.SetOpChannel(user);
         std::cout << "[INFO] User " << user.getNick() << " ajouté au channel " << chanIt->second.GetName() << " qu'il a cree" << std::endl;
         
         std::string joinMsg = ":" + user.getNick() + "!" + user.getName() + " JOIN #" + chanIt->second.GetName() + "\r\n";

@@ -57,6 +57,8 @@ class Server
         //===============
         bool NickIsList(std::string nick);
 
+        void handleWelcome(const User& user);
+
 
     public:
         //=================
@@ -82,6 +84,8 @@ class Server
         std::string GetNick(const std::string& str);
         std::string GetName(const std::string&  str, bool auth);
 
+        void handleLogin(int clientSocket, User& user);
+        
         void handleKickCommand(int clientSocket, const std::string& line);
         void handleBanCommand(int clientSocket, const std::string& chanName, const std::string mask);
         void handleBanlistCommand(int clientSocket, const std::string& chanName);
@@ -98,6 +102,8 @@ class Server
         void handleNames(User& user, const std::string& line);
 
         void handleList(User& user);
+
+        void handleTopic(User& user, const std::string& line);
 };
 
 

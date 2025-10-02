@@ -50,7 +50,7 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
     }
         
 
-    //Controle le grade
+    //Recupere le channel
     int idChan;
     for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
     {
@@ -63,7 +63,8 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
     Channel &chan = _Chan[idChan];
 
 
-    if (chan.GetGradeUser(op) == 0 || chan.GetGradeUser(op) == 1)
+    //Controle les autorisation
+    if (chan.GetGradeUser(op) == 0 || chan.GetGradeUser(op) == 1 || chan.GetOpChannel() == op.getSocket())
     { 
         // 2) Cherche l'utilisateur dans la liste
         int targetFd = -1;
@@ -81,15 +82,7 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
         // 3) Retour d’information dans le channel
         {
             std::string reply = ":" + op.getNick() + "!~" + op.getName() + "@localhost BAN " + chanName + " " + target.getName() + "\r\n";
-
-            for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
-            {
-                if (chanName.compare("#" + it->second.GetName()) == 0)
-                {
-                    it->second.BroadcastAll(reply);
-                    break;
-                }
-            }
+            chan.BroadcastAll(reply);
         }
 
         
@@ -140,7 +133,7 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
         std::string err = ":" + this->_ServName + " 482 " + op.getNick() + " " + chanName + " :You're not channel operator\r\n";
         ::send(clientSocket, err.c_str(), err.size(), 0);
 
-        std::cout << RED << "[BAN]: " << chanName << " " << op.getName() << " a tenter d'utiliser la commande BAN sur l'user " << target.getName() << std::endl;
+        std::cout << RED << "[BAN]: " << chanName << " " << op.getName() << " a tenter d'utiliser la commande BAN sur l'user " << target.getName() << RESET << std::endl;
         
         return;
     }
@@ -174,7 +167,7 @@ void Server::handleBanlistCommand(int clientSocket, const std::string& chanName)
 
 
 
-    if (chan.GetGradeUser(op) == 0 || chan.GetGradeUser(op) == 1)
+    if (chan.GetGradeUser(op) == 0 || chan.GetGradeUser(op) == 1 || chan.GetOpChannel() == op.getSocket())
     { 
 
         std::string note = "";
@@ -227,7 +220,7 @@ void Server::handleUnbanCommand(int clientSocket, const std::string& chanName, c
         }
         Channel &chan = _Chan[idChan];
     
-        if (chan.GetGradeUser(op) == 0 || chan.GetGradeUser(op) == 1)
+        if (chan.GetGradeUser(op) == 0 || chan.GetGradeUser(op) == 1 || chan.GetOpChannel() == op.getSocket())
         { 
             std::map<int, User> banl = chan.GetBanMap();
             for (std::map<int, User>::iterator it = banl.begin(); it != banl.end(); it++)
