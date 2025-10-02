@@ -20,14 +20,12 @@ void Server::handleList(User& user)
     int clientSocket = user.getSocket();
     std::string msg = "";
 
-    msg = ":" + this->_ServName + " 321 " + user.getNick() +  " Channel :Users  Name\r\n";
+    msg = ":" + this->_ServName + " 321 " + user.getNick() + " Channel :Users Name\r\n";
     ::send(clientSocket, msg.c_str(), msg.size(), 0);
 
-    // :server 322 Bob #general 12 :Discussion générale (retourn l'user + nom du chann + population + topic)
-    // Topic a faire
     for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
     {
-        msg = ":" + this->_ServName + " 322 " + user.getNick() + " #" + it->second.GetName() + " " + Utils::IntToString(it->second.GetPop()) + " :Topic test" + "\r\n";
+        msg = ":" + this->_ServName + " 322 " + user.getNick() + " #" + it->second.GetName() + " " + Utils::IntToString(it->second.GetPop()) + " :" + it->second.GetTopic() + "\r\n";
         ::send(clientSocket, msg.c_str(), msg.size(), 0);
     }
 

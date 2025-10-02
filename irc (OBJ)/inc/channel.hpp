@@ -22,7 +22,10 @@ class Channel
 	private:
 		int					_id;
 		std::string			_name;
-		int					_Mode;
+		std::string			_topic;
+		int					_mode;
+
+		User* _OpChannel;
 		
 		std::map<int, User> _grade_0; // OP IRC SERV = operateur serveur
 		std::map<int, User> _grade_1; // Op = Operateur channel
@@ -60,6 +63,14 @@ class Channel
 		//Mode Gest
 		void SetMode(const User& user);
 		void GetMode(const User& user);
+
+		//Topic
+		void SetTopic(std::string topic);
+		std::string GetTopic();
+
+		//OP Channel
+		void SetOpChannel(User& user);
+		int GetOpChannel();
 
 		void AddUser(const User& user);
 		int GetGradeUser(const User& user);

@@ -21,11 +21,12 @@
  *
  * Initialise l'ID, le nom et le grade de visibilité à 0 ou vide.
  */
-Channel::Channel(): _id(0), _name(""), _Mode(0) {}
+Channel::Channel(): _id(0), _name(""), _topic(""), _mode(0), _OpChannel(NULL) {}
 
-Channel::Channel(int id, std::string name): _Mode(0) 
+Channel::Channel(int id, std::string name): _topic(""), _mode(0), _OpChannel(NULL) 
 {
 	this->_id = id;
+
 	this->_name = name;
 }
 
@@ -42,7 +43,9 @@ Channel::Channel(const Channel& other)
 {
 	this->_id = other._id;
 	this->_name = other._name;
-	this->_Mode = other._Mode;
+	this->_topic = other._topic;
+	this->_mode = other._mode;
+	this->_OpChannel = other._OpChannel;
 	this->_grade_0 = other._grade_0;
 	this->_grade_1 = other._grade_1;
 	this->_grade_2 = other._grade_2;
@@ -65,7 +68,9 @@ Channel&	Channel::operator=(const Channel& other)
 	{
 		this->_id = other._id;
 		this->_name = other._name;
-		this->_Mode = other._Mode;
+		this->_topic = other._topic;
+		this->_mode = other._mode;
+		this->_OpChannel = other._OpChannel;
 		this->_grade_0 = other._grade_0;
 		this->_grade_1 = other._grade_1;
 		this->_grade_2 = other._grade_2;
@@ -136,15 +141,19 @@ std::string Channel::GetName() const
 }
 
 
+/*
+Actuellement le setMode permet de passer en mode +m via une detection 0/1
 
+changer du numerique en string pour prendre en charge +m, +p, +s, +t, +i
+*/
 void Channel::SetMode(const User& user)
 {
 	std::string ircMsg = "";
 	std::string msg = "";
 
-	if (this->_Mode == 0)
+	if (this->_mode == 0)
 	{
-		this->_Mode = 1;
+		this->_mode = 1;
 
 		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " +m\r\n";
 		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
@@ -153,7 +162,7 @@ void Channel::SetMode(const User& user)
 	}
 	else
 	{
-		this->_Mode = 0;
+		this->_mode = 0;
 
 		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " -m\r\n";
 		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
@@ -171,7 +180,7 @@ void Channel::GetMode(const User& user)
 {
 	std::string ircMsg = "";
 
-	if (this->_Mode == 0)
+	if (this->_mode == 0)
 	{
 		std::string msg = "Le channel est en mode: Normal";
 		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + GetName() + " :" + msg + "\r\n";
@@ -326,12 +335,11 @@ void Channel::RemoveUserBan(int sock)
 
 bool Channel::GetUserBan(const User& user)
 {
-	for (size_t i = 0; i < this->_ban.size(); ++i)
+	for (std::map<int, User>::iterator it = this->_ban.begin(); it != this->_ban.end(); ++it)
 	{
-		if (this->_ban[i].getName().compare(user.getName()) == 0)
+		if (it->second.getName() == user.getName())
 			return true;
 	}
-
 	return false;
 }
 
@@ -351,3 +359,28 @@ int Channel::GetPop()
 
 	return pop;
 }
+
+
+void Channel::SetTopic(std::string topic)
+{
+	this->_topic = topic;
+}
+
+std::string Channel::GetTopic()
+{
+	return this->_topic;
+}
+
+
+void Channel::SetOpChannel(User& user)
+{
+	_OpChannel = &user;
+}
+
+int Channel::GetOpChannel()
+{
+    if (_OpChannel)
+        return _OpChannel->getSocket();
+    return -1;
+}
+

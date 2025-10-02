@@ -74,7 +74,7 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
     }
     Channel &chan = _Chan[idChan];
 
-    if (chan.GetGradeUser(kicker) == 0 || chan.GetGradeUser(kicker) == 1)
+    if (chan.GetGradeUser(kicker) == 0 || chan.GetGradeUser(kicker) == 1 || chan.GetOpChannel() == kicker.getSocket())
     {
         // 2) Cherche l'utilisateur dans la liste
         int targetFd = -1;

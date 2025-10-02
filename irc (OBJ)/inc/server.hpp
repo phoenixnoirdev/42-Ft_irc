@@ -60,6 +60,8 @@ class Server
 		bool	NickIsList(std::string nick);
 		void	_msgUser(User *target, User& user, std::string filename);
 
+        void handleWelcome(const User& user);
+
 
 	public:
 		//=================
@@ -85,10 +87,12 @@ class Server
 		std::string	GetNick(const std::string& str);
 		std::string	GetName(const std::string&  str, bool auth);
 
-		void	handleKickCommand(int clientSocket, const std::string& line);
-		void	handleBanCommand(int clientSocket, const std::string& chanName, const std::string mask);
-		void	handleBanlistCommand(int clientSocket, const std::string& chanName);
-		void	handleUnbanCommand(int clientSocket, const std::string& chanName, const std::string mask);
+        void handleLogin(int clientSocket, User& user);
+        
+        void handleKickCommand(int clientSocket, const std::string& line);
+        void handleBanCommand(int clientSocket, const std::string& chanName, const std::string mask);
+        void handleBanlistCommand(int clientSocket, const std::string& chanName);
+        void handleUnbanCommand(int clientSocket, const std::string& chanName, const std::string mask);
 
 		void	handleBrodcastMsgKB(User& user, std::string line);
 		void	handleBrodcastPrivateMsg(User& user, std::string line);
@@ -105,6 +109,8 @@ class Server
 		//void	handleFileList(int clientSocket, User& user, const std::string& line);
 		void	handleFileSend(User& user, const std::string& line);
 		void	handleFileGet(User& user, const std::string& line);
+
+        void handleTopic(User& user, const std::string& line);
 };
 
 
