@@ -21,6 +21,7 @@
 #include <vector>
 #include "user.hpp"
 #include "channel.hpp"
+#include "file.hpp"
 
 
 
@@ -30,74 +31,80 @@
 
 class Server
 {
-    private:
-        std::string     _ServName;
-        
-        std::string     _Pass;
-        uint16_t	    _Port;
-        struct in_addr  _Ip;
+	private:
+		std::string	_ServName;
+		
+		std::string		_Pass;
+		uint16_t		_Port;
+		struct in_addr	_Ip;
 
-        std::string     _RecvBuffer; 
-        int             _Listening;
-        bool            _ServeurOn;
-        
-        std::map<int, std::string> _PendingData;
+		std::string	_RecvBuffer; 
+		int			_Listening;
+		bool		_ServeurOn;
+		
+		std::map<int, std::string>	_PendingData;
 
-        std::map<int, User> _User;
-        std::map<int, Channel> _Chan;
+		std::map<int, User>			_User;
+		std::map<int, Channel>		_Chan;
+		std::map<std::string, File>	_Files;
 
-        User            _UserObj;
-        Channel         _ChanObj;
+		User	_UserObj;
+		Channel	_ChanObj;
 
-        fd_set _Readfds;
+		fd_set	_Readfds;
 
-        
-        //===============
-        //Fonctions private
-        //===============
-        bool NickIsList(std::string nick);
+		
+		//===============
+		//Fonctions private
+		//===============
+		bool	NickIsList(std::string nick);
+		void	_msgUser(User *target, User& user, std::string filename);
 
 
-    public:
-        //=================
-        //Constructeur
-        //=================
-        Server(std::string port, std::string pass);
-        ~Server();
+	public:
+		//=================
+		//Constructeur
+		//=================
+		Server(std::string port, std::string pass);
+		~Server();
 
-        //===============
-        //Fonctions public
-        //===============
-        void Shutdown();
-        void ShutSign();
-        void Run();
-        void Init();
-        void AcceptClient();
-        void HandleClientData(int clientSocket);
+		//===============
+		//Fonctions public
+		//===============
+		void	Shutdown();
+		void	ShutSign();
+		void	Run();
+		void	Init();
+		void	AcceptClient();
+		void	HandleClientData(int clientSocket);
 
-        bool PassCont(const std::string& str);
-        bool IsNickIsList(std::string nick);
+		bool	PassCont(const std::string& str);
+		bool	IsNickIsList(std::string nick);
 
-        std::string GetPwd(const std::string& str);
-        std::string GetNick(const std::string& str);
-        std::string GetName(const std::string&  str, bool auth);
+		std::string	GetPwd(const std::string& str);
+		std::string	GetNick(const std::string& str);
+		std::string	GetName(const std::string&  str, bool auth);
 
-        void handleKickCommand(int clientSocket, const std::string& line);
-        void handleBanCommand(int clientSocket, const std::string& chanName, const std::string mask);
-        void handleBanlistCommand(int clientSocket, const std::string& chanName);
-        void handleUnbanCommand(int clientSocket, const std::string& chanName, const std::string mask);
+		void	handleKickCommand(int clientSocket, const std::string& line);
+		void	handleBanCommand(int clientSocket, const std::string& chanName, const std::string mask);
+		void	handleBanlistCommand(int clientSocket, const std::string& chanName);
+		void	handleUnbanCommand(int clientSocket, const std::string& chanName, const std::string mask);
 
-        void handleBrodcastMsgKB(User& user, std::string line);
-        void handleBrodcastPrivateMsg(User& user, std::string line);
-        void handleBrodcastMsgChann(int clientSocket, User& user, std::string line, int idchan);
+		void	handleBrodcastMsgKB(User& user, std::string line);
+		void	handleBrodcastPrivateMsg(User& user, std::string line);
+		void	handleBrodcastMsgChann(int clientSocket, User& user, std::string line, int idchan);
 
-        void handleJoin(int clientSocket, User& user, const std::string& line);
+		void	handleJoin(int clientSocket, User& user, const std::string& line);
 
-        void handleQuit(int clientSocket, User& user, const std::string& line);
+		void	handleQuit(int clientSocket, User& user, const std::string& line);
 
-        void handleNames(User& user, const std::string& line);
+		void	handleNames(User& user, const std::string& line);
 
-        void handleList(User& user);
+		void	handleList(User& user);
+
+		//void	handleFileList(int clientSocket, User& user, const std::string& line);
+		void	handleFileSend(User& user, const std::string& line);
+		void	handleFileGet(User& user, const std::string& line);
 };
 
 

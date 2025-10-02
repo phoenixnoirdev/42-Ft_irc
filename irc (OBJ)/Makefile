@@ -44,6 +44,8 @@ FILES		=	main.cpp\
 				cmdList.cpp\
 				cmdNames.cpp\
 				msg.cpp\
+				file.cpp\
+				cmdFile.cpp\
 				
 ################################################################################
 #	Colors
