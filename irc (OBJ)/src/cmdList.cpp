@@ -25,7 +25,7 @@ void Server::handleList(User& user)
 
     for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
     {
-        msg = ":" + this->_ServName + " 322 " + user.getNick() + " #" + it->second.GetName() + " " + Utils::IntToString(it->second.GetPop()) + " :" + it->second.GetTopic() + "\r\n";
+        msg = ":" + this->_ServName + " 322 " + user.getNick() + " #" + it->second.GetName() + " " + Utils::IntToString(it->second.GetNbUser()) + " :" + it->second.GetTopic() + "\r\n";
         ::send(clientSocket, msg.c_str(), msg.size(), 0);
     }
 

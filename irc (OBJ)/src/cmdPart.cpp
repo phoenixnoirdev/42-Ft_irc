@@ -95,11 +95,14 @@ void Server::handleQuit(int clientSocket, User& user, const std::string& line)
         std::string joinMsg = ":" + user.getNick() + "!" + user.getName() + " QUIT #" + chanIt->second.GetName() + "\r\n";
         chanIt->second.BroadcastAll(joinMsg);
 
-        if (chanIt->second.GetPop() == 0)
+        if (chanIt->second.GetNbUser() == 0)
         {
-            std::cout << "[INFO] Suppression du channel " << chanIt->second.GetName() << " car le channel est vide " << std::endl;
+            if (idChan != 0)
+            {
+                std::cout << "[INFO] Suppression du channel " << chanIt->second.GetName() << " car le channel est vide " << std::endl;
 
-            this->_Chan.erase(idChan);
+                this->_Chan.erase(idChan);
+            } 
         }
     }
 }

@@ -70,6 +70,7 @@
         "thread": "cpp",
         "cfenv": "cpp",
         "typeindex": "cpp",
-        "semaphore": "cpp"
+        "semaphore": "cpp",
+        "fstream": "cpp"
     }
 }

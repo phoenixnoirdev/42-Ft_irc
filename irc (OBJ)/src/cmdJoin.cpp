@@ -25,6 +25,7 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
 
     std::string tmp = line.substr(5); // aprés "JOIN "
     std::string chanName = "";
+    std::string key = "";
     
     for (size_t i = 0; i < tmp.size(); i++)
     {
@@ -42,7 +43,14 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
   
         for (size_t i = 1; i < sp1; i++)
             chanName += tmp[i];
-    }
+
+        key = tmp.substr(sp1 + 1);
+
+        while (!key.empty() && key[0] == ' ')
+            key = key.substr(1);
+        while (!key.empty() && key[key.size() - 1] == ' ')
+            key = key.substr(0, key.size() - 1);
+        }
     else
     {
         for (size_t i = 1; i < tmp.size(); i++)
@@ -50,7 +58,7 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
     }
 
     
-    if (c != '#' && c != '&' && c != '+' && c != '!')
+    if ((c != '#' && c != '&' && c != '+' && c != '!') || chanName.empty())
     {
         std::string err = ":" + this->_ServName + " 479 " + user.getNick() + " " + chanName + " :Illegal channel name\r\n";
         ::send(clientSocket, err.c_str(), err.size(), 0);
@@ -90,12 +98,65 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
     }
     else
     {
-        user.addIdChan(idChan);
         std::map<int, Channel>::iterator chanIt = this->_Chan.find(idChan);
+
+        
+        // Verificar se usuário está banido
+        if (chanIt->second.GetUserBan(user))
+        {
+            std::string err = ":" + this->_ServName + " 474 " + user.getNick() + " " + chanName + " :Cannot join channel (+b)\r\n";
+            ::send(clientSocket, err.c_str(), err.size(), 0);
+            return;
+        }
+        
+        // Verificar modo invite-only (+i)
+        if (chanIt->second.isInviteOnly() && !chanIt->second.isInvited(user.getNick()))
+        {
+            std::string err = ":" + this->_ServName + " 473 " + user.getNick() + " " + chanName + " :Cannot join channel (+i)\r\n";
+            ::send(clientSocket, err.c_str(), err.size(), 0);
+            return;
+        }
+
+        // Verificar limite de usuários (+l)
+        if (!chanIt->second.canJoin())
+        {
+            std::string err = ":" + this->_ServName + " 471 " + user.getNick() + " " + chanName + " :Cannot join channel (+l)\r\n";
+            ::send(clientSocket, err.c_str(), err.size(), 0);
+            return;
+        }
+
+        
+        // Verificar senha do canal (+k)
+        if (chanIt->second.hasKey())
+        {
+            std::cout << "[DEBUG KEY] Canal tem senha. Provided: '" << key << "', Expected: '" << chanIt->second.getKey() << "'" << std::endl;
+        }
+        
+        if (!chanIt->second.checkKey(key))
+        {
+            std::cout << "[DEBUG KEY] BLOCKING JOIN: Wrong key for " << user.getNick() << std::endl;
+            std::string err = ":" + this->_ServName + " 475 " + user.getNick() + " " + chanName + " :Cannot join channel (+k)\r\n";
+            ::send(clientSocket, err.c_str(), err.size(), 0);
+            return;
+        }
+
+        // Remover convite se estava na lista (usado uma vez)
+        if (chanIt->second.isInvited(user.getNick()))
+        {
+            chanIt->second.removeInvite(user.getNick());
+        }
+
         chanIt->second.AddUser(user);
+
+        user.addIdChan(idChan);
 
         std::cout << "[INFO] User " << user.getNick() << " ajouté au channel " << chanIt->second.GetName() << std::endl;
         
+        
+        // Dar privilégios automáticos se configurado
+        giveAutoOpPrivileges(clientSocket, "#" + chanName);
+
+
         std::string joinMsg = ":" + user.getNick() + "!" + user.getName() + " JOIN #" + chanIt->second.GetName() + "\r\n";
         chanIt->second.BroadcastAll(joinMsg);
     }

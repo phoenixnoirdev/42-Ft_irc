@@ -48,6 +48,8 @@ FILES		=	main.cpp\
 				msg.cpp\
 				file.cpp\
 				cmdFile.cpp\
+				admin.cpp\
+				cmdMode.cpp\
 				
 ################################################################################
 #	Colors

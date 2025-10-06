@@ -16,7 +16,15 @@
 
 void Server::handleBrodcastMsgChann(int clientSocket, User& user, std::string line, int idchan)
 {
+    
     std::map<int, Channel>::iterator chanIt = this->_Chan.find(idchan);
+    
+    if (!chanIt->second.canSpeak(user))
+    {
+        std::string err = ":localhost 404 " + user.getNick() + " " + chanIt->second.GetName() + " :Cannot send to channel (moderated)\r\n";
+        ::send(clientSocket, err.c_str(), err.size(), 0);
+        return;
+    }
 
     size_t pos = line.find(" :");
     std::string msg;

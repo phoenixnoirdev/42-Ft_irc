@@ -21,21 +21,31 @@
  *
  * Initialise l'ID, le nom et le grade de visibilité à 0 ou vide.
  */
-Channel::Channel(): _id(0), _name(""), _topic(""), _mode(0), _OpChannel(NULL) {}
+Channel::Channel(): _id(0), _name(""), _user_limit(0), _topic("") 
+{
+	_modes.invite_only = false;
+	_modes.topic_op_only = false;
+	_modes.has_key = false;
+	_modes.moderated = false;
+	_modes.has_limit = false;
+}
 
-Channel::Channel(int id, std::string name): _topic(""), _mode(0), _OpChannel(NULL) 
+Channel::Channel(int id, std::string name): _user_limit(0), _topic(""), _OpChannel(NULL) 
 {
 	this->_id = id;
-
 	this->_name = name;
+
+	_modes.invite_only = false;
+	_modes.topic_op_only = false;
+	_modes.has_key = false;
+	_modes.moderated = false;
+	_modes.has_limit = false;
 }
 
 /**
  * @brief Constructeur de Channel avec ID et nom spécifiés.
  *
  * - Initialise l'ID et le nom du canal.
- * - Initialise le grade de visibilité à 0 par défaut.
- *
  * @param id Identifiant du canal.
  * @param name Nom du canal.
  */
@@ -43,9 +53,11 @@ Channel::Channel(const Channel& other)
 {
 	this->_id = other._id;
 	this->_name = other._name;
+	this->_modes = other._modes;
+	this->_key = other._key;
+	this->_user_limit = other._user_limit;
 	this->_topic = other._topic;
-	this->_mode = other._mode;
-	this->_OpChannel = other._OpChannel;
+	this->_invite_list = other._invite_list;
 	this->_grade_0 = other._grade_0;
 	this->_grade_1 = other._grade_1;
 	this->_grade_2 = other._grade_2;
@@ -68,9 +80,11 @@ Channel&	Channel::operator=(const Channel& other)
 	{
 		this->_id = other._id;
 		this->_name = other._name;
+		this->_modes = other._modes;
+		this->_key = other._key;
+		this->_user_limit = other._user_limit;
 		this->_topic = other._topic;
-		this->_mode = other._mode;
-		this->_OpChannel = other._OpChannel;
+		this->_invite_list = other._invite_list;
 		this->_grade_0 = other._grade_0;
 		this->_grade_1 = other._grade_1;
 		this->_grade_2 = other._grade_2;
@@ -138,62 +152,6 @@ void Channel::SetName(const std::string& str)
 std::string Channel::GetName() const
 {
 	return this->_name;
-}
-
-
-/*
-Actuellement le setMode permet de passer en mode +m via une detection 0/1
-
-changer du numerique en string pour prendre en charge +m, +p, +s, +t, +i
-*/
-void Channel::SetMode(const User& user)
-{
-	std::string ircMsg = "";
-	std::string msg = "";
-
-	if (this->_mode == 0)
-	{
-		this->_mode = 1;
-
-		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " +m\r\n";
-		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
-
-		msg = "Le channel vient de passer en mode: Moderer";
-	}
-	else
-	{
-		this->_mode = 0;
-
-		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " -m\r\n";
-		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
-
-		msg = "Le channel vient de passer en mode: Normal";
-	}
-
-
-	std::string ircMsgUser = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + GetName() + " :" + msg + "\r\n";
-	BroadcastAll(ircMsgUser);
-}
-
-
-void Channel::GetMode(const User& user)
-{
-	std::string ircMsg = "";
-
-	if (this->_mode == 0)
-	{
-		std::string msg = "Le channel est en mode: Normal";
-		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + GetName() + " :" + msg + "\r\n";
-
-		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
-	}
-	else
-	{
-		std::string msg = "Le channel est en mode: Moderer";
-		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " -m\r\n";
-
-		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
-	}
 }
 
 
@@ -348,28 +306,6 @@ std::map<int, User> Channel::GetBanMap()
 	return this->_ban;
 }
 
-int Channel::GetPop()
-{
-	int pop = 0;
-
-	pop += this->_grade_0.size();
-	pop += this->_grade_1.size();
-	pop += this->_grade_2.size();
-	pop += this->_grade_3.size();
-
-	return pop;
-}
-
-
-void Channel::SetTopic(std::string topic)
-{
-	this->_topic = topic;
-}
-
-std::string Channel::GetTopic()
-{
-	return this->_topic;
-}
 
 
 void Channel::SetOpChannel(User& user)
@@ -384,3 +320,333 @@ int Channel::GetOpChannel()
     return -1;
 }
 
+bool Channel::isOpChannel(User user)
+{
+	if (_OpChannel->getSocket() == user.getSocket())
+		return true;
+	
+	return false;
+}
+
+
+//===============
+//GESTION DES MODES IRC
+//===============
+
+// USERLIMIT (Modes +l/-l)
+int Channel::GetNbUser()
+{
+	int pop = 0;
+
+	pop += this->_grade_0.size();
+	pop += this->_grade_1.size();
+	pop += this->_grade_2.size();
+	pop += this->_grade_3.size();
+
+	return pop;
+}
+
+bool Channel::canJoin() const
+{
+	if (!this->_modes.has_limit) 
+		return true;
+	
+	return (const_cast<Channel*>(this)->GetNbUser() < getUserLimit());
+}
+
+int Channel::getUserLimit() const
+{
+	return this->_user_limit;
+}
+
+void Channel::setUserLimit(int limit)
+{
+	this->_modes.has_limit = (limit > 0);
+	this->_user_limit = limit;
+}
+
+void Channel::removeUserLimit()
+{
+	this->_modes.has_limit = false;
+	this->_user_limit = 0;
+}
+
+bool Channel::hasUserLimit() const
+{
+	return this->_modes.has_limit;
+}
+
+
+// MODERATED (Modes +m/-m)
+void Channel::setModerated(bool enabled)
+{
+	//std::string ircMsg = "";
+	//std::string msg = "";
+
+	this->_modes.moderated = enabled;
+
+	/*
+	if (isModerated() == true)
+	{
+		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " +m\r\n";
+		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
+
+		msg = "Le channel vient de passer en mode: Moderer";
+		std::string ircMsgUser = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + GetName() + " :" + msg + "\r\n";
+		
+		BroadcastAll(ircMsgUser);
+
+		return;
+	}
+
+	ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " -m\r\n";
+	::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
+
+	msg = "Le channel vient de passer en mode: Normal";
+
+	std::string ircMsgUser = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + GetName() + " :" + msg + "\r\n";
+	BroadcastAll(ircMsgUser);
+	*/
+}
+
+bool Channel::isModerated() const
+{
+	/*
+	std::string ircMsg = "";
+
+	if (!this->_modes.moderated)
+	{
+		std::string msg = "Le channel est en mode: Normal";
+		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + GetName() + " :" + msg + "\r\n";
+
+		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
+	}
+	else
+	{
+		std::string msg = "Le channel est en mode: Moderer";
+		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " -m\r\n";
+
+		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
+	}
+	*/
+
+	return this->_modes.moderated;
+}
+
+bool Channel::canSpeak(const User& user) const
+{
+	if (!this->_modes.moderated) return true;
+	int grade = const_cast<Channel*>(this)->GetGradeUser(user);
+	return (grade <= 2);
+}
+
+
+// TOPIC RESTRICTION (Modes +t/-t)
+void Channel::SetTopic(std::string topic)
+{
+	this->_topic = topic;
+}
+
+std::string Channel::GetTopic()
+{
+	return this->_topic;
+}
+
+void Channel::setTopicOpOnly(bool enabled)
+{
+	this->_modes.topic_op_only = enabled;
+}
+
+bool Channel::isTopicOpOnly() const
+{
+	return this->_modes.topic_op_only;
+}
+
+bool Channel::canChangeTopic(const User& user) const
+{
+	if (!this->_modes.topic_op_only)
+		return true;
+	
+	int grade = const_cast<Channel*>(this)->GetGradeUser(user);
+	
+	return (grade <= 1);
+}
+
+
+//Moderateur privileg (Modes +o/-o)
+void Channel::giveOp(const std::string& nick)
+{
+	for (std::map<int, User>::iterator it = this->_grade_3.begin(); it != this->_grade_3.end(); ++it)
+	{
+		if (it->second.getNick() == nick)
+		{
+			User user = it->second;
+
+			this->_grade_1.insert(std::make_pair(it->first, user));
+			this->_grade_3.erase(it);
+
+			return;
+		}
+	}
+	
+
+	for (std::map<int, User>::iterator it = this->_grade_2.begin(); it != this->_grade_2.end(); ++it)
+	{
+		if (it->second.getNick() == nick)
+		{
+			User user = it->second;
+
+			this->_grade_1.insert(std::make_pair(it->first, user));
+			this->_grade_2.erase(it);
+
+			return;
+		}
+	}
+}
+
+void Channel::removeOp(const std::string& nick)
+{
+	for (std::map<int, User>::iterator it = this->_grade_1.begin(); it != this->_grade_1.end(); ++it)
+	{
+		if (it->second.getNick() == nick)
+		{
+			User user = it->second;
+			
+			this->_grade_3.insert(std::make_pair(it->first, user));
+			this->_grade_1.erase(it);
+
+			return;
+		}
+	}
+}
+
+bool Channel::isOperator(const User& user) const
+{
+	int grade = const_cast<Channel*>(this)->GetGradeUser(user);
+
+	return (grade <= 1);
+}
+
+
+// INVITED-ONLY (Modes +i/-i)
+void Channel::setInviteOnly(bool enabled)
+{
+	this->_modes.invite_only = enabled;
+}
+
+bool Channel::isInviteOnly() const
+{
+	return this->_modes.invite_only;
+}
+
+void Channel::addInvite(const std::string& nick)
+{
+	this->_invite_list.insert(nick);
+}
+
+void Channel::removeInvite(const std::string& nick)
+{
+	this->_invite_list.erase(nick);
+}
+
+bool Channel::isInvited(const std::string& nick) const
+{
+	return this->_invite_list.find(nick) != _invite_list.end();
+}
+
+
+//CHANNEL KEY (Modes +k/-k)
+void Channel::setKey(const std::string& key)
+{
+	this->_modes.has_key = !key.empty();
+	this->_key = key;
+}
+
+void Channel::removeKey()
+{
+	this->_modes.has_key = false;
+	this->_key.clear();
+}
+
+bool Channel::hasKey() const
+{
+	return this->_modes.has_key;
+}
+
+bool Channel::checkKey(const std::string& provided_key) const
+{
+	if (!this->_modes.has_key) 
+		return true;
+	
+	return (this->_key == provided_key);
+}
+
+std::string Channel::getKey() const
+{
+	return this->_key;
+}
+
+
+//Methode generale appliquer au modes
+bool Channel::applyMode(const User& user, const std::string& modestring, const std::string& param)
+{
+	if (!isOpChannel(user) && !isOperator(user)) 
+		return false;
+	
+	if (modestring.length() < 2) 
+		return false;
+	
+	bool adding = (modestring[0] == '+');
+	char mode = modestring[1];
+	
+	switch(mode)
+	{
+		case 'i':
+			setInviteOnly(adding);
+			return true;
+		case 't':
+			setTopicOpOnly(adding);
+			return true;
+		case 'k':
+			if (adding && !param.empty())
+				setKey(param);
+			else if (!adding)
+				removeKey();
+			return true;
+		case 'o':
+			if (!param.empty())
+			{
+				if (adding)
+					giveOp(param);
+				else
+					removeOp(param);
+			}
+			return true;
+		case 'l':
+			if (adding && !param.empty())
+				setUserLimit(std::atoi(param.c_str()));
+			else if (!adding)
+				removeUserLimit();
+			return true;
+		case 'm':
+			setModerated(adding);
+			return true;
+	}
+	
+	return false;
+}
+
+std::string Channel::getModeString() const
+{
+	std::string modes = "+";
+	
+	if (this->_modes.invite_only) modes += "i";
+	if (this->_modes.topic_op_only) modes += "t";
+	if (this->_modes.has_key) modes += "k";
+	if (this->_modes.moderated) modes += "m";
+	if (this->_modes.has_limit) modes += "l";
+	
+	if (modes == "+") modes = "";
+	
+	return modes;
+}
