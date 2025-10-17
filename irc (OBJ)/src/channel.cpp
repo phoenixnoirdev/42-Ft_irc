@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: luis-fif <luis-fif@student.42.fr>          +#+  +:+       +#+        */
+/*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 08:36:42 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/09/17 13:10:11 by luis-fif         ###   ########.fr       */
+/*   Updated: 2025/10/17 16:05:03 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -435,8 +435,11 @@ bool Channel::isModerated() const
 
 bool Channel::canSpeak(const User& user) const
 {
-	if (!this->_modes.moderated) return true;
+	if (!this->_modes.moderated) 
+		return true;
+
 	int grade = const_cast<Channel*>(this)->GetGradeUser(user);
+	
 	return (grade <= 2);
 }
 
