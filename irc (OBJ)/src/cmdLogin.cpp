@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   cmdNames.cpp                                       :+:      :+:    :+:   */
+/*   cmdLogin.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 11:47:14 by phkevin           #+#    #+#             */
-/*   Updated: 2025/09/29 12:08:30 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/10/17 14:34:45 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ void Server::handleLogin(int clientSocket, User& user)
         return;
     }
 
-    user.setGrade(0);
+    user.setGrade(3);
     user.setAuth(true);
 
     std::cout << "[INFO] User " << user.getNick() << "@" << user.getName() << " authentifié !" << std::endl;
