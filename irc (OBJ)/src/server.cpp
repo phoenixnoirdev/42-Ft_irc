@@ -30,10 +30,6 @@ Server::Server(std::string port, std::string pass)
 	this->_Pass = pass;
 	this->_ServeurOn = true;
 
-	/*insertion of channel*/
-	this->_Chan.insert(std::make_pair(0, Channel(0, "default")));
-	this->_Chan[0].SetTopic("Canal principal - Bem-vindos ao IRC_42");
-
 	this->_ServName = "IRC_42";
 	
 	
@@ -221,6 +217,26 @@ void Server::HandleClientData(int clientSocket)
 			std::cout << "[INFO] User " << user.getNick() << "@" << user.getName() << " disconnected !" << std::endl;
 		else
 			std::cerr << "recv failed" << std::endl;
+        
+        std::set<int> idChan = user.getLstIdChan();
+        std::set<int>::iterator itId = idChan.begin();
+        while (itId != idChan.end())
+        {
+            int chanId = *itId;
+            std::map<int, Channel>::iterator itChan = this->_Chan.find(chanId);
+            if (itChan != this->_Chan.end())
+            {
+                Channel &chan = itChan->second;
+                chan.RemoveUser(user.getSocket());
+        
+                if (chan.GetNbUser() == 0)
+                {
+                    std::cout << "[INFO] Channel " << chan.GetName() << " is now empty and will be deleted." << std::endl;
+                    this->_Chan.erase(itChan);
+                }
+            }
+            ++itId;
+        }
 
 		user.closeSocket();
 		FD_CLR(clientSocket, &_Readfds);
@@ -449,8 +465,8 @@ void Server::HandleClientData(int clientSocket)
         {
             handleList(user);
         }
-        //NAME
-        else if (line.find("NAME ") == 0)
+        //NAMES
+        else if (line.find("NAMES ") == 0)
         {
             handleNames(user, line);
         }
@@ -556,10 +572,13 @@ void Server::Run()
 
 		for (std::map<int, User>::iterator it = this->_User.begin(); it != this->_User.end();)
 		{
-			int clientSock = it->second.getSocket();
-			++it;
-			if (FD_ISSET(clientSock, &_Readfds))
-				HandleClientData(clientSock);
+            int clientSock = it->second.getSocket();
+
+            HandleClientData(clientSock);
+        
+            it = this->_User.find(clientSock);
+            if (it != this->_User.end())
+                ++it;
 		}
 	}
 

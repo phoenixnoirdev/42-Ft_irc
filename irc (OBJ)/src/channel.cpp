@@ -206,6 +206,23 @@ int Channel::GetGradeUser(const User& user)
 	return -1;
 }
 
+std::map<int, User> Channel::GetLstGrade(int e) const
+{
+	if (e == 0)
+		return this->_grade_0;
+
+	if (e == 1)
+		return this->_grade_1;
+
+	if (e == 2)
+		return this->_grade_2;
+
+	if (e == 3)
+		return this->_grade_3;
+	
+	return this->_grade_3;
+}
+
 
 /**
  * @brief Diffuse un message de type JOIN à tous les utilisateurs du canal.
@@ -380,56 +397,11 @@ bool Channel::hasUserLimit() const
 // MODERATED (Modes +m/-m)
 void Channel::setModerated(bool enabled)
 {
-	//std::string ircMsg = "";
-	//std::string msg = "";
-
 	this->_modes.moderated = enabled;
-
-	/*
-	if (isModerated() == true)
-	{
-		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " +m\r\n";
-		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
-
-		msg = "Le channel vient de passer en mode: Moderer";
-		std::string ircMsgUser = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + GetName() + " :" + msg + "\r\n";
-		
-		BroadcastAll(ircMsgUser);
-
-		return;
-	}
-
-	ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " -m\r\n";
-	::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
-
-	msg = "Le channel vient de passer en mode: Normal";
-
-	std::string ircMsgUser = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + GetName() + " :" + msg + "\r\n";
-	BroadcastAll(ircMsgUser);
-	*/
 }
 
 bool Channel::isModerated() const
 {
-	/*
-	std::string ircMsg = "";
-
-	if (!this->_modes.moderated)
-	{
-		std::string msg = "Le channel est en mode: Normal";
-		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + GetName() + " :" + msg + "\r\n";
-
-		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
-	}
-	else
-	{
-		std::string msg = "Le channel est en mode: Moderer";
-		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " -m\r\n";
-
-		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
-	}
-	*/
-
 	return this->_modes.moderated;
 }
 

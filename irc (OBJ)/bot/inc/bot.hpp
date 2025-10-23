@@ -27,6 +27,7 @@ class Bot
         uint16_t	                _Port;
         struct in_addr              _Ip;
         std::string                 _Pass;
+        std::string                 _Chan;
         int                         _Sock;
         bool                        _BotOn;
         std::vector<std::string>    _MsgFR;
@@ -42,7 +43,7 @@ class Bot
         //=================
         //Constructeur
         //=================
-        Bot(std::string ip, std::string port, std::string pass);
+        Bot(std::string ip, std::string port, std::string pass, std::string chan);
         ~Bot();
 
         //===============
