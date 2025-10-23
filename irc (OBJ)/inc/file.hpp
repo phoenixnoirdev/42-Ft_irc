@@ -21,8 +21,10 @@ class	File
 	private:
 		std::string	_fileName;
 		std::string	_fileDir;
+		std::string	_channel;
 		std::string	_sender;
 		std::string	_captor;
+		bool		_global;
 	
 	public:
 		//=================
@@ -37,8 +39,17 @@ class	File
 
 		std::string	getFileName() const;
 		std::string	getFileDir() const;
+		std::string	getChannel() const;
 		std::string	getSender() const;
 		std::string	getCaptor() const;
+		bool		getGlobal() const;
+
+		void		setFileName(std::string fileName);
+		void		setFileDir(std::string fileDir);
+		void		setChannel(std::string channel);
+		void		setSender(std::string sender);
+		void		setCaptor(std::string captor);
+		void		setGlobal(bool global);
 };
 
 #endif

@@ -110,7 +110,7 @@ class Server
 
 		void	handleList(User& user);
 
-		//void	handleFileList(int clientSocket, User& user, const std::string& line);
+		void	handleFileList();
 		void	handleFileSend(User& user, const std::string& line);
 		void	handleFileGet(User& user, const std::string& line);
 

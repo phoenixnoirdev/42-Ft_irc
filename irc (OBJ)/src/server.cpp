@@ -470,10 +470,10 @@ void Server::HandleClientData(int clientSocket)
 			handleFileGet(user, line);
 		}
 		//FLIST
-		/*else if (line.find("FLIST ") == 0)
+		else if (line.find("FLIST ") == 0)
 		{
 			handleFileList();
-		}*/
+		}
 		// OPER - Comando para obter privilégios de operador
 		else if (line.find("OPER ") == 0)
 		{
