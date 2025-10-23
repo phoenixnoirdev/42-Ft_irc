@@ -27,13 +27,14 @@
  * @param port Numéro de port du serveur sous forme de chaîne.
  * @param pass Mot de passe utilisé pour l'authentification.
  */
-Bot::Bot(std::string ip, std::string port, std::string pass)
+Bot::Bot(std::string ip, std::string port, std::string pass, std::string chan)
 {
     srand(time(NULL)); 
 
     this->_Port = Utils::PortConvert(port);
     this->_Ip = Utils::IpConvert(ip);
     this->_Pass = pass;
+    this->_Chan = chan;
     this->_BotOn = true;
 
 
@@ -133,6 +134,7 @@ void Bot::connectToServer()
     std::cout << YELLOW << "-- IP: " << CYAN << inet_ntoa(this->_Ip) << RESET << std::endl;
     std::cout << YELLOW << "-- Port: " << CYAN << this->_Port << RESET << std::endl;
     std::cout << YELLOW << "-- Pwd: " << CYAN << this->_Pass <<  RESET << std::endl;
+    std::cout << YELLOW << "-- Chan: " << CYAN << this->_Chan <<  RESET << std::endl;
     std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
 }
 
@@ -156,8 +158,8 @@ void Bot::loginBot()
 
     sendRaw(std::string("NICK ") + NICK + "\r\n");
     sendRaw(std::string("USER ") + NAME + " 0 * :" + NAME + "\r\n");
-    sendRaw(std::string("JOIN ") + CHAN_NAME + "\r\n");
-    sendRaw(std::string("NAMES ") + CHAN_NAME + "\r\n");
+    sendRaw(std::string("JOIN ") + "#" + this->_Chan + "\r\n");
+    sendRaw(std::string("NAMES ") + "#" + this->_Chan + "\r\n");
 }
 
 /**
@@ -246,13 +248,13 @@ void Bot::sendMessage()
     if (std::string(BOTLANG) == "FR")
     {
         randomValue = rand() % this->_MsgFR.size();
-        sendRaw("PRIVMSG " + std::string(CHAN_NAME) + " :" + this->_MsgFR[randomValue] + "\r\n");
+        sendRaw("PRIVMSG #" + this->_Chan + " :" + this->_MsgFR[randomValue] + "\r\n");
     }
 
     if (std::string(BOTLANG) == "ENG")
     {
         randomValue = rand() % this->_MsgENG.size();
-        sendRaw("PRIVMSG " + std::string(CHAN_NAME) + " :" + this->_MsgENG[randomValue] + "\r\n");
+        sendRaw("PRIVMSG #" + this->_Chan + " :" + this->_MsgENG[randomValue] + "\r\n");
     }
 }
 

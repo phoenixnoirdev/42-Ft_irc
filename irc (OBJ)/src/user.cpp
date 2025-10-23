@@ -277,6 +277,12 @@ void User::removeIdChan(int id)
 	this->_idChan.erase(id);
 }
 
+// Retourn la liste des id
+std::set<int>  User::getLstIdChan()
+{
+	return _idChan;
+}
+
 // Retourn si le chan est dans la liste
 bool User::getIdChan(int id)
 {

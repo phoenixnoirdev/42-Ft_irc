@@ -85,6 +85,7 @@ class User
 		//User in chan
 		void addIdChan(int id);
 		void removeIdChan(int id);
+		std::set<int>  getLstIdChan();
 		bool getIdChan(int id);
 
 		//Authentification

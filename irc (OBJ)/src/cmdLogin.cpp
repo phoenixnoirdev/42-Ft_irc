@@ -37,32 +37,6 @@ void Server::handleLogin(int clientSocket, User& user)
     user.setAuth(true);
 
     std::cout << "[INFO] User " << user.getNick() << "@" << user.getName() << " authentifié !" << std::endl;
-
-
-    std::map<int, Channel>::iterator chanIt = this->_Chan.find(0);
-    if (chanIt != this->_Chan.end())
-    {
-        //Ajout le chan a l'user
-        user.addIdChan(chanIt->second.GetId());
-
-        // Gestion du ban a la tentative de join le chan par default
-        if (chanIt->second.GetUserBan(user) == true)
-        {
-            send(clientSocket, "You are banned from this channel.\n", 30, 0);
-            
-            std::cout << RED << "[INFO] Banned user " << user.getNick() << " tried to connect to chan: " << chanIt->second.GetName() << std::endl;
-            
-            return;
-        }
-        handleWelcome(user);
-
-        chanIt->second.AddUser(user);
-        std::cout << "[INFO] User " << user.getNick() << " ajouté au channel " << chanIt->second.GetName() << std::endl;
-        
-        std::string joinMsg = ":" + user.getNick() + "!" + user.getName() + " JOIN #" + chanIt->second.GetName() + "\r\n";
-
-        chanIt->second.BroadcastAll(joinMsg);
-    }
 }
 
 void Server::handleWelcome(const User& user)

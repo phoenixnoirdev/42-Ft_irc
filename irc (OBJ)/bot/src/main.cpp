@@ -68,13 +68,13 @@ void SigHandler(int signum)
 
 int main(int argc, char** argv)
 {
-	if (argc != 4)
+	if (argc != 5)
 	{
 		std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
 		if (std::string(LANG) == "FR")
-			std::cout << CYAN << "Utilisation: ./botirc [ip] [port] [password]" << RESET << std::endl;
+			std::cout << CYAN << "Utilisation: ./botirc [ip] [port] [password] [channel]" << RESET << std::endl;
 		else
-			std::cout << CYAN << "Usage: ./botirc [ip] [port] [password]" << RESET << std::endl;
+			std::cout << CYAN << "Usage: ./botirc [ip] [port] [password] [channel]" << RESET << std::endl;
 		std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
 		return 1;
 	}
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
 	
     try
 	{
-		Bot Bot(argv[1], argv[2], argv[3]);
+		Bot Bot(argv[1], argv[2], argv[3], argv[4]);
 		BotPtr = &Bot;
 	}
 	catch (const std::exception& e)

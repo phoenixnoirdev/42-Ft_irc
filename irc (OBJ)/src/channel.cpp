@@ -380,56 +380,11 @@ bool Channel::hasUserLimit() const
 // MODERATED (Modes +m/-m)
 void Channel::setModerated(bool enabled)
 {
-	//std::string ircMsg = "";
-	//std::string msg = "";
-
 	this->_modes.moderated = enabled;
-
-	/*
-	if (isModerated() == true)
-	{
-		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " +m\r\n";
-		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
-
-		msg = "Le channel vient de passer en mode: Moderer";
-		std::string ircMsgUser = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + GetName() + " :" + msg + "\r\n";
-		
-		BroadcastAll(ircMsgUser);
-
-		return;
-	}
-
-	ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " -m\r\n";
-	::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
-
-	msg = "Le channel vient de passer en mode: Normal";
-
-	std::string ircMsgUser = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + GetName() + " :" + msg + "\r\n";
-	BroadcastAll(ircMsgUser);
-	*/
 }
 
 bool Channel::isModerated() const
 {
-	/*
-	std::string ircMsg = "";
-
-	if (!this->_modes.moderated)
-	{
-		std::string msg = "Le channel est en mode: Normal";
-		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG #" + GetName() + " :" + msg + "\r\n";
-
-		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
-	}
-	else
-	{
-		std::string msg = "Le channel est en mode: Moderer";
-		ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost MODE #" + GetName() + " -m\r\n";
-
-		::send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
-	}
-	*/
-
 	return this->_modes.moderated;
 }
 
