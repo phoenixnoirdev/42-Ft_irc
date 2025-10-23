@@ -73,7 +73,11 @@ struct in_addr Utils::IpConvert(const std::string& ipStr)
 
     int status = getaddrinfo(ipStr.c_str(), NULL, &hints, &res);
     if (status != 0 || !res)
+    {
         std::cerr << RED << "Error: Getaddrinfo error: " << gai_strerror(status) << RESET << std::endl;
+        outAddr.s_addr = INADDR_NONE;
+        return outAddr;
+    }
 
     struct sockaddr_in* ipv4 = (struct sockaddr_in*)res->ai_addr;
     outAddr = ipv4->sin_addr;

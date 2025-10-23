@@ -21,6 +21,6 @@
 # define NAME "Bot_IRC"
 # define NICK "Bot_IRC"
 # define REAL "Bot_IRC"
-# define CHAN_NAME "Default"
+# define CHAN_NAME "#default"
 
 #endif //PARAM.HPP

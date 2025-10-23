@@ -131,7 +131,7 @@ void Bot::connectToServer()
     std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
     std::cout << GREEN << "Bot connecté au serveur IRC" << RESET << std::endl;
     std::cout << YELLOW << "-- IP: " << CYAN << inet_ntoa(this->_Ip) << RESET << std::endl;
-    std::cout << YELLOW << " Port: " << CYAN << this->_Port << RESET << std::endl;
+    std::cout << YELLOW << "-- Port: " << CYAN << this->_Port << RESET << std::endl;
     std::cout << YELLOW << "-- Pwd: " << CYAN << this->_Pass <<  RESET << std::endl;
     std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
 }
