@@ -107,6 +107,7 @@ class Server
 		void	handleQuit(int clientSocket, User& user, const std::string& line);
 
 		void	handleNames(User& user, const std::string& line);
+		void 	sendNamesReply(User &user, Channel &chan);
 
 		void	handleList(User& user);
 

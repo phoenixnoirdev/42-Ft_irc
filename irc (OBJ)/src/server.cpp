@@ -465,8 +465,8 @@ void Server::HandleClientData(int clientSocket)
         {
             handleList(user);
         }
-        //NAME
-        else if (line.find("NAME ") == 0)
+        //NAMES
+        else if (line.find("NAMES ") == 0)
         {
             handleNames(user, line);
         }

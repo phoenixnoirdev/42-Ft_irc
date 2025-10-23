@@ -206,6 +206,23 @@ int Channel::GetGradeUser(const User& user)
 	return -1;
 }
 
+std::map<int, User> Channel::GetLstGrade(int e) const
+{
+	if (e == 0)
+		return this->_grade_0;
+
+	if (e == 1)
+		return this->_grade_1;
+
+	if (e == 2)
+		return this->_grade_2;
+
+	if (e == 3)
+		return this->_grade_3;
+	
+	return this->_grade_3;
+}
+
 
 /**
  * @brief Diffuse un message de type JOIN à tous les utilisateurs du canal.

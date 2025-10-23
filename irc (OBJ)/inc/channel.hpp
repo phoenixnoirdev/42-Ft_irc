@@ -84,6 +84,7 @@ class Channel
 		// USER 
 		void AddUser(const User& user);		// Ajoute un user lorsqu'il se log au channel
 		int GetGradeUser(const User& user);	// Retourn le grade d'un user dans le channel
+		std::map<int, User> GetLstGrade(int e) const; // Retourn la liste des grade souhaiter
 
 		void AddUserBan(const User& user); 	// Ajoute un user a la liste des ban
 		void RemoveUserBan(int sock);		// Unban un user
