@@ -70,55 +70,6 @@ void SigHandler(int signum)
 
 int main(int argc, char** argv)
 {
-	//Teste bdd user et channel
-	/*if (argc == 1)
-	{
-		User	userDB = User();
-
-		std::cout << (userDB.empty() ? "Is empty" : "Is not empty") << std::endl;
-		std::cout << userDB.hasPass("Skombadi") << std::endl;
-		userDB.addUser("Name1", "Nickname1", "123456", 5, 4);
-		userDB.addUser("Name2", "Nickname2", "Pipipoupou", 127, 5);
-		userDB.addUser("Name3", "Nickname34", "Skibidi", 2, 6);
-		userDB.addUser("Name4", "Nickname567", "Skombadi", 29, 7);
-		std::cout << (userDB.empty() ? "Is empty" : "Is not empty") << std::endl;
-		std::cout << "Size: " << userDB.getSize() << std::endl;
-		std::cout << userDB.hasUUID("Hello") << std::endl;
-		std::cout << userDB.getUserByPass("Pipipoupou")->grade << std::endl;
-		std::cout << userDB.getUserByIndex(2)->name << std::endl;
-		userDB.removeUserByUUID(userDB.getUserByIndex(2)->uuid);
-		std::cout << userDB.getUserByIndex(2)->name << std::endl;
-		std::cout << userDB.hasPass("Skombadi") << std::endl;
-		std::cout << userDB.hasPass("Skombady") << std::endl;
-		std::cout << userDB.getUserByNick("Nickname567")->uuid << std::endl;
-		//userDB.removeUserByUUID(userDB.getTop()->uuid);
-		//userDB.removeUserByUUID(userDB.getTop()->uuid);
-		//userDB.removeUserByUUID(userDB.getTop()->uuid);
-		std::cout << (userDB.empty() ? "Is empty" : "Is not empty") << std::endl;
-
-		Channel	channelDB = Channel();
-		channelDB.addChannel(0, "General", 3, userDB.getTop());
-		channelDB.addChannel(1, "Trade", 3, userDB.getTop());
-		channelDB.addChannel(2, "Secret", 3, userDB.getBot());
-		t_channel	*general = channelDB.getTop();
-		t_user		*top = userDB.getTop();
-		t_user		*skibidi = userDB.getUserByPass("Pipipoupou");
-		channelDB.addUserChannel(general, skibidi, 1);
-		channelDB.addUserChannel(general, skibidi, 0);
-		std::cout << channelDB.getChannelUserDisplayName(general, top) << std::endl;
-		std::cout << channelDB.getChannelUserDisplayName(general, skibidi) << std::endl;
-		channelDB.setChannelUserDisplayName(general, top, "Nemik, the Creator");
-		channelDB.setChannelUserDisplayName(general, skibidi, "God of the Underwrold");
-		std::cout << channelDB.getChannelUserDisplayName(general, top) << std::endl;
-		std::cout << channelDB.getChannelUserDisplayName(general, skibidi) << std::endl;
-		channelDB.demoteChannelUser(general, skibidi, 3);
-		channelDB.setChannelUserDisplayName(general, skibidi, "Fallen God of the Underwrold");
-		std::cout << channelDB.getChannelUserDisplayName(general, top) << std::endl;
-		std::cout << channelDB.getChannelUserDisplayName(general, skibidi) << std::endl;
-
-		return (0);
-	}*/
-
 	//Retourn l'usage 
 	if (argc != 3)
 	{

@@ -562,6 +562,7 @@ void Server::Run()
 		if (ret < 0)
 			break;
 
+        
 		if (ret == 0)
 			continue;
 
@@ -573,12 +574,18 @@ void Server::Run()
 		for (std::map<int, User>::iterator it = this->_User.begin(); it != this->_User.end();)
 		{
             int clientSock = it->second.getSocket();
-
+			++it;
+			if (FD_ISSET(clientSock, &_Readfds))
+				HandleClientData(clientSock);
+            
+            //NE PAS SUPPRIMER POUR TRAVAIL HORS 42 PHKEVIN
+            /*
             HandleClientData(clientSock);
         
             it = this->_User.find(clientSock);
             if (it != this->_User.end())
                 ++it;
+            */
 		}
 	}
 
