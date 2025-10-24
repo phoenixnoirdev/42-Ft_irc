@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 08:36:42 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/10/17 16:05:03 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/10/24 16:37:59 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -175,6 +175,11 @@ void Channel::AddUser(const User& user)
 
 	if (user.getGrade() == 3)
 		this->_grade_3.insert(std::make_pair(user.getSocket(), user));
+}
+
+void Channel::AddUserCreatChan(const User& user)
+{
+	this->_grade_0.insert(std::make_pair(user.getSocket(), user));
 }
 
 int Channel::GetGradeUser(const User& user)

@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 11:47:00 by phkevin           #+#    #+#             */
-/*   Updated: 2025/09/29 12:47:16 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/10/24 16:38:46 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,7 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
         this->_Chan.insert(std::make_pair(idNeChan, Channel(idNeChan, chanName)));
         user.addIdChan(idNeChan);
         std::map<int, Channel>::iterator chanIt = this->_Chan.find(idNeChan);
-        chanIt->second.AddUser(user);
+        chanIt->second.AddUserCreatChan(user);
         chanIt->second.SetOpChannel(user);
         std::cout << "[INFO] User " << user.getNick() << " ajouté au channel " << chanIt->second.GetName() << " qu'il a cree" << std::endl;
         

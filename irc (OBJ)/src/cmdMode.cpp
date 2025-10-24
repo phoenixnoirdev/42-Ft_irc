@@ -166,9 +166,9 @@ void handleModeCommand(int clientSocket, const std::string& line, std::map<int, 
     std::string param = (tokens.size() > 3) ? tokens[3] : "";
     
     // Verificar se o usuário é operador do canal
-    if (!channel->isOperator(user))
+    if (channel->GetGradeUser(user) == 3 || channel->GetGradeUser(user) == 2)
     {
-        sendIRCError(clientSocket, 482, channelName + " :You're not channel operator");
+        sendIRCError(clientSocket, 482, channelName + " :You're not channel operator --- dd");
         return;
     }
     
@@ -313,13 +313,6 @@ void handleInviteCommand(int clientSocket, const std::string& line, std::map<int
         return;
         
     User& inviter = users[clientSocket];
-    
-    // Verificar se tem permissão para convidar (deve ser operador)
-    if (!channel->isOperator(inviter))
-    {
-        sendIRCError(clientSocket, 482, channelName + " :You're not channel operator");
-        return;
-    }
     
     // Procurar usuário alvo
     User* target = NULL;

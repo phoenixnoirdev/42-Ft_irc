@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: luis-fif <luis-fif@student.42.fr>          +#+  +:+       +#+        */
+/*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 11:21:29 by phkevin           #+#    #+#             */
-/*   Updated: 2025/09/17 13:09:54 by luis-fif         ###   ########.fr       */
+/*   Updated: 2025/10/24 16:38:37 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,7 @@ class Channel
 
 		// USER 
 		void AddUser(const User& user);		// Ajoute un user lorsqu'il se log au channel
+		void AddUserCreatChan(const User& user); // Add user a la creation d'un channel
 		int GetGradeUser(const User& user);	// Retourn le grade d'un user dans le channel
 		std::map<int, User> GetLstGrade(int e) const; // Retourn la liste des grade souhaiter
 
