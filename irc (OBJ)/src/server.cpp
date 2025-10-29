@@ -17,10 +17,18 @@
 //=================
 
 /**
- * @brief Constructeur du serveur : initialise, crée un canal par défaut et lance le serveur.
+ * @brief Constructeur de la classe Server.
  *
- * @param port Port d'écoute du serveur.
- * @param pass Mot de passe du serveur.
+ * Initialise un serveur IRC avec le port et le mot de passe fournis.
+ * Configure l'adresse IP locale, le nom du serveur et les paramètres
+ * d'administration, puis lance les routines principales d'initialisation
+ * et d'exécution.
+ *
+ * @param port Chaîne représentant le port d'écoute du serveur.
+ * @param pass Chaîne contenant le mot de passe d'accès au serveur.
+ *
+ * @note Appelle les fonctions loadAdminConfig(), displayAdminInfo(),
+ *       Init() et Run() pour configurer et démarrer le serveur.
  */
 Server::Server(std::string port, std::string pass)
 {
@@ -32,8 +40,6 @@ Server::Server(std::string port, std::string pass)
 
 	this->_ServName = "IRC_42";
 	
-	
-	// Initialize admin system
 	this->_hasMainAdmin = false;
 	this->_mainAdminNick = "";
 	loadAdminConfig();
@@ -47,7 +53,11 @@ Server::Server(std::string port, std::string pass)
 }
 
 /**
- * @brief Destructeur par défaut de la classe Server.
+ * @brief Destructeur de la classe Server.
+ *
+ * Libère les ressources éventuellement allouées par le serveur avant
+ * sa destruction. Actuellement, aucune opération spécifique n'est
+ * effectuée dans ce destructeur.
  */
 Server::~Server()
 {
@@ -60,7 +70,11 @@ Server::~Server()
 //===============
 
 /**
- * @brief Arrête le serveur en mettant le drapeau _ServeurOn à false.
+ * @brief Arrête le serveur en modifiant son état interne.
+ *
+ * Met à false le membre _ServeurOn pour indiquer que le serveur
+ * doit cesser son fonctionnement. Ne fait rien si le serveur est
+ * déjà arrêté.
  */
 void Server::ShutSign()
 {
@@ -71,7 +85,15 @@ void Server::ShutSign()
 }
 
 /**
- * @brief Ferme proprement le serveur en nettoyant utilisateurs, canaux et sockets.
+ * @brief Ferme proprement le serveur et libère toutes les ressources.
+ *
+ * Cette fonction :
+ *  - Ferme tous les sockets des utilisateurs et vide la liste _User.
+ *  - Supprime tous les canaux du serveur (_Chan).
+ *  - Ferme le socket d'écoute si ouvert (_Listening).
+ *  - Affiche des messages informatifs sur les étapes de fermeture.
+ *
+ * @note Garantit une fermeture propre sans fuite de ressources.
  */
 void Server::Shutdown()
 {
@@ -110,14 +132,17 @@ void Server::Shutdown()
 //===============
 
 /**
- * @brief Initialise le serveur en créant la socket, configurant les options et
- *        en liant l'adresse IP et le port. Met ensuite la socket en mode écoute.
+ * @brief Initialise le serveur et configure le socket d'écoute.
  *
- * - Crée une socket TCP.
- * - Configure SO_REUSEADDR pour réutiliser l'adresse rapidement.
- * - Lie la socket à l'adresse IP et au port définis.
- * - Passe la socket en écoute pour accepter les connexions entrantes.
- * - Affiche les informations du serveur (port, IP, mot de passe) sur la console.
+ * Cette fonction :
+ *  - Crée le socket d'écoute (_Listening) pour les connexions TCP.
+ *  - Configure les options du socket (SO_REUSEADDR).
+ *  - Associe le socket à l'adresse IP et au port spécifiés.
+ *  - Met le socket en mode écoute avec la taille maximale de backlog.
+ *  - Affiche des informations sur l'état du serveur.
+ *
+ * @note Appelle Error::ErrorServ() en cas d'échec de création, de
+ *       configuration, de bind ou de listen.
  */
 void Server::Init()
 {
@@ -152,15 +177,16 @@ void Server::Init()
 }
 
 /**
- * @brief Accepte une nouvelle connexion client et l'ajoute à la liste des utilisateurs.
+ * @brief Accepte une nouvelle connexion client sur le serveur.
  *
- * - Attend une connexion entrante sur la socket d'écoute.
- * - Crée un objet User associé au descripteur de socket du client.
- * - Ajoute le client dans la map _User pour le gérer.
- * - Affiche l'adresse IP et le port du client connecté.
- * - En mode DEBUG, affiche le descripteur de socket du client.
+ * Cette fonction :
+ *  - Attend et accepte une connexion entrante sur le socket d'écoute.
+ *  - Crée un objet User pour le client et l'ajoute à la map _User.
+ *  - Affiche les informations de connexion (IP et port) du client.
+ *
+ * @note Appelle Error::ErrorServ() si accept() échoue.
+ * @note Le descripteur du client est utilisé comme clé dans _User.
  */
-
 void Server::AcceptClient()
 {
 	sockaddr_in client;
@@ -191,18 +217,23 @@ void Server::AcceptClient()
 }
 
 /**
- * @brief Traite les données reçues d'un client spécifique.
+ * @brief Traite les données reçues d'un client connecté.
  *
- * - Lit les données depuis le socket du client.
- * - Gère la déconnexion ou les erreurs de réception.
- * - Concatène les nouvelles données au buffer de réception de l'utilisateur.
- * - Analyse les commandes IRC : NICK, USER, PASS, PRIVMSG.
- * - Authentifie l'utilisateur si NICK, USER et PASS sont reçus.
- * - Ajoute l'utilisateur au canal par défaut après authentification.
- * - Diffuse les messages privés (PRIVMSG) aux membres du canal.
- * - Affiche des informations et messages DEBUG sur la console.
+ * Cette fonction :
+ *  - Lit les données depuis le socket du client.
+ *  - Gère la déconnexion si le client ferme la connexion ou en cas
+ *    d'erreur de réception.
+ *  - Analyse et traite chaque ligne de commande IRC reçue :
+ *      - NICK, USER, PASS pour l'authentification.
+ *      - JOIN, PART, PRIVMSG, KICK, MODE, INVITE, TOPIC.
+ *      - Gestion des fichiers FSEND, FGET, FLIST.
+ *      - Commandes administratives : OPER, ADMIN, GRADES, SETGRADE.
+ *  - Met à jour le buffer de réception et l'état de l'utilisateur.
  *
- * @param clientSocket Descripteur de socket du client à traiter.
+ * @param clientSocket Descripteur du socket du client à traiter.
+ *
+ * @note Utilise la map _User pour accéder à l'objet User correspondant.
+ * @note Supprime l'utilisateur et ferme son socket en cas de déconnexion.
  */
 void Server::HandleClientData(int clientSocket)
 {
@@ -263,55 +294,37 @@ void Server::HandleClientData(int clientSocket)
     {
         std::string line = data.substr(0, pos);
         data.erase(0, pos + 2);
-        
-        //std::cout << line << std::endl;
 
         if (line.find("NICK ") == 0)
         {
             user.setNick(GetNick(line));
-            /*
-            if (getBanList().isBanned(user.getNick()))
-            {
-                std::string msg = ":" + std::string("server") +
-                                " 465 " + user.getNick() +
-                                " :You're banned from this server\r\n";
-                send(clientSocket, msg.c_str(), msg.size(), 0);
-                user.closeSocket();
-                FD_CLR(clientSocket, &_Readfds);
-                _User.erase(clientSocket);
-                return;
-            }
-            */
+
             if (DEBUG == true)
                 std::cout << "[DEBUG] NICK: " << user.getNick() << "-----" << user.getName()  << std::endl;
         }
-        // NICKNAME
         else if (line.find("USER ") == 0)
         {
             user.setName(GetName(line, user.getAuth()));
+
             if (DEBUG == true)
                 std::cout << "[DEBUG] USER: " << user.getName() << std::endl;
         }
-        // PASSWORD
         else if (line.find("PASS ") == 0)
         {
             user.setPass(GetPwd(line));
+
             if (DEBUG == true)
                 std::cout << "[DEBUG] PASS: " << user.getPass() << std::endl;
         }
-        // KICK
         else if (line.find("KICK ") == 0)
         {
             handleKickCommand(clientSocket, line);
             continue;
         }
-		// MODE - Suporte completo para modos IRC
         else if (line.find("MODE ") == 0)
         {
-            // Primeiro verificar se é um comando de ban (manter compatibilidade)
-            std::string rest = line.substr(5); // tout après "MODE "
+            std::string rest = line.substr(5);
     
-            // 1) Extraire le channel
             size_t sp = rest.find(' ');
             std::string chanName;
             std::string param;
@@ -327,7 +340,6 @@ void Server::HandleClientData(int clientSocket)
                 param = rest.substr(sp + 1);
             }
         
-            // 2) Extraire le mode et éventuellement le mask
             sp = param.find(' ');
             std::string mode;
             std::string mask;
@@ -343,7 +355,6 @@ void Server::HandleClientData(int clientSocket)
                 mask = param.substr(sp + 1);
             }
 
-            // Verificar se é comando de ban (manter compatibilidade)
             if (mode == "+b" && !mask.empty()) 
             {
                 handleBanCommand(clientSocket, chanName, mask);
@@ -358,24 +369,19 @@ void Server::HandleClientData(int clientSocket)
             }
             else
             {
-                // Usar novo sistema de modos
                 handleModeCommand(clientSocket, line, this->_User, this->_Chan);
             }
-            
             continue;
         }
-        // INVITE - Convidar usuário para canal invite-only
         else if (line.find("INVITE ") == 0)
         {
             handleInviteCommand(clientSocket, line, this->_User, this->_Chan);
             continue;
         }
-        // BAN - UBAN - BANLIST
         else if (line.find("MODE ") == 0)
         {
-            std::string rest = line.substr(5); // tout après "MODE "
+            std::string rest = line.substr(5);
     
-            // 1) Extraire le channel
             size_t sp = rest.find(' ');
             std::string chanName;
             std::string param;
@@ -391,7 +397,7 @@ void Server::HandleClientData(int clientSocket)
                 param = rest.substr(sp + 1);
             }
         
-            // 2) Extraire le mode et éventuellement le mask
+
             sp = param.find(' ');
             std::string mode;
             std::string mask;
@@ -413,10 +419,8 @@ void Server::HandleClientData(int clientSocket)
                 handleUnbanCommand(clientSocket, chanName, mask);
             else if (mode == "+b" && mask.empty())
                 handleBanlistCommand(clientSocket, chanName);
-            
             continue;
         }
-        // MSG
         else if (line.find("PRIVMSG ") == 0)
         {
             size_t pos0 = line.find(" :");
@@ -429,7 +433,6 @@ void Server::HandleClientData(int clientSocket)
                 handleBrodcastPrivateMsg(user,line);
             else
             {
-                //extrait le nom du channel
                 std::string chanName = "";
                 size_t posSpNa = line.find(" ");
                 for(size_t i = posSpNa + 2; i < pos0; i++)
@@ -445,70 +448,57 @@ void Server::HandleClientData(int clientSocket)
                     }
                 }
 
-                // Uniquementis le channel a ete trouver
                 if (ref > -1 && user.getIdChan(ref) == true)
                     handleBrodcastMsgChann(clientSocket, user,line, ref);
             }
         }
-        //JOIN
         else if (line.find("JOIN ") == 0)
         {
             handleJoin(clientSocket, user, line);
         }
-        //PART
         else if (line.find("PART ") == 0)
         {
             handleQuit(clientSocket, user, line);
         }
-        //LIST
         else if (line.find("LIST") == 0)
         {
             handleList(user);
         }
-        //NAMES
         else if (line.find("NAMES ") == 0)
         {
             handleNames(user, line);
         }
-        //TOPIC
         else if (line.find("TOPIC ") == 0)
         {
             handleTopic(user, line);
         }
-		//FSEND
 		else if (line.find("FSEND ") == 0)
 		{
 			handleFileSend(user, line);
 		}
-		//FGET
 		else if (line.find("FGET ") == 0)
 		{
 			handleFileGet(user, line);
 		}
-		//FLIST
 		else if (line.find("FLIST ") == 0)
 		{
 			handleFileList();
 		}
-		// OPER - Comando para obter privilégios de operador
 		else if (line.find("OPER ") == 0)
 		{
 			handleOperCommand(clientSocket, line);
 			continue;
 		}
-		// ADMIN - Comando para autenticar como administrador
 		else if (line.find("ADMIN ") == 0)
 		{
 			handleAdminCommand(clientSocket, line);
 			continue;
 		}
-		// GRADES - Ver grades de todos os usuários
 		else if (line.find("GRADES") == 0)
 		{
 			handleGradesCommand(clientSocket, line);
 			continue;
 		}
-		// SETGRADE - Alterar grade de usuário (só admin)
 		else if (line.find("SETGRADE ") == 0)
 		{
 			handleSetGradeCommand(clientSocket, line);
@@ -525,15 +515,18 @@ void Server::HandleClientData(int clientSocket)
 }
 
 /**
- * @brief Boucle principale du serveur pour gérer les connexions et données clients.
+ * @brief Boucle principale d'exécution du serveur.
  *
- * - Initialise le set de sockets à surveiller (fd_set).
- * - Ajoute la socket d'écoute et toutes les sockets clients au fd_set.
- * - Utilise select() pour attendre l'activité sur les sockets.
- * - Accepte les nouvelles connexions entrantes.
- * - Traite les données reçues des clients actifs.
- * - Continue la boucle tant que le serveur est actif (_ServeurOn).
- * - Ferme proprement le serveur à la sortie de la boucle.
+ * Cette fonction :
+ *  - Attend les événements sur le socket d'écoute et les sockets clients.
+ *  - Accepte les nouvelles connexions entrantes.
+ *  - Traite les données reçues de chaque client via HandleClientData().
+ *  - Utilise select() pour gérer simultanément plusieurs sockets.
+ *  - Continue tant que _ServeurOn est true.
+ *  - Ferme proprement le serveur à la fin en appelant Shutdown().
+ *
+ * @note Met à jour le fd_set _Readfds à chaque itération pour le select().
+ * @note Garantit la gestion des clients multiples sans blocage.
  */
 void Server::Run()
 {
@@ -548,10 +541,10 @@ void Server::Run()
 		for (std::map<int, User>::iterator it = this->_User.begin(); it != this->_User.end(); ++it)
 		{
 			FD_SET(it->second.getSocket(), &_Readfds);
-			if (it->second.getSocket() > maxFd)
+			
+            if (it->second.getSocket() > maxFd)
 				maxFd = it->second.getSocket();
 		}
-
 
 		struct timeval tv;
 		tv.tv_sec = 1;
@@ -562,14 +555,11 @@ void Server::Run()
 		if (ret < 0)
 			break;
 
-        
 		if (ret == 0)
 			continue;
 
-
 		if (FD_ISSET(this->_Listening, &_Readfds))
 			AcceptClient();
-
 
 		for (std::map<int, User>::iterator it = this->_User.begin(); it != this->_User.end();)
 		{
@@ -577,15 +567,6 @@ void Server::Run()
 			++it;
 			if (FD_ISSET(clientSock, &_Readfds))
 				HandleClientData(clientSock);
-            
-            //NE PAS SUPPRIMER POUR TRAVAIL HORS 42 PHKEVIN
-            /*
-            HandleClientData(clientSock);
-        
-            it = this->_User.find(clientSock);
-            if (it != this->_User.end())
-                ++it;
-            */
 		}
 	}
 
@@ -593,7 +574,9 @@ void Server::Run()
 }
 
 /**
- * @brief Vérifie si le mot de passe fourni correspond à celui du serveur.
+ * @brief Vérifie si le mot de passe fourni correspond au serveur.
+ *
+ * Compare la chaîne fournie avec le mot de passe interne _Pass.
  *
  * @param str Mot de passe à vérifier.
  * @return true si le mot de passe est correct, false sinon.
@@ -609,12 +592,13 @@ bool Server::PassCont(const std::string& str)
 /**
  * @brief Extrait le mot de passe d'une commande PASS IRC.
  *
- * - Vérifie que la commande commence par "PASS".
- * - Récupère la chaîne après le premier espace comme mot de passe.
- * - Affiche le mot de passe en mode DEBUG.
+ * Analyse la chaîne fournie et retourne le mot de passe si la
+ * commande commence par "PASS ".
  *
- * @param str Ligne de commande reçue.
- * @return Mot de passe extrait ou chaîne vide si non trouvé.
+ * @param str Chaîne contenant la commande IRC.
+ * @return std::string Mot de passe extrait ou chaîne vide si non trouvé.
+ *
+ * @note Affiche le mot de passe en debug si DEBUG est activé.
  */
 std::string Server::GetPwd(const std::string& str)
 {
@@ -635,14 +619,15 @@ std::string Server::GetPwd(const std::string& str)
 }
 
 /**
- * @brief Extrait le pseudonyme (NICK) d'une commande IRC.
+ * @brief Extrait le pseudonyme (nickname) d'une commande NICK IRC.
  *
- * - Vérifie que la commande commence par "NICK".
- * - Récupère la chaîne après le premier espace comme pseudonyme.
- * - Affiche le pseudonyme en mode DEBUG.
+ * Analyse la chaîne fournie et retourne le pseudonyme si la
+ * commande commence par "NICK ".
  *
- * @param str Ligne de commande reçue.
- * @return Pseudonyme extrait ou chaîne vide si non trouvé.
+ * @param str Chaîne contenant la commande IRC.
+ * @return std::string Pseudonyme extrait ou chaîne vide si non trouvé.
+ *
+ * @note Affiche le pseudonyme en debug si DEBUG est activé.
  */
 std::string Server::GetNick(const std::string& str)
 {
@@ -663,14 +648,16 @@ std::string Server::GetNick(const std::string& str)
 }
 
 /**
- * @brief Extrait le nom d'utilisateur (USER) d'une commande IRC.
+ * @brief Extrait le nom complet de l'utilisateur d'une commande IRC.
  *
- * - Vérifie que la commande commence par "USER".
- * - Récupère la chaîne après le caractère ':' comme nom d'utilisateur.
- * - Affiche le nom en mode DEBUG.
+ * Analyse la chaîne fournie pour récupérer le nom après "USER" ou
+ * "NAMES", selon l'état d'authentification.
  *
- * @param str Ligne de commande reçue.
- * @return Nom d'utilisateur extrait ou chaîne vide si non trouvé.
+ * @param str Chaîne contenant la commande IRC.
+ * @param auth Booléen indiquant si l'utilisateur est déjà authentifié.
+ * @return std::string Nom extrait ou chaîne vide si non trouvé.
+ *
+ * @note Affiche le nom en debug si DEBUG est activé.
  */
 std::string Server::GetName(const std::string& str, bool auth)
 {
@@ -703,14 +690,21 @@ std::string Server::GetName(const std::string& str, bool auth)
 
 				return user;
 			}
-	
 		}
 	}
 
 	return "";
 }
 
-//controle les doublon nickname
+/**
+ * @brief Vérifie si un pseudonyme est déjà utilisé par plusieurs utilisateurs.
+ *
+ * Parcourt la map _User et compte combien d'utilisateurs ont le
+ * pseudonyme fourni. Retourne true si plus d'un utilisateur l'utilise.
+ *
+ * @param nick Pseudonyme à vérifier.
+ * @return true si le pseudonyme est utilisé par plusieurs utilisateurs, false sinon.
+ */
 bool Server::NickIsList(std::string nick)
 {
 	int i = 0;
@@ -726,7 +720,15 @@ bool Server::NickIsList(std::string nick)
 	return false;
 }
 
-//controle si l'user est dans la liste
+/**
+ * @brief Vérifie si un pseudonyme est déjà utilisé par un utilisateur.
+ *
+ * Parcourt la map _User et retourne true dès qu'un utilisateur avec
+ * le pseudonyme fourni est trouvé.
+ *
+ * @param nick Pseudonyme à vérifier.
+ * @return true si le pseudonyme est déjà utilisé, false sinon.
+ */
 bool Server::IsNickIsList(std::string nick)
 {
 	for (std::map<int, User>::iterator it = this->_User.begin(); it != this->_User.end(); it++)
@@ -738,42 +740,75 @@ bool Server::IsNickIsList(std::string nick)
 }
 
 
-
-
-
 //==============
 // ADMIN SYSTEM METHODS
 //==============
 
-void Server::loadAdminConfig() {
-    if (!_AdminConfig.loadFromFile("admin.conf")) {
+/**
+ * @brief Charge la configuration des administrateurs depuis un fichier.
+ *
+ * Tente de charger les paramètres d'administration depuis "admin.conf".
+ * Affiche un avertissement si le fichier n'est pas trouvé ou non chargé.
+ *
+ * @note Utilise la méthode _AdminConfig.loadFromFile() pour la lecture.
+ */
+void Server::loadAdminConfig()
+{
+    if (!_AdminConfig.loadFromFile("admin.conf"))
+    {
         std::cerr << "Warning: Admin config not loaded, using default settings" << std::endl;
     }
 }
 
-bool Server::checkUserBanned(const std::string& nickname) {
+/**
+ * @brief Vérifie si un utilisateur est banni.
+ *
+ * Cette fonction consulte la configuration administrateur pour déterminer
+ * si le pseudo donné figure dans la liste des utilisateurs bannis.
+ *
+ * @param nickname Le nom de l'utilisateur à vérifier.
+ * @return true si l'utilisateur est banni, false sinon.
+ */
+bool Server::checkUserBanned(const std::string& nickname)
+{
     return _AdminConfig.isBannedUser(nickname);
 }
 
-void Server::giveAutoOpPrivileges(int clientSocket, const std::string& channelName) {
-    // Check if this channel should give auto-op
-    if (_AdminConfig.isAutoOpChannel(channelName)) {
+/**
+ * @brief Attribue automatiquement les privilèges d'opérateur à un utilisateur.
+ *
+ * Si le canal spécifié est configuré pour l'auto-op, et que l'utilisateur
+ * possède les droits nécessaires selon la configuration administrateur,
+ * cette fonction lui accorde le statut d'opérateur dans le canal.
+ *
+ * Un message MODE est ensuite envoyé au client pour notifier le changement
+ * de statut, et une confirmation est affichée dans la console.
+ *
+ * @param clientSocket Le socket du client concerné.
+ * @param channelName  Le nom du canal où appliquer l'auto-op.
+ */
+void Server::giveAutoOpPrivileges(int clientSocket, const std::string& channelName)
+{
+    if (_AdminConfig.isAutoOpChannel(channelName))
+    {
         std::map<int, User>::iterator userIt = _User.find(clientSocket);
-        if (userIt != _User.end()) {
+        if (userIt != _User.end())
+        {
             std::string nickname = userIt->second.getNick();
             
-            // Give op if user has operator privileges
-            if (_AdminConfig.hasOperatorPrivs(nickname)) {
-                // Find the channel
-                for (std::map<int, Channel>::iterator chanIt = _Chan.begin(); chanIt != _Chan.end(); ++chanIt) {
-                    if (chanIt->second.GetName() == channelName) {
+            if (_AdminConfig.hasOperatorPrivs(nickname))
+            {
+                for (std::map<int, Channel>::iterator chanIt = _Chan.begin(); chanIt != _Chan.end(); ++chanIt)
+                {
+                    if (chanIt->second.GetName() == channelName)
+                    {
                         chanIt->second.giveOp(nickname);
                         
-                        // Send mode change notification
                         std::string modeMsg = ":" + _ServName + " MODE " + channelName + " +o " + nickname + "\r\n";
                         send(clientSocket, modeMsg.c_str(), modeMsg.length(), 0);
                         
                         std::cout << "Auto-op granted to " << nickname << " in " << channelName << std::endl;
+
                         break;
                     }
                 }
@@ -782,40 +817,58 @@ void Server::giveAutoOpPrivileges(int clientSocket, const std::string& channelNa
     }
 }
 
-void Server::handleOperCommand(int clientSocket, const std::string& line) {
+/**
+ * @brief Gère la commande OPER pour promouvoir un utilisateur.
+ *
+ * Cette fonction permet à un utilisateur de devenir opérateur s’il fournit
+ * le mot de passe administrateur correct. Si le mot de passe est valide et
+ * que l’utilisateur n’est pas déjà administrateur principal (Grade 0),
+ * son grade passe à 1 (opérateur).  
+ *
+ * Des messages informatifs sont envoyés au client pour confirmer la
+ * réussite ou l’échec de la promotion, et un log est affiché en console.
+ *
+ * @param clientSocket Le socket du client envoyant la commande.
+ * @param line         La ligne complète de la commande OPER reçue.
+ */
+void Server::handleOperCommand(int clientSocket, const std::string& line)
+{
     std::vector<std::string> tokens = splitString(line);
     
-    if (tokens.size() < 3) {
+    if (tokens.size() < 3)
+    {
         std::string errorMsg = ":" + _ServName + " 461 * OPER :Not enough parameters\r\n";
+
         send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+
         return;
     }
     
     std::string username = tokens[1];
     std::string password = tokens[2];
     
-    // Check if password matches and user is authorized
     std::map<int, User>::iterator userIt = _User.find(clientSocket);
-    if (userIt == _User.end()) {
+    if (userIt == _User.end())
+    {
         return;
     }
     
     std::string nickname = userIt->second.getNick();
     
-    // Verificar se a senha está correta
-    if (password == _AdminConfig.getOperPassword()) {
-        // Qualquer usuário pode se tornar operador com a senha correta
+    if (password == _AdminConfig.getOperPassword())
+    {
         int currentGrade = userIt->second.getGrade();
         
-        if (currentGrade == 0) {
-            // Já é admin principal
+        if (currentGrade == 0)
+        {
             std::string msg1 = ":" + _ServName + " NOTICE " + nickname + " :👑 Você já é o ADMINISTRADOR PRINCIPAL!\r\n";
             send(clientSocket, msg1.c_str(), msg1.length(), 0);
             
             std::string msg2 = ":" + _ServName + " NOTICE " + nickname + " :⚡ Grade 0 é superior ao Grade 1 (Operador)\r\n";
             send(clientSocket, msg2.c_str(), msg2.length(), 0);
-        } else {
-            // Promover para operador (grade 1)
+        }
+        else
+        {
             userIt->second.setGrade(1);
             
             std::string separator = ":" + _ServName + " NOTICE " + nickname + " :═══════════════════════════════════\r\n";
@@ -834,29 +887,47 @@ void Server::handleOperCommand(int clientSocket, const std::string& line) {
             
             std::cout << "OPER: " << nickname << " promoted from Grade " << currentGrade << " to Grade 1 (Operator)" << std::endl;
         }
-    } else {
+    }
+    else
+    {
         std::string errorMsg = ":" + _ServName + " NOTICE " + nickname + " :❌ Senha incorreta para OPER\r\n";
+
         send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+
         std::cout << "OPER: Failed attempt by " << nickname << " with wrong password" << std::endl;
     }
 }
 
-void Server::sendWelcomeMessage(int clientSocket, const User& user) {
+/**
+ * @brief Envoie un message de bienvenue personnalisé à un utilisateur.
+ *
+ * Cette fonction envoie au client un ensemble de messages IRC formatés 
+ * contenant des informations sur son grade, ses privilèges et les 
+ * commandes auxquelles il a accès.  
+ * Le message varie selon le grade :  
+ * - **Grade 0** : Administrateur principal  
+ * - **Grade 1** : Opérateur  
+ * - **Grade 2** : Voix  
+ * - **Grade 3** : Utilisateur normal  
+ *
+ * @param clientSocket Le socket du client connecté.
+ * @param user         Référence constante vers l'objet User concerné.
+ */
+void Server::sendWelcomeMessage(int clientSocket, const User& user)
+{
     std::string nickname = user.getNick();
     int grade = user.getGrade();
-    
-    // Message de bienvenue IRC standard
+
     std::string welcomeMsg = ":" + _ServName + " 001 " + nickname + " :Bienvenue sur " + _ServName + "!\r\n";
     send(clientSocket, welcomeMsg.c_str(), welcomeMsg.length(), 0);
     
-    // Envoyer comme messages du serveur (pas NOTICE)
     std::string separator = ":" + _ServName + " 002 " + nickname + " :═══════════════════════════════════\r\n";
     send(clientSocket, separator.c_str(), separator.length(), 0);
     
-    // Statut de l'utilisateur avec emoji et couleur
     std::string statusMsg = ":" + _ServName + " 003 " + nickname + " :";
     
-    switch(grade) {
+    switch(grade)
+    {
         case 0:
             statusMsg += "👑 ADMINISTRATEUR PRINCIPAL (Grade 0)";
             break;
@@ -875,10 +946,10 @@ void Server::sendWelcomeMessage(int clientSocket, const User& user) {
     statusMsg += "\r\n";
     send(clientSocket, statusMsg.c_str(), statusMsg.length(), 0);
     
-    // Description des privilèges
     std::string privMsg = ":" + _ServName + " 004 " + nickname + " :Privilèges: ";
     
-    switch(grade) {
+    switch(grade)
+    {
         case 0:
             privMsg += "Contrôle total du serveur";
             break;
@@ -897,46 +968,49 @@ void Server::sendWelcomeMessage(int clientSocket, const User& user) {
     privMsg += "\r\n";
     send(clientSocket, privMsg.c_str(), privMsg.length(), 0);
     
-    // Instructions spécifiques par grade
-    if (grade == 0) {
+    if (grade == 0)
+    {
         std::string adminMsg1 = ":" + _ServName + " 005 " + nickname + " :🎯 Vous avez le CONTRÔLE TOTAL du serveur!\r\n";
         send(clientSocket, adminMsg1.c_str(), adminMsg1.length(), 0);
         
         std::string adminMsg2 = ":" + _ServName + " 006 " + nickname + " :📋 Commandes: MODE, KICK, BAN, INVITE, TOPIC\r\n";
         send(clientSocket, adminMsg2.c_str(), adminMsg2.length(), 0);
     }
-    else if (grade == 1) {
+    else if (grade == 1)
+    {
         std::string operMsg1 = ":" + _ServName + " 005 " + nickname + " :⚡ Vous êtes OPÉRATEUR du serveur!\r\n";
         send(clientSocket, operMsg1.c_str(), operMsg1.length(), 0);
         
         std::string operMsg2 = ":" + _ServName + " 006 " + nickname + " :📋 Commandes: MODE +o, KICK, BAN dans les canaux\r\n";
         send(clientSocket, operMsg2.c_str(), operMsg2.length(), 0);
     }
-    else if (grade == 2) {
+    else if (grade == 2)
+    {
         std::string voiceMsg = ":" + _ServName + " 005 " + nickname + " :🔊 Vous avez la VOIX - vous pouvez parler dans les canaux modérés\r\n";
         send(clientSocket, voiceMsg.c_str(), voiceMsg.length(), 0);
     }
-    else if (grade == 3) {
+    else if (grade == 3)
+    {
         std::string userMsg1 = ":" + _ServName + " 005 " + nickname + " :📈 Pour obtenir plus de privilèges:\r\n";
         send(clientSocket, userMsg1.c_str(), userMsg1.length(), 0);
         
         std::string userMsg2 = ":" + _ServName + " 006 " + nickname + " :   💼 OPER " + nickname + " <motdepasse> → Devenir Opérateur\r\n";
         send(clientSocket, userMsg2.c_str(), userMsg2.length(), 0);
         
-        if (nickname == _AdminConfig.getMainAdmin()) {
+        if (nickname == _AdminConfig.getMainAdmin())
+        {
             std::string adminHint = ":" + _ServName + " 007 " + nickname + " :   👑 ADMIN " + nickname + " <motdepasse> → Devenir Admin Principal\r\n";
             send(clientSocket, adminHint.c_str(), adminHint.length(), 0);
         }
     }
     
-    // Ligne séparatrice finale
     std::string separator2 = ":" + _ServName + " 008 " + nickname + " :═══════════════════════════════════\r\n";
     send(clientSocket, separator2.c_str(), separator2.length(), 0);
     
-    // Message additionnel qui apparaît comme privmsg du serveur (plus visible)
     std::string visibleMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + nickname + " :";
     
-    switch(grade) {
+    switch(grade)
+    {
         case 0:
             visibleMsg += "👑 Você é ADMINISTRADOR PRINCIPAL (Grade 0) - Controle total!";
             break;
@@ -954,10 +1028,31 @@ void Server::sendWelcomeMessage(int clientSocket, const User& user) {
     send(clientSocket, visibleMsg.c_str(), visibleMsg.length(), 0);
 }
 
-void Server::handleAdminCommand(int clientSocket, const std::string& line) {
+/**
+ * @brief Gère la commande ADMIN permettant à un utilisateur de devenir
+ *        administrateur principal du serveur.
+ *
+ * Cette fonction vérifie les identifiants fournis par l'utilisateur via la
+ * commande IRC `ADMIN <username> <password>`.  
+ * Si la combinaison est valide (selon le fichier de configuration admin.conf),
+ * l'utilisateur est promu **Grade 0** (Administrateur Principal) et reçoit
+ * une série de messages de confirmation et d’information sur ses privilèges.  
+ * En cas d’échec, un message d’erreur est envoyé.
+ *
+ * @param clientSocket Le socket du client exécutant la commande.
+ * @param line         La ligne complète contenant la commande IRC ADMIN.
+ *
+ * @note 
+ * - En cas de succès, le grade de l’utilisateur passe à 0 (niveau maximum).
+ * - Les privilèges associés incluent le contrôle total du serveur :
+ *   gestion des modes, bans, topics, et utilisateurs.
+ */
+void Server::handleAdminCommand(int clientSocket, const std::string& line)
+{
     std::vector<std::string> tokens = splitString(line);
     
-    if (tokens.size() < 3) {
+    if (tokens.size() < 3)
+    {
         std::string errorMsg = ":" + _ServName + " 461 * ADMIN :Not enough parameters\r\n";
         send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
         return;
@@ -966,17 +1061,16 @@ void Server::handleAdminCommand(int clientSocket, const std::string& line) {
     std::string username = tokens[1];
     std::string password = tokens[2];
     
-    // Check if user exists
     std::map<int, User>::iterator userIt = _User.find(clientSocket);
-    if (userIt == _User.end()) {
+    if (userIt == _User.end())
+    {
         return;
     }
     
     std::string nickname = userIt->second.getNick();
     
-    // Validate admin credentials
-    if (_AdminConfig.validateAdminCredentials(username, password)) {
-        // Grant admin privileges
+    if (_AdminConfig.validateAdminCredentials(username, password))
+    {
         userIt->second.setGrade(0);
         
         std::string separator = ":" + _ServName + " NOTICE " + nickname + " :═══════════════════════════════════\r\n";
@@ -997,14 +1091,34 @@ void Server::handleAdminCommand(int clientSocket, const std::string& line) {
         send(clientSocket, separator.c_str(), separator.length(), 0);
         
         std::cout << "ADMIN: " << nickname << " authenticated as server administrator" << std::endl;
-    } else {
+    }
+    else
+    {
         std::string errorMsg = ":" + _ServName + " NOTICE " + nickname + " :❌ Credenciais de admin inválidas\r\n";
         send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
         std::cout << "ADMIN: Failed authentication attempt by " << nickname << std::endl;
     }
 }
 
-void Server::displayAdminInfo() {
+/**
+ * @brief Affiche les informations de configuration administratives du serveur.
+ *
+ * Cette fonction affiche dans la console les identifiants et mots de passe
+ * actuels pour l’administrateur principal et les opérateurs, tels que définis
+ * dans le fichier `admin.conf`.  
+ * Elle fournit également un récapitulatif clair des différents niveaux
+ * d’autorisation ("grades") disponibles sur le serveur.
+ *
+ * @details
+ * - Montre le nom et la commande pour se connecter en tant qu’Admin principal.  
+ * - Indique la commande pour devenir opérateur.  
+ * - Présente la hiérarchie complète des grades et leurs privilèges.
+ *
+ * @note Les mots de passe affichés ici ne devraient être visibles qu’en
+ *       environnement de développement ou de test, jamais en production.
+ */
+void Server::displayAdminInfo()
+{
     std::cout << "=====================================" << std::endl;
     std::cout << "📋 CONFIGURAÇÕES DE ADMINISTRAÇÃO" << std::endl;
     std::cout << "=====================================" << std::endl;
@@ -1022,29 +1136,65 @@ void Server::displayAdminInfo() {
     std::cout << "=====================================" << std::endl;
 }
 
-void Server::handleGradesCommand(int clientSocket, const std::string& /* line */) {
+/**
+ * @brief Gère la commande interne "GRADES" permettant d’afficher les rôles
+ *        (grades) des utilisateurs actuellement connectés au serveur.
+ *
+ * @param clientSocket Le descripteur de socket du client qui a envoyé la commande.
+ * @param line         Ligne de commande reçue (non utilisée ici).
+ *
+ * @details
+ * Cette commande envoie au client une liste formatée de tous les utilisateurs
+ * connectés, accompagnée de leur grade :
+ * - 👑 Grade 0 : Administrateur Principal  
+ * - ⚡ Grade 1 : Opérateur  
+ * - 🔊 Grade 2 : Voix  
+ * - 👤 Grade 3 : Utilisateur normal  
+ *
+ * @note Le message est envoyé via des lignes PRIVMSG afin d’être affiché
+ *       directement dans le client IRC.
+ *
+ * @example
+ * Commande :
+ * @code
+ * /GRADES
+ * @endcode
+ *
+ * Résultat :
+ * @code
+ * 📊 GRADES DOS USUÁRIOS CONECTADOS
+ * ─────────────────────────────────
+ * 👑 Admin - Administrateur Principal (Grade 0)
+ * ⚡ Oper1 - Opérateur (Grade 1)
+ * 👤 UserA - Utilisateur Normal (Grade 3)
+ * 💡 Use: SETGRADE <nick> <0-3> para alterar
+ * @endcode
+ */
+void Server::handleGradesCommand(int clientSocket, const std::string& /* line */)
+{
     std::map<int, User>::iterator userIt = _User.find(clientSocket);
-    if (userIt == _User.end()) {
+    if (userIt == _User.end())
+    {
         return;
     }
     
     std::string nickname = userIt->second.getNick();
     
-    // Cabeçalho
     std::string header = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + nickname + " :📊 GRADES DOS USUÁRIOS CONECTADOS\r\n";
     send(clientSocket, header.c_str(), header.length(), 0);
     
     std::string separator = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + nickname + " :═════════════════════════════════════\r\n";
     send(clientSocket, separator.c_str(), separator.length(), 0);
     
-    // Lista todos os usuários conectados
-    for (std::map<int, User>::iterator it = _User.begin(); it != _User.end(); ++it) {
+    for (std::map<int, User>::iterator it = _User.begin(); it != _User.end(); ++it)
+    {
         std::string userNick = it->second.getNick();
         int grade = it->second.getGrade();
         
         std::string gradeMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + nickname + " :";
         
-        switch(grade) {
+        switch(grade)
+        {
             case 0:
                 gradeMsg += "👑 " + userNick + " - Administrateur Principal (Grade 0)";
                 break;
@@ -1064,32 +1214,72 @@ void Server::handleGradesCommand(int clientSocket, const std::string& /* line */
         send(clientSocket, gradeMsg.c_str(), gradeMsg.length(), 0);
     }
     
-    // Rodapé
     send(clientSocket, separator.c_str(), separator.length(), 0);
     
     std::string footer = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + nickname + " :💡 Use: SETGRADE <nick> <0-3> para alterar\r\n";
     send(clientSocket, footer.c_str(), footer.length(), 0);
 }
 
-void Server::handleSetGradeCommand(int clientSocket, const std::string& line) {
+/**
+ * @brief Gère la commande "SETGRADE" permettant à l’Administrateur Principal
+ *        de modifier le grade d’un utilisateur connecté.
+ *
+ * @param clientSocket Le descripteur de socket du client ayant envoyé la commande.
+ * @param line         La ligne complète contenant la commande SETGRADE et ses arguments.
+ *
+ * @details
+ * Cette commande permet uniquement au grade 0 (Administrateur Principal)
+ * de modifier le niveau de privilège d’un utilisateur parmi :
+ * - 👑 Grade 0 : Administrateur Principal  
+ * - ⚡ Grade 1 : Opérateur  
+ * - 🔊 Grade 2 : Voix  
+ * - 👤 Grade 3 : Utilisateur normal  
+ *
+ * Si la commande est correctement exécutée :
+ * - L’administrateur reçoit un message de confirmation.  
+ * - L’utilisateur ciblé est notifié du changement de grade.  
+ *
+ * En cas d’erreur (mauvaise syntaxe, utilisateur inexistant, permissions
+ * insuffisantes, ou grade invalide), un message explicite est envoyé.
+ *
+ * @note
+ * Seul un utilisateur avec le grade 0 peut utiliser cette commande.
+ *
+ * @example
+ * Commande :
+ * @code
+ * /SETGRADE Alice 1
+ * @endcode
+ *
+ * Résultat :
+ * @code
+ * ✅ Alice modifié du Grade 3 au Grade 1
+ * 🎉 Votre grade a été modifié en: ⚡ Opérateur (Grade 1)
+ * @endcode
+ */
+void Server::handleSetGradeCommand(int clientSocket, const std::string& line)
+{
     std::vector<std::string> tokens = splitString(line);
     
-    if (tokens.size() < 3) {
+    if (tokens.size() < 3)
+    {
         std::string errorMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG * :❌ Uso: SETGRADE <nickname> <grade>\r\n";
         send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
         return;
     }
     
-    // Verificar se quem executa tem privilégios
+
     std::map<int, User>::iterator adminIt = _User.find(clientSocket);
-    if (adminIt == _User.end()) {
+    if (adminIt == _User.end())
+    {
         return;
     }
     
     std::string adminNick = adminIt->second.getNick();
     int adminGrade = adminIt->second.getGrade();
     
-    if (adminGrade != 0) {
+    if (adminGrade != 0)
+    {
         std::string errorMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + adminNick + " :❌ Seul l'Admin Principal (Grade 0) peut utiliser SETGRADE\r\n";
         send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
         return;
@@ -1098,47 +1288,60 @@ void Server::handleSetGradeCommand(int clientSocket, const std::string& line) {
     std::string targetNick = tokens[1];
     std::string gradeParam = tokens[2];
     
-    // Remover # se estiver presente (usuário pode digitar #1 por engano)
-    if (!gradeParam.empty() && gradeParam[0] == '#') {
+    if (!gradeParam.empty() && gradeParam[0] == '#')
+    {
         gradeParam = gradeParam.substr(1);
     }
     
     int newGrade = atoi(gradeParam.c_str());
     
-    if (newGrade < 0 || newGrade > 3) {
+    if (newGrade < 0 || newGrade > 3)
+    {
         std::string errorMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + adminNick + " :❌ Le grade doit être 0, 1, 2 ou 3\r\n";
         send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+       
         return;
     }
     
-    // Chercher l'utilisateur cible
     bool found = false;
-    for (std::map<int, User>::iterator it = _User.begin(); it != _User.end(); ++it) {
-        if (it->second.getNick() == targetNick) {
+    for (std::map<int, User>::iterator it = _User.begin(); it != _User.end(); ++it)
+    {
+        if (it->second.getNick() == targetNick)
+        {
             int oldGrade = it->second.getGrade();
             it->second.setGrade(newGrade);
             
-            // Convertir int en char (compatible C++98)
             char oldGradeChar = '0' + oldGrade;
             char newGradeChar = '0' + newGrade;
             
-            // Message pour l'admin
-            std::string successMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + adminNick + " :✅ " + targetNick + " modifié du Grade " + 
-                                    oldGradeChar + " au Grade " + newGradeChar + "\r\n";
+            std::string successMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + adminNick + " :✅ " + targetNick + " modifié du Grade " + oldGradeChar + " au Grade " + newGradeChar + "\r\n";
             send(clientSocket, successMsg.c_str(), successMsg.length(), 0);
             
-            // Notifier l'utilisateur cible avec switch
             std::string gradeName;
-            switch(newGrade) {
-                case 0: gradeName = "👑 Administrateur Principal"; break;
-                case 1: gradeName = "⚡ Opérateur"; break;
-                case 2: gradeName = "🔊 Voix"; break;
-                case 3: gradeName = "👤 Utilisateur Normal"; break;
-                default: gradeName = "❓ Inconnu"; break;
+            switch(newGrade)
+            {
+                case 0: 
+                    gradeName = "👑 Administrateur Principal";
+                    break;
+
+                case 1:
+                    gradeName = "⚡ Opérateur";
+                    break;
+
+                case 2:
+                    gradeName = "🔊 Voix";
+                    break;
+
+                case 3:
+                    gradeName = "👤 Utilisateur Normal";
+                    break;
+
+                default:
+                    gradeName = "❓ Inconnu";
+                    break;
             }
             
-            std::string notifyMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + targetNick + " :🎉 Votre grade a été modifié en: " + 
-                                   gradeName + " (Grade " + newGradeChar + ")\r\n";
+            std::string notifyMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + targetNick + " :🎉 Votre grade a été modifié en: " + gradeName + " (Grade " + newGradeChar + ")\r\n";
             send(it->first, notifyMsg.c_str(), notifyMsg.length(), 0);
             
             std::cout << "SETGRADE: " << adminNick << " changed " << targetNick << " from Grade " << oldGrade << " to Grade " << newGrade << std::endl;
@@ -1147,7 +1350,8 @@ void Server::handleSetGradeCommand(int clientSocket, const std::string& line) {
         }
     }
     
-    if (!found) {
+    if (!found)
+    {
         std::string errorMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + adminNick + " :❌ Usuário '" + targetNick + "' não encontrado\r\n";
         send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
     }

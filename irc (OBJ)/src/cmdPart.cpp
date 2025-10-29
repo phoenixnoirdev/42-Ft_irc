@@ -13,17 +13,29 @@
 # include "../inc/inc.hpp"
 # include "../inc/server.hpp"
 
+/**
+ * @brief Gère la commande QUIT d'un utilisateur pour quitter un canal.
+ *
+ * Cette fonction analyse la ligne de commande QUIT envoyée par l'utilisateur, 
+ * extrait le nom du canal, et vérifie sa validité. Si le canal existe et que 
+ * l'utilisateur en fait partie, il est retiré du canal et un message de départ 
+ * est diffusé aux autres membres. Si le canal devient vide après le départ, 
+ * il est supprimé du serveur. Des messages d'erreur sont renvoyés si le canal 
+ * n'existe pas ou si le nom du canal est invalide.
+ *
+ * @param clientSocket Socket de l'utilisateur quittant le canal.
+ * @param user Référence vers l'objet User représentant l'utilisateur.
+ * @param line Ligne complète de la commande QUIT reçue.
+ */
 void Server::handleQuit(int clientSocket, User& user, const std::string& line)
 {
     size_t pos0 = line.find(" ");
 
     char c = line[pos0 + 1];
 
-
-
     bool multi = false;
 
-    std::string tmp = line.substr(5); // aprés "PART "
+    std::string tmp = line.substr(5);
     std::string chanName = "";
     
     for (size_t i = 0; i < tmp.size(); i++)
@@ -34,7 +46,6 @@ void Server::handleQuit(int clientSocket, User& user, const std::string& line)
             break;
         }
     }
-
 
     size_t sp1 = tmp.find(":");
 

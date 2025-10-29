@@ -13,9 +13,19 @@
 # include "../inc/inc.hpp"
 # include "../inc/server.hpp"
 
+/**
+ * @brief Gère la commande TOPIC pour changer le sujet d'un canal.
+ * 
+ * Cette fonction permet à un utilisateur de modifier le topic d'un canal
+ * s'il possède les droits nécessaires (Grade 0, Grade 1 ou opérateur du canal).
+ * Si l'utilisateur n'a pas les permissions, un message d'erreur est renvoyé.
+ * 
+ * @param user Référence vers l'utilisateur qui envoie la commande.
+ * @param line Ligne complète de la commande reçue.
+ */
 void Server::handleTopic(User& user, const std::string& line)
 {
-    std::string tmp = line.substr(6); // aprés "TOPIC "
+    std::string tmp = line.substr(6);
 
     size_t sp1 = tmp.find("#");
     size_t sp2 = tmp.find(" :");
@@ -24,8 +34,6 @@ void Server::handleTopic(User& user, const std::string& line)
     for (size_t i = sp1; i < sp2; i++)
         chanName += tmp[i];
 
-    
-    //Recupere le channel
     int idChan;
     for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
     {
@@ -37,7 +45,6 @@ void Server::handleTopic(User& user, const std::string& line)
     }
     Channel &chan = _Chan[idChan];
 
-    //Controle les autorisation
     if (chan.GetGradeUser(user) == 0 || chan.GetGradeUser(user) == 1 || chan.GetOpChannel() == user.getSocket())
     {
         std::string topic = "";

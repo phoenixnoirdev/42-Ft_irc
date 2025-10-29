@@ -61,6 +61,22 @@ uint16_t Utils::PortConvert(const std::string& arg)
  * @param ipStr Adresse IP en format chaîne (ex: "127.0.0.1").
  * @return struct in_addr Adresse IP convertie au format binaire.
  */
+
+ /**
+ * @brief Convertit une adresse IP sous forme de chaîne en structure in_addr.
+ *
+ * Cette fonction résout une adresse IPv4 donnée sous forme de texte et
+ * retourne la structure correspondante utilisable par les fonctions réseau.
+ *
+ * @param ipStr Chaîne contenant l'adresse IP à convertir (ex: "127.0.0.1").
+ * @return struct in_addr Structure contenant l'adresse IPv4 convertie.
+ *
+ * @throws Appelle Error::ErrorServ() si la conversion échoue ou si
+ *         getaddrinfo ne parvient pas à résoudre l'adresse IP.
+ *
+ * @note Utilise getaddrinfo() pour la résolution et libère les ressources
+ *       allouées avec freeaddrinfo() avant de retourner le résultat.
+ */
 struct in_addr Utils::IpConvert(const std::string& ipStr)
 {
     struct addrinfo hints;
@@ -85,10 +101,14 @@ struct in_addr Utils::IpConvert(const std::string& ipStr)
 /**
  * @brief Convertit un entier en chaîne de caractères.
  *
- * Utilise un std::stringstream pour convertir un entier en string.
+ * Cette fonction insère la valeur entière dans un flux de type stringstream
+ * puis retourne la chaîne résultante.
  *
- * @param i L'entier à convertir.
- * @return std::string Représentation texte de l'entier.
+ * @param i Entier à convertir en chaîne.
+ * @return std::string Représentation textuelle de l'entier fourni.
+ *
+ * @note Utilise std::stringstream pour la conversion, garantissant un
+ *       comportement cohérent avec les flux standards C++.
  */
 std::string Utils::IntToString(int i)
 {
@@ -98,10 +118,3 @@ std::string Utils::IntToString(int i)
 
     return ss.str();
 }
-
-
-//===============
-//Fonctions private
-//===============
-
-

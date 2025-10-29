@@ -22,16 +22,14 @@
 //===============
 
 /**
- * @brief Convertit une chaîne en entier pour définir le port du serveur.
- *
- * Cette fonction tente de convertir l'argument fourni en un entier.
- * Si l'argument ne peut pas être converti ou s'il reste des caractères
- * après la conversion, une erreur est levée via Error::ErrorServ(1).
- * Si le port est en dehors des bornes valides (1 à PORT_MAX), une erreur
- * est levée via Error::ErrorServ(2). Si tout est valide, le port
- * converti est stocké dans l'attribut _Port du serveur.
- *
- * @param arg Chaîne représentant un port à convertir (doit être un entier).
+ * @brief Convertit une chaîne de caractères en numéro de port valide.
+ * 
+ * Cette fonction tente de convertir la chaîne fournie en entier, 
+ * vérifie que la conversion est correcte et que le port est dans 
+ * la plage autorisée (1 à PORT_MAX).
+ * 
+ * @param arg Chaîne représentant le numéro de port.
+ * @return uint16_t Le numéro de port converti.
  */
 uint16_t Utils::PortConvert(const std::string& arg)
 {
@@ -49,17 +47,14 @@ uint16_t Utils::PortConvert(const std::string& arg)
 }
 
 /**
- * @brief Convertit une adresse IP en structure in_addr (IPv4).
- *
- * Utilise getaddrinfo pour résoudre une adresse IP passée en chaîne
- * de caractères (ipStr) vers une structure sockaddr, puis extrait
- * l'adresse IPv4 (in_addr) correspondante.
- *
- * En cas d'échec de résolution, une erreur est levée via
- * Error::ErrorServ(3, gai_strerror(status)).
- *
- * @param ipStr Adresse IP en format chaîne (ex: "127.0.0.1").
- * @return struct in_addr Adresse IP convertie au format binaire.
+ * @brief Convertit une chaîne représentant une adresse IPv4 en structure in_addr.
+ * 
+ * Cette fonction utilise getaddrinfo pour résoudre la chaîne IP fournie et 
+ * renvoie l'adresse IPv4 correspondante sous forme de struct in_addr. 
+ * En cas d'erreur, la fonction renvoie INADDR_NONE.
+ * 
+ * @param ipStr Chaîne contenant l'adresse IP à convertir.
+ * @return struct in_addr Structure contenant l'adresse IPv4 convertie.
  */
 struct in_addr Utils::IpConvert(const std::string& ipStr)
 {
@@ -88,11 +83,12 @@ struct in_addr Utils::IpConvert(const std::string& ipStr)
 
 /**
  * @brief Convertit un entier en chaîne de caractères.
- *
- * Utilise un std::stringstream pour convertir un entier en string.
- *
+ * 
+ * Cette fonction utilise un stringstream pour transformer un entier en 
+ * représentation textuelle.
+ * 
  * @param i L'entier à convertir.
- * @return std::string Représentation texte de l'entier.
+ * @return std::string Chaîne correspondant à l'entier fourni.
  */
 std::string Utils::IntToString(int i)
 {
@@ -102,10 +98,3 @@ std::string Utils::IntToString(int i)
 
     return ss.str();
 }
-
-
-//===============
-//Fonctions private
-//===============
-
-

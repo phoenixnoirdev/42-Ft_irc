@@ -19,33 +19,18 @@
 /**
  * @brief Constructeur par défaut de la classe User.
  *
- * Initialise tous les attributs avec des valeurs neutres par défaut :
- * - `_uuid`       : chaîne vide
- * - `_name`       : chaîne vide
- * - `_nick`       : chaîne vide
- * - `_pass`       : chaîne vide
- * - `_recvBuffer` : chaîne vide
- * - `_grade`      : 0
- * - `_socket`     : 0
- * - `_idChan`     : 0
+ * Initialise tous les membres de l'utilisateur à des valeurs par défaut,
+ * incluant UUID, nom, pseudonyme, mot de passe, buffer et grade.
  */
 User::User(): _uuid(""), _name(""), _nick(""), _pass(""), _recvBuffer(""), _grade(0), _socket(0), _idChan() {}
 
 /**
- * @brief Constructeur de la classe User avec un socket.
+ * @brief Constructeur de la classe User avec initialisation du socket.
  *
- * Initialise un utilisateur avec un descripteur de socket spécifique.
- * Les autres champs sont initialisés avec des valeurs neutres :
- * - `_uuid`       : chaîne vide
- * - `_name`       : chaîne vide
- * - `_nick`       : chaîne vide
- * - `_pass`       : chaîne vide
- * - `_recvBuffer` : chaîne vide
- * - `_grade`      : 0
- * - `_idChan`     : 0
- * - `_auth`       : false
+ * Crée un nouvel utilisateur avec un descripteur de socket donné.
+ * Initialise les autres membres à des valeurs par défaut.
  *
- * @param socket Descripteur de socket associé à l'utilisateur.
+ * @param socket Descripteur du socket associé à l'utilisateur.
  */
 User::User(int socket): _uuid(""), _name(""), _nick(""), _pass(""), _recvBuffer(""), _grade(0), _idChan()
 {
@@ -56,10 +41,10 @@ User::User(int socket): _uuid(""), _name(""), _nick(""), _pass(""), _recvBuffer(
 /**
  * @brief Constructeur de copie de la classe User.
  *
- * Initialise un nouvel utilisateur en copiant toutes les
- * informations d'un autre utilisateur existant.
+ * Initialise un nouvel objet User en copiant tous les membres
+ * privés depuis l'objet fourni.
  *
- * @param other Référence constante vers l'utilisateur à copier.
+ * @param other Objet User à copier.
  */
 User::User(const User& other)
 {
@@ -74,13 +59,13 @@ User::User(const User& other)
 }
 
 /**
- * @brief Opérateur d'affectation de la classe User.
+ * @brief Surcharge de l'opérateur d'affectation pour User.
  *
- * Copie toutes les informations d'un autre utilisateur dans
- * l'utilisateur courant, sauf en cas d'auto-affectation.
+ * Copie tous les membres privés de l'objet fourni dans l'objet
+ * courant, en évitant l'auto-affectation.
  *
- * @param other Référence constante vers l'utilisateur à copier.
- * @return Référence vers l'utilisateur courant (*this).
+ * @param other Objet User à copier.
+ * @return User& Référence à l'objet courant après copie.
  */
 User&	User::operator=(const User& other)
 {
@@ -101,8 +86,9 @@ User&	User::operator=(const User& other)
 /**
  * @brief Destructeur de la classe User.
  *
- * Comme la classe ne gère pas de ressources dynamiques,
- * le destructeur est trivial.
+ * Libère les ressources associées à l'utilisateur lors de sa
+ * destruction. Actuellement, aucune opération spécifique n'est
+ * effectuée dans ce destructeur.
  */
 User::~User() {}
 
@@ -113,9 +99,12 @@ User::~User() {}
 //===============
 
 /**
- * @brief Définit l'UUID de l'utilisateur avec la valeur donnée.
+ * @brief Définit l'identifiant unique (UUID) de l'utilisateur.
  *
- * @param str Nouvelle valeur de l'UUID.
+ * Met à jour le membre privé _uuid avec la chaîne fournie,
+ * garantissant une identification unique de l'utilisateur.
+ *
+ * @param str Nouvelle valeur de l'UUID à assigner.
  */
 void User::setUuid(std::string str)
 {
@@ -123,9 +112,12 @@ void User::setUuid(std::string str)
 }
 
 /**
- * @brief Retourne l'UUID actuel de l'utilisateur.
+ * @brief Retourne l'identifiant unique (UUID) de l'utilisateur.
  *
- * @return UUID de l'utilisateur.
+ * Fournit la valeur du membre privé _uuid, servant à identifier
+ * de manière unique l'utilisateur sur le serveur.
+ *
+ * @return std::string UUID de l'utilisateur.
  */
 std::string User::getUuid() const
 {
@@ -133,9 +125,12 @@ std::string User::getUuid() const
 }
 
 /**
- * @brief Définit le nom de l'utilisateur avec la valeur donnée.
+ * @brief Définit le nom complet de l'utilisateur.
  *
- * @param str Nouveau nom de l'utilisateur.
+ * Met à jour le membre privé _name avec la chaîne fournie,
+ * représentant le nom officiel ou complet de l'utilisateur.
+ *
+ * @param str Nouveau nom complet à assigner.
  */
 void User::setName(std::string str)
 {
@@ -143,9 +138,12 @@ void User::setName(std::string str)
 }
 
 /**
- * @brief Retourne le nom actuel de l'utilisateur.
+ * @brief Retourne le nom complet de l'utilisateur.
  *
- * @return Nom de l'utilisateur.
+ * Fournit la valeur du membre privé _name, représentant le nom
+ * officiel ou complet de l'utilisateur.
+ *
+ * @return std::string Nom complet de l'utilisateur.
  */
 std::string User::getName() const
 {
@@ -153,9 +151,12 @@ std::string User::getName() const
 }
 
 /**
- * @brief Définit le pseudonyme de l'utilisateur avec la valeur donnée.
+ * @brief Définit le pseudonyme (nickname) de l'utilisateur.
  *
- * @param str Nouveau pseudonyme de l'utilisateur.
+ * Met à jour le membre privé _nick avec la chaîne fournie,
+ * modifiant ainsi le nom affiché ou utilisé sur le serveur.
+ *
+ * @param str Nouvelle valeur du pseudonyme à assigner.
  */
 void User::setNick(std::string str)
 {
@@ -163,9 +164,12 @@ void User::setNick(std::string str)
 }
 
 /**
- * @brief Retourne le pseudonyme actuel de l'utilisateur.
+ * @brief Retourne le pseudonyme (nickname) de l'utilisateur.
  *
- * @return Pseudonyme de l'utilisateur.
+ * Fournit le nom affiché ou utilisé pour identifier l'utilisateur
+ * sur le serveur.
+ *
+ * @return std::string Pseudonyme actuel de l'utilisateur.
  */
 std::string User::getNick() const
 {
@@ -175,7 +179,10 @@ std::string User::getNick() const
 /**
  * @brief Définit le mot de passe de l'utilisateur.
  *
- * @param str Nouveau mot de passe.
+ * Met à jour le membre privé _pass avec la chaîne fournie,
+ * utilisée pour l'authentification sur le serveur.
+ *
+ * @param str Nouveau mot de passe de l'utilisateur.
  */
 void User::setPass(std::string str)
 {
@@ -183,9 +190,12 @@ void User::setPass(std::string str)
 }
 
 /**
- * @brief Retourne le mot de passe actuel de l'utilisateur.
+ * @brief Retourne le mot de passe de l'utilisateur.
  *
- * @return Mot de passe de l'utilisateur.
+ * Fournit le mot de passe associé à l'utilisateur pour
+ * l'authentification sur le serveur.
+ *
+ * @return std::string Mot de passe de l'utilisateur.
  */
 std::string User::getPass() const
 {
@@ -194,9 +204,12 @@ std::string User::getPass() const
 
 
 /**
- * @brief Définit le contenu du buffer de réception de l'utilisateur.
+ * @brief Met à jour le buffer de réception de l'utilisateur.
  *
- * @param str Nouveau contenu du buffer.
+ * Remplace le contenu du buffer _recvBuffer par la chaîne fournie,
+ * représentant les nouvelles données reçues.
+ *
+ * @param str Chaîne à stocker dans le buffer de réception.
  */
 void User::setRcvBuff(std::string str)
 {
@@ -204,9 +217,12 @@ void User::setRcvBuff(std::string str)
 }
 
 /**
- * @brief Retourne le contenu actuel du buffer de réception.
+ * @brief Retourne une copie du buffer de réception de l'utilisateur.
  *
- * @return Contenu du buffer de réception.
+ * Fournit le contenu actuel du buffer de réception (_recvBuffer)
+ * sans permettre sa modification.
+ *
+ * @return const std::string Copie du buffer de réception.
  */
 const std::string User::getRcvBuff() const
 {
@@ -214,9 +230,12 @@ const std::string User::getRcvBuff() const
 }
 
 /**
- * @brief Retourne une référence au buffer de réception de l'utilisateur.
+ * @brief Fournit l'accès au buffer de réception de l'utilisateur.
  *
- * @return Référence du buffer de réception.
+ * Retourne une référence vers la chaîne stockant les données reçues
+ * depuis le socket de l'utilisateur.
+ *
+ * @return std::string& Référence au buffer de réception (_recvBuffer).
  */
 std::string& User::getRcvBuff()
 {
@@ -224,9 +243,12 @@ std::string& User::getRcvBuff()
 }      
 
 /**
- * @brief Définit le grade (niveau) de l'utilisateur.
+ * @brief Définit le grade de l'utilisateur.
  *
- * @param i Nouveau grade de l'utilisateur.
+ * Met à jour le membre privé _grade pour refléter le niveau ou
+ * rôle attribué à l'utilisateur sur le serveur.
+ *
+ * @param i Valeur entière représentant le grade à assigner.
  */
 void User::setGrade(int i)
 {
@@ -234,9 +256,12 @@ void User::setGrade(int i)
 }
 
 /**
- * @brief Retourne le grade (niveau) actuel de l'utilisateur.
+ * @brief Retourne le grade de l'utilisateur.
  *
- * @return Grade de l'utilisateur.
+ * Fournit la valeur entière correspondant au niveau ou rôle
+ * de l'utilisateur dans le serveur.
+ *
+ * @return int Grade actuel de l'utilisateur.
  */
 int User::getGrade() const
 {
@@ -245,9 +270,12 @@ int User::getGrade() const
 
 
 /**
- * @brief Définit le descripteur de socket de l'utilisateur.
+ * @brief Définit le descripteur du socket de l'utilisateur.
  *
- * @param i Nouveau descripteur de socket.
+ * Met à jour le membre privé _socket avec le descripteur fourni,
+ * utilisé pour la communication réseau de l'utilisateur.
+ *
+ * @param i Descripteur de socket à assigner à l'utilisateur.
  */
 void User::setSocket(int i)
 {
@@ -255,9 +283,12 @@ void User::setSocket(int i)
 }
 
 /**
- * @brief Retourne le descripteur de socket de l'utilisateur.
+ * @brief Retourne le descripteur du socket de l'utilisateur.
  *
- * @return Descripteur de socket.
+ * Fournit l'identifiant du socket utilisé par l'utilisateur pour
+ * les communications réseau.
+ *
+ * @return int Descripteur du socket de l'utilisateur.
  */
 int User::getSocket() const
 {
@@ -265,25 +296,54 @@ int User::getSocket() const
 }
 
 
-// Ajoute un chan a la liste
+/**
+ * @brief Ajoute un canal à la liste de l'utilisateur.
+ *
+ * Insère l'identifiant du canal spécifié dans l'ensemble _idChan,
+ * indiquant que l'utilisateur fait désormais partie de ce canal.
+ *
+ * @param id Identifiant du canal à ajouter.
+ */
 void User::addIdChan(int id)
 {
 	this->_idChan.insert(id);
 }
 
-// Retire un chan de la liste
+/**
+ * @brief Supprime un canal de la liste de l'utilisateur.
+ *
+ * Retire l'identifiant du canal spécifié de l'ensemble _idChan,
+ * indiquant que l'utilisateur n'en fait plus partie.
+ *
+ * @param id Identifiant du canal à supprimer.
+ */
 void User::removeIdChan(int id)
 {
 	this->_idChan.erase(id);
 }
 
-// Retourn la liste des id
+/**
+ * @brief Retourne la liste des identifiants des canaux de l'utilisateur.
+ *
+ * Fournit une copie de l'ensemble contenant tous les IDs de canaux
+ * auxquels l'utilisateur est actuellement abonné.
+ *
+ * @return std::set<int> Ensemble des identifiants de canaux.
+ */
 std::set<int>  User::getLstIdChan()
 {
 	return _idChan;
 }
 
-// Retourn si le chan est dans la liste
+/**
+ * @brief Vérifie si l'utilisateur appartient à un canal donné.
+ *
+ * Recherche l'identifiant du canal dans la collection interne _idChan
+ * pour déterminer si l'utilisateur en fait partie.
+ *
+ * @param id Identifiant numérique du canal à vérifier.
+ * @return true si l'utilisateur est présent dans le canal, false sinon.
+ */
 bool User::getIdChan(int id)
 {
 	return _idChan.find(id) != _idChan.end();
@@ -291,9 +351,13 @@ bool User::getIdChan(int id)
 
 
 /**
- * @brief Définit le statut d'authentification de l'utilisateur.
+ * @brief Définit l'état d'authentification de l'utilisateur.
  *
- * @param e Nouveau statut (true si authentifié).
+ * Met à jour la valeur du membre privé _auth selon le paramètre fourni,
+ * indiquant si l'utilisateur est authentifié ou non.
+ *
+ * @param e Valeur booléenne représentant l'état d'authentification.
+ *        true pour authentifié, false sinon.
  */
 void User::setAuth(bool e)
 {
@@ -301,7 +365,10 @@ void User::setAuth(bool e)
 }
 
 /**
- * @brief Retourne le statut d'authentification de l'utilisateur.
+ * @brief Indique si l'utilisateur est authentifié.
+ *
+ * Retourne l'état d'authentification de l'utilisateur, déterminé
+ * par la valeur du membre privé _auth.
  *
  * @return true si l'utilisateur est authentifié, false sinon.
  */
@@ -311,7 +378,12 @@ bool User::getAuth() const
 }
 
 /**
- * @brief Ferme le descripteur de socket de l'utilisateur.
+ * @brief Ferme le socket associé à l'utilisateur.
+ *
+ * Cette fonction ferme proprement la connexion réseau de l'utilisateur
+ * en appelant la fonction système close() sur le descripteur stocké.
+ *
+ * @note Après cet appel, le descripteur _socket ne doit plus être utilisé.
  */
 void User::closeSocket()
 {

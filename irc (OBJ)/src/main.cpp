@@ -14,11 +14,19 @@
 
 Server* ServPtr = NULL;
 
-
 /**
- * @brief Affiche plusieurs lignes vides dans la console.
+ * @brief Affiche un nombre spécifié de sauts de ligne dans la console.
  *
- * @param nb Nombre de lignes vides a afficher.
+ * @param nb Nombre de lignes vides à afficher.
+ *
+ * @details
+ * Cette fonction insère `nb` sauts de ligne successifs dans la sortie
+ * standard (std::cout). Elle est principalement utilisée pour aérer
+ * l'affichage dans la console, par exemple entre deux sections de logs
+ * ou d'informations serveur.
+ *
+ * @note
+ * Si `nb` est égal à zéro, aucune ligne vide n'est affichée.
  */
 void lBreak(int nb)
 {
@@ -27,9 +35,15 @@ void lBreak(int nb)
 }
 
 /**
- * @brief Affiche un separateur formate avec un titre centre.
+ * @brief Affiche une chaîne de texte encadrée par des séparateurs visuels.
  *
- * @param str Texte a afficher au centre du separateur.
+ * @param str La chaîne de texte à afficher entre les lignes de séparation.
+ *
+ * @details
+ * Cette fonction affiche deux sauts de ligne, une ligne de tirets, 
+ * la chaîne `str`, une nouvelle ligne de tirets, puis deux sauts de 
+ * ligne supplémentaires. Utile pour organiser visuellement les 
+ * sections de la sortie console.
  */
 void separator(std::string str)
 {
@@ -41,13 +55,16 @@ void separator(std::string str)
 }
 
 /**
- * @brief Gère les signaux pour effectuer un arrêt propre du serveur.
+ * @brief Gestionnaire de signal pour la fermeture propre du serveur.
  *
- * Affiche un message indiquant qu'un signal a été reçu, puis appelle
- * la méthode Shutdown() via le pointeur global ServPtr si celui-ci est
- * non nul. Termine ensuite le programme avec le code du signal reçu.
+ * @param signum Le numéro du signal reçu.
  *
- * @param signum Numéro du signal reçu (ex: SIGINT, SIGTERM).
+ * @details
+ * Cette fonction intercepte les signaux (ex. SIGINT, SIGTERM) et 
+ * s'assure que le serveur effectue une fermeture propre, en évitant
+ * les appels récursifs grâce à une variable statique `handling`.
+ * Elle affiche un message d'information avant d'appeler `ShutSign()`
+ * sur l'objet serveur pointé par `ServPtr`, si celui-ci est défini.
  */
 void SigHandler(int signum)
 {
@@ -56,8 +73,7 @@ void SigHandler(int signum)
 	if (handling)
 		return;
 
-    handling = true;
-
+	handling = true;
 
 	std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
 	std::cout << YELLOW << "\n[Signal " << GREEN << signum << YELLOW << "] Fermeture propre du serveur..." << RESET << std::endl;
@@ -68,9 +84,26 @@ void SigHandler(int signum)
         ServPtr->ShutSign();
 }
 
+/**
+ * @brief Point d'entrée principal du serveur IRC.
+ *
+ * @param argc Nombre d'arguments en ligne de commande.
+ * @param argv Tableau contenant les arguments : [port] [mot de passe].
+ *
+ * @return int Retourne 0 si succès, 1 si erreur.
+ *
+ * @details
+ * Vérifie que le serveur reçoit exactement deux arguments. Sinon, 
+ * affiche l'utilisation en français ou anglais selon la macro LANG.
+ * Configure les gestionnaires de signaux : SIGPIPE est ignoré, 
+ * SIGINT appelle SigHandler pour une fermeture propre.
+ * Instancie ensuite l'objet Server avec le port et le mot de passe 
+ * fournis, et met à jour le pointeur global ServPtr pour la gestion 
+ * des signaux. Les exceptions sont capturées et affichées avant de 
+ * retourner une erreur.
+ */
 int main(int argc, char** argv)
-{
-	//Retourn l'usage 
+{ 
 	if (argc != 3)
 	{
 		std::cout << YELLOW << "------------------------------------" << RESET << std::endl;
@@ -82,11 +115,7 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	
-	// Ignore SIGPIPE pour éviter crash sur socket fermé
 	signal(SIGPIPE, SIG_IGN);
-
-	// Capture SIGINT (CTRL+C)
 	signal(SIGINT, SigHandler);
 
 	try

@@ -13,10 +13,13 @@
 #include "../inc/inc.hpp"
 
 /**
- * @brief Divide uma string em tokens usando espaço como delimitador
- * 
- * @param str String a ser dividida
- * @return std::vector<std::string> Vetor com os tokens
+ * @brief Sépare une chaîne en tokens à partir des espaces.
+ *
+ * Cette fonction parcourt la chaîne fournie et découpe chaque mot séparé par 
+ * un espace en un élément d'un vecteur de chaînes.
+ *
+ * @param str La chaîne à découper.
+ * @return std::vector<std::string> Un vecteur contenant tous les mots extraits.
  */
 std::vector<std::string> splitString(const std::string& str)
 {
@@ -31,15 +34,17 @@ std::vector<std::string> splitString(const std::string& str)
 }
 
 /**
- * @brief Procura um canal pelo nome no mapa de canais do servidor
- * 
- * @param channelName Nome do canal a procurar
- * @param channels Mapa de canais do servidor
- * @return Channel* Ponteiro para o canal encontrado ou NULL se não encontrado
+ * @brief Recherche un canal par son nom dans une map de canaux.
+ *
+ * Cette fonction retire le préfixe '#' si présent dans le nom du canal
+ * et parcourt la map fournie pour trouver un canal correspondant.
+ *
+ * @param channelName Le nom du canal à rechercher (peut commencer par '#').
+ * @param channels La map des canaux, indexée par leur identifiant.
+ * @return Channel* Pointeur vers le canal trouvé, ou NULL si aucun canal ne correspond.
  */
 Channel* findChannelByName(const std::string& channelName, std::map<int, Channel>& channels)
 {
-    // Remover o # do nome se estiver presente para padronizar a busca
     std::string searchName = channelName;
     if (!searchName.empty() && searchName[0] == '#')
         searchName = searchName.substr(1);
@@ -54,15 +59,19 @@ Channel* findChannelByName(const std::string& channelName, std::map<int, Channel
 }
 
 /**
- * @brief Procura um usuário pelo nick no canal
- * 
- * @param nick Nick do usuário a procurar
- * @param channel Canal onde procurar
- * @return User* Ponteiro para o usuário encontrado ou NULL se não encontrado
+ * @brief Recherche un utilisateur par son pseudo dans un canal donné.
+ *
+ * Cette fonction parcourt la map des utilisateurs et vérifie si
+ * chaque utilisateur appartient au canal (grade >= 0) et si son
+ * pseudo correspond à celui recherché.
+ *
+ * @param nick Le pseudo de l'utilisateur à rechercher.
+ * @param channel Référence au canal dans lequel rechercher l'utilisateur.
+ * @param users La map de tous les utilisateurs, indexée par socket.
+ * @return User* Pointeur vers l'utilisateur trouvé, ou NULL si aucun utilisateur ne correspond.
  */
 User* findUserInChannelByNick(const std::string& nick, Channel& channel, std::map<int, User>& users)
 {
-    // Procurar em todas as grades do canal
     for (std::map<int, User>::iterator it = users.begin(); it != users.end(); ++it)
     {
         if (it->second.getNick() == nick && channel.GetGradeUser(it->second) >= 0)
@@ -72,27 +81,34 @@ User* findUserInChannelByNick(const std::string& nick, Channel& channel, std::ma
 }
 
 /**
- * @brief Envia uma mensagem de erro IRC para o cliente
- * 
- * @param clientSocket Socket do cliente
- * @param errorCode Código do erro IRC
- * @param message Mensagem do erro
+ * @brief Envoie un message d'erreur IRC à un client spécifique.
+ *
+ * Cette fonction construit un message d'erreur au format IRC et l'envoie
+ * directement au socket du client.
+ *
+ * @param clientSocket Le socket du client à qui envoyer l'erreur.
+ * @param errorCode Le code d'erreur IRC à transmettre.
+ * @param message Le message d'erreur détaillant la cause.
  */
 void sendIRCError(int clientSocket, int errorCode, const std::string& message)
 {
     std::ostringstream oss;
     oss << ":localhost " << errorCode << " * " << message << "\r\n";
+
     std::string response = oss.str();
     send(clientSocket, response.c_str(), response.size(), 0);
 }
 
 /**
- * @brief Envia resposta de modo IRC para o canal
- * 
- * @param channel Canal onde enviar a resposta
- * @param user Usuário que executou o comando
- * @param modeString String do modo aplicado
- * @param param Parâmetro do modo (se houver)
+ * @brief Envoie un message MODE à tous les utilisateurs d'un canal.
+ *
+ * Cette fonction construit un message de type MODE selon le format IRC et le
+ * diffuse à tous les utilisateurs présents dans le canal.
+ *
+ * @param channel Référence au canal sur lequel appliquer le MODE.
+ * @param user Référence à l'utilisateur qui déclenche le MODE.
+ * @param modeString Chaîne représentant le mode à appliquer (ex: "+o", "-v").
+ * @param param Paramètre optionnel associé au mode (ex: pseudo d'un utilisateur).
  */
 void sendModeResponse(Channel& channel, const User& user, const std::string& modeString, const std::string& param = "")
 {
@@ -107,22 +123,17 @@ void sendModeResponse(Channel& channel, const User& user, const std::string& mod
 }
 
 /**
- * @brief Processa comando MODE para definir/consultar modos do canal
- * 
- * Formato: MODE #canal [+/-modo] [parâmetro]
- * 
- * Modos suportados:
- * +i/-i : Invite-only channel
- * +t/-t : Topic restriction to ops only
- * +k/-k : Channel key (password)
- * +o/-o : Give/take operator privilege
- * +l/-l : Set/remove user limit
- * +m/-m : Moderated channel
- * 
- * @param clientSocket Socket do cliente que enviou o comando
- * @param line Linha completa do comando MODE
- * @param users Mapa de usuários do servidor
- * @param channels Mapa de canais do servidor
+ * @brief Gère la commande MODE d'un client sur un canal IRC.
+ *
+ * Cette fonction analyse la commande MODE reçue d'un client et effectue les
+ * actions correspondantes sur le canal visé, comme définir des modes (+i, +t, +k, +o, +l, +m),
+ * ajouter ou retirer des opérateurs, limiter le nombre d'utilisateurs ou définir une clé.
+ * Elle envoie également les réponses appropriées au client et diffuse les changements aux autres utilisateurs du canal.
+ *
+ * @param clientSocket Le socket du client qui envoie la commande.
+ * @param line La ligne complète de la commande MODE.
+ * @param users Référence à la map des utilisateurs connectés.
+ * @param channels Référence à la map des canaux existants.
  */
 void handleModeCommand(int clientSocket, const std::string& line, std::map<int, User>& users, std::map<int, Channel>& channels)
 {
@@ -136,7 +147,6 @@ void handleModeCommand(int clientSocket, const std::string& line, std::map<int, 
     
     std::string channelName = tokens[1];
     
-    // Verificar se o canal existe
     Channel* channel = findChannelByName(channelName, channels);
     if (!channel)
     {
@@ -144,7 +154,6 @@ void handleModeCommand(int clientSocket, const std::string& line, std::map<int, 
         return;
     }
     
-    // Verificar se o usuário existe
     if (users.find(clientSocket) == users.end())
     {
         sendIRCError(clientSocket, 401, ":No such nick/channel");
@@ -153,7 +162,6 @@ void handleModeCommand(int clientSocket, const std::string& line, std::map<int, 
     
     User& user = users[clientSocket];
     
-    // Se não há mais parâmetros, mostrar modos atuais
     if (tokens.size() == 2)
     {
         std::string modes = channel->getModeString();
@@ -165,14 +173,13 @@ void handleModeCommand(int clientSocket, const std::string& line, std::map<int, 
     std::string modeString = tokens[2];
     std::string param = (tokens.size() > 3) ? tokens[3] : "";
     
-    // Verificar se o usuário é operador do canal
+
     if (channel->GetGradeUser(user) == 3 || channel->GetGradeUser(user) == 2)
     {
         sendIRCError(clientSocket, 482, channelName + " :You're not channel operator --- dd");
         return;
     }
     
-    // Processar cada modo na string
     if (modeString.length() < 2)
     {
         sendIRCError(clientSocket, 472, modeString + " :is unknown mode char to me");
@@ -181,7 +188,6 @@ void handleModeCommand(int clientSocket, const std::string& line, std::map<int, 
     
     bool adding = (modeString[0] == '+');
     
-    // Processar cada caracter de modo
     for (size_t i = 1; i < modeString.length(); ++i)
     {
         char mode = modeString[i];
@@ -189,17 +195,17 @@ void handleModeCommand(int clientSocket, const std::string& line, std::map<int, 
         
         switch(mode)
         {
-            case 'i': // Invite-only
+            case 'i':
                 channel->setInviteOnly(adding);
                 sendModeResponse(*channel, user, singleMode);
                 break;
                 
-            case 't': // Topic restriction
+            case 't':
                 channel->setTopicOpOnly(adding);
                 sendModeResponse(*channel, user, singleMode);
                 break;
                 
-            case 'k': // Channel key
+            case 'k':
                 if (adding)
                 {
                     if (param.empty())
@@ -217,14 +223,13 @@ void handleModeCommand(int clientSocket, const std::string& line, std::map<int, 
                 }
                 break;
                 
-            case 'o': // Operator privilege
+            case 'o':
                 if (param.empty())
                 {
                     sendIRCError(clientSocket, 461, "MODE +o :Not enough parameters");
                     continue;
                 }
                 
-                // Verificar se o usuário alvo existe no canal
                 if (!findUserInChannelByNick(param, *channel, users))
                 {
                     sendIRCError(clientSocket, 401, param + " :No such nick/channel");
@@ -239,7 +244,7 @@ void handleModeCommand(int clientSocket, const std::string& line, std::map<int, 
                 sendModeResponse(*channel, user, singleMode, param);
                 break;
                 
-            case 'l': // User limit
+            case 'l':
                 if (adding)
                 {
                     if (param.empty())
@@ -265,7 +270,7 @@ void handleModeCommand(int clientSocket, const std::string& line, std::map<int, 
                 }
                 break;
                 
-            case 'm': // Moderated
+            case 'm':
                 channel->setModerated(adding);
                 sendModeResponse(*channel, user, singleMode);
                 break;
@@ -278,14 +283,19 @@ void handleModeCommand(int clientSocket, const std::string& line, std::map<int, 
 }
 
 /**
- * @brief Processa comando INVITE para convidar usuário para canal invite-only
- * 
- * Formato: INVITE nick #canal
- * 
- * @param clientSocket Socket do cliente que enviou o comando
- * @param line Linha completa do comando INVITE
- * @param users Mapa de usuários do servidor
- * @param channels Mapa de canais do servidor
+ * @brief Gère la commande INVITE d'un utilisateur pour inviter un autre utilisateur
+ *        à rejoindre un canal IRC.
+ *
+ * Cette fonction vérifie que tous les paramètres nécessaires sont fournis,
+ * que le canal et le destinataire existent, et que l'utilisateur n'est pas déjà
+ * présent sur le canal. Si toutes les conditions sont respectées, elle ajoute
+ * l'utilisateur à la liste des invités et envoie les messages IRC appropriés
+ * à l'invité et à l'expéditeur.
+ *
+ * @param clientSocket Le socket de l'utilisateur qui envoie l'invitation.
+ * @param line La ligne complète de la commande INVITE.
+ * @param users Référence à la map des utilisateurs connectés.
+ * @param channels Référence à la map des canaux existants.
  */
 void handleInviteCommand(int clientSocket, const std::string& line, std::map<int, User>& users, std::map<int, Channel>& channels)
 {
@@ -300,7 +310,6 @@ void handleInviteCommand(int clientSocket, const std::string& line, std::map<int
     std::string targetNick = tokens[1];
     std::string channelName = tokens[2];
     
-    // Verificar se o canal existe
     Channel* channel = findChannelByName(channelName, channels);
     if (!channel)
     {
@@ -308,13 +317,11 @@ void handleInviteCommand(int clientSocket, const std::string& line, std::map<int
         return;
     }
     
-    // Verificar se o usuário que convida existe
     if (users.find(clientSocket) == users.end())
         return;
         
     User& inviter = users[clientSocket];
     
-    // Procurar usuário alvo
     User* target = NULL;
     for (std::map<int, User>::iterator it = users.begin(); it != users.end(); ++it)
     {
@@ -331,34 +338,34 @@ void handleInviteCommand(int clientSocket, const std::string& line, std::map<int
         return;
     }
     
-    // Verificar se o usuário já está no canal
     if (channel->GetGradeUser(*target) >= 0)
     {
         sendIRCError(clientSocket, 443, targetNick + " " + channelName + " :is already on channel");
         return;
     }
     
-    // Adicionar convite
     channel->addInvite(targetNick);
     
-    // Notificar o usuário convidado
     std::string inviteMsg = ":" + inviter.getNick() + "!~" + inviter.getName() + "@localhost INVITE " + targetNick + " " + channelName + "\r\n";
     send(target->getSocket(), inviteMsg.c_str(), inviteMsg.size(), 0);
     
-    // Confirmar para quem convidou
     std::string confirmMsg = ":localhost 341 " + inviter.getNick() + " " + targetNick + " " + channelName + "\r\n";
     send(clientSocket, confirmMsg.c_str(), confirmMsg.size(), 0);
 }
 
 /**
- * @brief Processa comando TOPIC para definir/consultar tópico do canal
- * 
- * Formato: TOPIC #canal [novo_tópico]
- * 
- * @param clientSocket Socket do cliente que enviou o comando
- * @param line Linha completa do comando TOPIC
- * @param users Mapa de usuários do servidor
- * @param channels Mapa de canais do servidor
+ * @brief Gère la commande TOPIC pour afficher ou modifier le sujet d'un canal IRC.
+ *
+ * Si la commande ne fournit pas de nouveau sujet, elle renvoie le sujet actuel
+ * du canal au client. Si un nouveau sujet est fourni, la fonction vérifie si
+ * l'utilisateur a les droits pour modifier le sujet (opérateur du canal ou
+ * permissions adéquates). Si autorisé, le sujet est mis à jour et diffusé
+ * à tous les utilisateurs du canal.
+ *
+ * @param clientSocket Le socket de l'utilisateur qui envoie la commande.
+ * @param line La ligne complète de la commande TOPIC.
+ * @param users Référence à la map des utilisateurs connectés.
+ * @param channels Référence à la map des canaux existants.
  */
 void handleTopicCommand(int clientSocket, const std::string& line, std::map<int, User>& users, std::map<int, Channel>& channels)
 {
@@ -372,7 +379,6 @@ void handleTopicCommand(int clientSocket, const std::string& line, std::map<int,
     
     std::string channelName = tokens[1];
     
-    // Verificar se o canal existe
     Channel* channel = findChannelByName(channelName, channels);
     if (!channel)
     {
@@ -380,13 +386,11 @@ void handleTopicCommand(int clientSocket, const std::string& line, std::map<int,
         return;
     }
     
-    // Verificar se o usuário existe
     if (users.find(clientSocket) == users.end())
         return;
         
     User& user = users[clientSocket];
     
-    // Se não há mais parâmetros, mostrar tópico atual
     if (tokens.size() == 2)
     {
         std::string topic = channel->GetTopic();
@@ -403,14 +407,12 @@ void handleTopicCommand(int clientSocket, const std::string& line, std::map<int,
         return;
     }
     
-    // Verificar se pode alterar tópico
     if (!channel->canChangeTopic(user))
     {
         sendIRCError(clientSocket, 482, channelName + " :You're not channel operator");
         return;
     }
     
-    // Extrair novo tópico (tudo após "TOPIC #canal ")
     size_t pos = line.find(" :");
     std::string newTopic;
     
@@ -418,7 +420,6 @@ void handleTopicCommand(int clientSocket, const std::string& line, std::map<int,
         newTopic = line.substr(pos + 2);
     else
     {
-        // Se não tem ":", pegar tudo após o segundo espaço
         size_t firstSpace = line.find(' ');
         if (firstSpace != std::string::npos)
         {
@@ -429,8 +430,7 @@ void handleTopicCommand(int clientSocket, const std::string& line, std::map<int,
     }
     
     channel->SetTopic(newTopic);
-    
-    // Notificar mudança para todos no canal
+    l
     std::string response = ":" + user.getNick() + "!~" + user.getName() + "@localhost TOPIC " + channelName + " :" + newTopic + "\r\n";
     channel->BroadcastAll(response);
 }

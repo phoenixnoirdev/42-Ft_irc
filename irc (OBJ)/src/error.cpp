@@ -22,15 +22,13 @@
 //===============
 
 /**
- * @brief Affiche un message d'erreur formaté et termine le programme.
- *
- * Affiche sur stderr un message d'erreur correspondant au code d'erreur
- * fourni, avec une coloration ANSI et un texte explicatif spécifique.
- * Le message optionnel `str` est ajouté après le texte principal.
- * Termine ensuite immédiatement le programme avec EXIT_FAILURE.
- *
- * @param err Code d'erreur (de 1 à 8, ou autre pour erreur inconnue).
- * @param str Chaîne supplémentaire à afficher avec le message d'erreur.
+ * @brief Affiche un message d'erreur serveur formaté et termine le programme.
+ * 
+ * Cette fonction prend un code d'erreur et une chaîne descriptive,
+ * affiche le message correspondant avec un style coloré, puis quitte le programme.
+ * 
+ * @param err Code d'erreur indiquant le type d'erreur survenue.
+ * @param str Chaîne descriptive supplémentaire pour le message d'erreur.
  */
 void Error::ErrorServ(int err, std::string str)
 {

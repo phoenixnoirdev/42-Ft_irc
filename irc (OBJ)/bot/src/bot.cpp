@@ -18,14 +18,22 @@
 
 /**
  * @brief Constructeur de la classe Bot.
- *
- * Initialise un bot avec une IP, un port et un mot de passe donnés.
- * Configure les messages en français et anglais, puis se connecte
- * au serveur, s'authentifie et démarre son exécution.
- *
- * @param ip   Adresse IP du serveur sous forme de chaîne.
- * @param port Numéro de port du serveur sous forme de chaîne.
- * @param pass Mot de passe utilisé pour l'authentification.
+ * 
+ * Initialise le bot IRC avec les informations de connexion et
+ * démarre sa boucle principale.
+ * 
+ * Étapes effectuées :
+ * 1. Conversion du port et de l'adresse IP.
+ * 2. Stockage du mot de passe et du canal cible.
+ * 3. Initialisation des messages en français et en anglais.
+ * 4. Connexion au serveur IRC.
+ * 5. Authentification du bot.
+ * 6. Démarrage de la boucle principale du bot.
+ * 
+ * @param ip Adresse IP du serveur IRC.
+ * @param port Port du serveur IRC sous forme de chaîne de caractères.
+ * @param pass Mot de passe pour la connexion au serveur IRC.
+ * @param chan Canal IRC sur lequel le bot doit se connecter.
  */
 Bot::Bot(std::string ip, std::string port, std::string pass, std::string chan)
 {
@@ -37,10 +45,8 @@ Bot::Bot(std::string ip, std::string port, std::string pass, std::string chan)
     this->_Chan = chan;
     this->_BotOn = true;
 
-
     initMsgFr();
     initMsgEng();
-
 
     connectToServer();
     loginBot();
@@ -49,8 +55,9 @@ Bot::Bot(std::string ip, std::string port, std::string pass, std::string chan)
 
 /**
  * @brief Destructeur de la classe Bot.
- *
- * Libère les ressources utilisées par le bot avant sa destruction.
+ * 
+ * Nettoie les ressources allouées par le bot.
+ * Actuellement, aucune opération spécifique n'est nécessaire.
  */
 Bot::~Bot()
 {
@@ -62,9 +69,12 @@ Bot::~Bot()
 //===============
 
 /**
- * @brief Désactive le bot en cours d'exécution.
- *
- * Met l'état interne du bot à inactif si celui-ci est actif.
+ * @brief Gère la fermeture propre du bot suite à un signal.
+ * 
+ * Cette fonction désactive le bot en mettant le flag interne `_BotOn`
+ * à `false`, empêchant ainsi la boucle principale de continuer à s’exécuter.
+ * 
+ * @note Si le bot est déjà arrêté, la fonction ne fait rien.
  */
 void Bot::shutSign()
 {
@@ -75,9 +85,14 @@ void Bot::shutSign()
 }
 
 /**
- * @brief Ferme proprement le bot et sa connexion.
- *
- * Affiche les étapes de fermeture et ferme le socket si ouvert.
+ * @brief Ferme proprement le bot et libère les ressources réseau.
+ * 
+ * Cette fonction affiche des messages d’état indiquant la fermeture du socket
+ * et la terminaison propre du bot.  
+ * Si le socket est valide (`_Sock != -1`), il est fermé avant la fin.
+ * 
+ * @note Cette méthode est appelée lors de la terminaison du programme ou
+ *       lorsqu’un signal d’interruption (SIGINT) est reçu.
  */
 void Bot::shutdown()
 {
@@ -100,18 +115,19 @@ void Bot::shutdown()
 //===============
 
 /**
- * @brief Connecte le bot au serveur IRC spécifié.
+ * @brief Établit la connexion entre le bot et le serveur IRC.
  *
- * Crée un socket TCP IPv4 et initialise la structure d'adresse du
- * serveur avec l'IP et le port configurés dans le bot. Tente ensuite
- * d'établir une connexion au serveur IRC. Affiche des messages
- * d'erreur en cas d'échec de création ou de connexion du socket.
+ * Cette fonction crée un socket TCP et tente de se connecter au serveur
+ * en utilisant l’adresse IP et le port spécifiés.  
+ * En cas d’échec lors de la création ou de la connexion du socket, 
+ * un message d’erreur est affiché sur la sortie d’erreur standard.
  *
- * Si la connexion réussit, affiche dans la console les informations
- * de connexion (adresse IP, port et mot de passe utilisé) pour suivi.
+ * Une fois la connexion établie, les informations de connexion 
+ * (IP, port, mot de passe et canal) sont affichées dans la console.
  *
- * @note Cette méthode doit être appelée avant toute tentative de
- * communication avec le serveur.
+ * @warning Aucun arrêt immédiat n’est effectué en cas d’échec de connexion.
+ *          Il serait préférable de lever une exception ou de retourner un
+ *          code d’erreur pour éviter un comportement indéfini.
  */
 void Bot::connectToServer()
 {
@@ -139,17 +155,17 @@ void Bot::connectToServer()
 }
 
 /**
- * @brief Authentifie et connecte le bot au serveur IRC.
+ * @brief Authentifie le bot et rejoint le canal IRC.
  *
- * Envoie au serveur IRC les commandes nécessaires à la connexion :
- * - PASS : envoie le mot de passe si défini.
- * - NICK : définit le pseudonyme du bot.
- * - USER : envoie les informations utilisateur du bot.
- * - JOIN : rejoint le canal spécifié.
- * - NAMES : demande la liste des utilisateurs présents.
+ * Cette fonction envoie au serveur IRC les commandes nécessaires pour :
+ * - fournir le mot de passe (si défini) ;
+ * - définir le pseudo (NICK) ;
+ * - enregistrer le bot comme utilisateur (USER) ;
+ * - rejoindre le canal spécifié ;
+ * - récupérer la liste des utilisateurs présents (NAMES).
  *
- * @note Cette méthode doit être appelée après l'établissement de la
- * connexion avec le serveur via connectToServer().
+ * @note Les commandes sont envoyées en texte brut via la méthode sendRaw().
+ * @warning Cette fonction suppose que la connexion au serveur est déjà établie.
  */
 void Bot::loginBot()
 {
@@ -163,17 +179,26 @@ void Bot::loginBot()
 }
 
 /**
- * @brief Boucle principale d'exécution du bot IRC.
+ * @brief Boucle principale du bot IRC.
  *
- * Écoute les messages entrants du serveur en utilisant `select` pour
- * surveiller le socket du bot. Lit les données reçues et les affiche
- * si le mode DEBUG est activé. Gère les commandes PING/PONG pour
- * maintenir la connexion active. Compte les messages reçus et envoie
- * automatiquement une annonce après un nombre prédéfini de messages.
+ * Cette fonction maintient la connexion au serveur et gère :
+ * - la réception des messages du serveur ;
+ * - la réponse automatique aux requêtes PING (pour éviter la déconnexion) ;
+ * - l’envoi périodique de messages d’annonce ;
+ * - la détection des erreurs de lecture ou de fermeture du socket.
  *
- * La boucle continue tant que le bot est actif (_BotOn == true).
- * À la fin ou en cas d'erreur, appelle shutdown() pour fermer
- * proprement le bot et son socket.
+ * @details
+ * La fonction utilise `select()` pour surveiller le socket et gérer les entrées
+ * sans blocage.  
+ * Un compteur `compt` est utilisé pour déterminer quand envoyer une annonce
+ * automatisée.  
+ * Si la constante `DEBUG` est activée, les messages reçus et l’état interne
+ * sont affichés dans la console.
+ *
+ * @note La boucle principale s’arrête lorsque `_BotOn` devient `false`
+ * (par signal ou erreur de connexion).
+ *
+ * @see Bot::shutdown(), Bot::sendMessage(), Bot::sendRaw()
  */
 void Bot::run()
 {
@@ -218,7 +243,7 @@ void Bot::run()
                 compt = 0;
                 std::cout << YELLOW << "[BOT] Annonce envoyer " << RESET << std::endl;
             }
-            
+
 
             if(DEBUG == true)
                 std::cout << YELLOW << "[BOT] Prochaine annonce dans " << CYAN << compt << "/" << NBMSG << RESET << std::endl;
@@ -233,13 +258,22 @@ void Bot::run()
 }
 
 /**
- * @brief Envoie un message aléatoire du bot dans le canal IRC.
+ * @brief Envoie un message aléatoire sur le canal IRC.
  *
- * Sélectionne un message aléatoire dans la liste correspondant à
- * la langue du bot (FR ou ENG) et l'envoie sur le canal défini
- * par CHAN_NAME en utilisant la commande PRIVMSG.
+ * Cette fonction choisit aléatoirement un message prédéfini dans le tableau
+ * correspondant à la langue du bot (`_MsgFR` ou `_MsgENG`), puis l’envoie
+ * au canal défini par `_Chan`.
  *
- * @note Utilise la fonction sendRaw pour l'envoi direct au serveur.
+ * @details
+ * - La langue utilisée dépend de la constante `BOTLANG`.
+ * - Le message est envoyé via la commande IRC `PRIVMSG`.
+ * - L’ajout de "\r\n" en fin de message est nécessaire pour respecter
+ *   le protocole IRC.
+ *
+ * @note Si `BOTLANG` ne correspond à aucune des langues connues (FR/ENG),
+ *       aucun message n’est envoyé.
+ *
+ * @see Bot::sendRaw()
  */
 void Bot::sendMessage()
 {
@@ -259,12 +293,22 @@ void Bot::sendMessage()
 }
 
 /**
- * @brief Envoie une chaîne de caractères brute au serveur IRC.
+ * @brief Envoie une commande brute au serveur IRC.
  *
- * Écrit directement la chaîne `msg` sur le socket du bot. Si
- * l'écriture échoue, lance une exception std::runtime_error.
+ * Cette fonction écrit directement le contenu de `msg` sur le socket
+ * connecté au serveur IRC. Elle est utilisée pour transmettre toutes
+ * les commandes et messages IRC tels que `PASS`, `NICK`, `JOIN`,
+ * `PRIVMSG`, etc.
  *
- * @param msg Chaîne de caractères à envoyer au serveur.
+ * @param msg Chaîne contenant la commande IRC complète à envoyer.
+ *
+ * @throw std::runtime_error Si l’écriture sur le socket échoue.
+ *
+ * @note Aucun contrôle de format n’est effectué sur `msg`. Il doit donc
+ *       inclure les caractères de fin de ligne requis par le protocole
+ *       IRC (`\r\n`).
+ *
+ * @see Bot::connectToServer(), Bot::loginBot(), Bot::sendMessage()
  */
 void Bot::sendRaw(const std::string& msg)
 {
@@ -273,11 +317,16 @@ void Bot::sendRaw(const std::string& msg)
 }
 
 /**
- * @brief Initialise la liste des messages en français du bot.
+ * @brief Initialise la liste des messages automatiques en français.
  *
- * Remplit le vecteur _MsgFR avec des messages prédéfinis
- * humoristiques ou informatifs que le bot pourra envoyer
- * automatiquement sur le canal IRC.
+ * Cette fonction remplit le vecteur `_MsgFR` avec plusieurs messages
+ * humoristiques ou informatifs que le bot enverra de manière aléatoire
+ * sur le canal IRC.
+ *
+ * @note Les messages sont codés en dur dans la fonction. Ils peuvent être
+ *       modifiés ou complétés selon le ton souhaité pour le bot.
+ *
+ * @see Bot::sendMessage()
  */
 void Bot::initMsgFr()
 {
@@ -289,11 +338,15 @@ void Bot::initMsgFr()
 }
 
 /**
- * @brief Initialise la liste des messages en anglais du bot.
+ * @brief Initializes the list of automatic English messages.
  *
- * Remplit le vecteur _MsgENG avec des messages prédéfinis
- * humoristiques ou informatifs que le bot pourra envoyer
- * automatiquement sur le canal IRC.
+ * This function fills the `_MsgENG` vector with several humorous or
+ * informational messages that the bot will send randomly in the IRC channel.
+ *
+ * @note The messages are hardcoded and can be modified or extended to suit
+ *       the bot’s personality or purpose.
+ *
+ * @see Bot::sendMessage()
  */
 void Bot::initMsgEng()
 {

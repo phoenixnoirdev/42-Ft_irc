@@ -15,9 +15,24 @@
 # include "../inc/utils.hpp"
 # include <sstream>
 
+/**
+ * @brief Gère la commande BAN pour exclure un utilisateur d'un canal.
+ *
+ * Cette fonction permet à un opérateur de canal de bannir un utilisateur ciblé
+ * d'un canal spécifique. Elle vérifie :
+ * - Que l'expéditeur est bien un opérateur du canal.
+ * - Que l'utilisateur ciblé existe et n'est pas l'expéditeur lui-même.
+ * 
+ * Si le ban est valide, l'utilisateur ciblé est retiré du canal, ajouté à la
+ * liste des utilisateurs bannis du canal, et reçoit une notification. Tous les
+ * membres du canal reçoivent également une notification du ban.
+ *
+ * @param clientSocket Le socket de l'utilisateur qui envoie la commande.
+ * @param chanName Le nom du canal où le ban doit être appliqué.
+ * @param maskTarg Le pseudonyme de l'utilisateur ciblé pour le ban.
+ */
 void Server::handleBanCommand(int clientSocket, const std::string& chanName, const std::string maskTarg)
 {
-    // 0) Permet retourner l'user qui lance la commande
     std::map<int, User>::iterator itK = _User.find(clientSocket);
 
     if (itK == _User.end())
@@ -50,7 +65,6 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
     }
         
 
-    //Recupere le channel
     int idChan;
     for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
     {
@@ -63,10 +77,8 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
     Channel &chan = _Chan[idChan];
 
 
-    //Controle les autorisation
     if (chan.GetGradeUser(op) == 0 || chan.GetGradeUser(op) == 1 || chan.GetOpChannel() == op.getSocket())
     { 
-        // 2) Cherche l'utilisateur dans la liste
         int targetFd = -1;
         std::map<int, User>::iterator targetUs = _User.end();
         for (std::map<int, User>::iterator it = _User.begin(); it != _User.end(); ++it)
@@ -79,14 +91,12 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
             }
         }
 
-        // 3) Retour d’information dans le channel
         {
             std::string reply = ":" + op.getNick() + "!~" + op.getName() + "@localhost BAN " + chanName + " " + target.getName() + "\r\n";
             chan.BroadcastAll(reply);
         }
 
-        
-        // 6) Si l'utilisateur cible n'es pas en ligne informe l'utilisateur et sort de la commande
+
         if (targetFd == -1)
         {
             std::string note = ":" + this->_ServName + " NOTICE " + op.getNick() + " :User " + target.getName() + " not online.\r\n";
@@ -96,12 +106,12 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
         
 
         
-        // 5) Log serveur
+
         std::cout << "[" << RED << "BAN" << RESET << "]: " << chanName << " " << target.getName() <<  " / OP = " << op.getName() << std::endl;
         
 
         
-        // 6) Informe la cible de sont ban
+
         {
             const User &target = targetUs->second;
 
@@ -113,7 +123,6 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
         }
 
         
-        // 8) Deconnecte la cible du channel et set a -1 pour signifier qu'il est hors channel
         for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
         {
             if (chanName.compare("#" + it->second.GetName()) == 0)
@@ -139,10 +148,21 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
     }
 }
 
-
+/**
+ * @brief Gère la commande BANLIST pour afficher la liste des utilisateurs bannis d'un canal.
+ *
+ * Cette fonction permet à un opérateur de canal de consulter la liste des utilisateurs
+ * actuellement bannis sur un canal spécifique. Elle vérifie :
+ * - Que l'expéditeur est bien un opérateur du canal.
+ * 
+ * Si l'utilisateur a les droits, la fonction envoie via le socket du client une
+ * liste numérotée des utilisateurs bannis. Sinon, un message d'erreur IRC est envoyé.
+ *
+ * @param clientSocket Le socket de l'utilisateur qui demande la liste.
+ * @param chanName Le nom du canal dont la liste des bannis doit être affichée.
+ */
 void Server::handleBanlistCommand(int clientSocket, const std::string& chanName)
 {
-    // 0) Permet retourner l'user qui lance la commande
     std::map<int, User>::iterator itK = _User.find(clientSocket);
 
     if (itK == _User.end())
@@ -153,7 +173,6 @@ void Server::handleBanlistCommand(int clientSocket, const std::string& chanName)
 
     std::cout << RED << "[BAN]: " << chanName << " " << op.getName() << " a demander un BANLIST." << RESET << std::endl;
         
-    //Controle le grade
     int idChan;
     for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
     {
@@ -197,56 +216,68 @@ void Server::handleBanlistCommand(int clientSocket, const std::string& chanName)
     }
 }
 
-
+/**
+ * @brief Gère la commande UNBAN pour retirer un utilisateur de la liste des bannis d'un canal.
+ *
+ * Cette fonction permet à un opérateur de canal de débannir un utilisateur spécifique
+ * précédemment banni. Elle vérifie :
+ * - Que l'expéditeur est bien un opérateur du canal.
+ * - Que l'utilisateur ciblé est bien dans la liste des bannis.
+ * 
+ * Si l'utilisateur est correctement débanni, un message de confirmation est envoyé
+ * au client. Sinon, un message d'erreur est transmis.
+ *
+ * @param clientSocket Le socket de l'utilisateur qui effectue le débannissement.
+ * @param chanName Le nom du canal où l'utilisateur doit être débanni.
+ * @param target Le pseudo de l'utilisateur à débannir.
+ */
 void Server::handleUnbanCommand(int clientSocket, const std::string& chanName, const std::string target)
 {
-        // 0) Permet retourner l'user qui lance la commande
-        std::map<int, User>::iterator itK = _User.find(clientSocket);
+    std::map<int, User>::iterator itK = _User.find(clientSocket);
 
-        if (itK == _User.end())
-            return;
-    
-        User &op = itK->second;
+    if (itK == _User.end())
+        return;
 
-        //Controle le grade
-        int idChan;
-        for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
+    User &op = itK->second;
+
+    int idChan;
+    for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
+    {
+        if (chanName.compare("#" + it->second.GetName()) == 0)
         {
-            if (chanName.compare("#" + it->second.GetName()) == 0)
+            idChan = it->second.GetId();
+            break;
+        }
+    }
+    Channel &chan = _Chan[idChan];
+
+    if (chan.GetGradeUser(op) == 0 || chan.GetGradeUser(op) == 1 || chan.GetOpChannel() == op.getSocket())
+    { 
+        std::map<int, User> banl = chan.GetBanMap();
+        for (std::map<int, User>::iterator it = banl.begin(); it != banl.end(); it++)
+        {
+            if (target.compare(it->second.getNick()) == 0 && op.getNick().compare(it->second.getNick()) == 1)
             {
-                idChan = it->second.GetId();
-                break;
+                chan.RemoveUserBan(it->second.getSocket());
+
+                std::string note = "L'utilisateur " + target + " a été unban. \r\n";
+                ::send(clientSocket, note.c_str(), note.size(), 0);
+
+                return;
             }
         }
-        Channel &chan = _Chan[idChan];
-    
-        if (chan.GetGradeUser(op) == 0 || chan.GetGradeUser(op) == 1 || chan.GetOpChannel() == op.getSocket())
-        { 
-            std::map<int, User> banl = chan.GetBanMap();
-            for (std::map<int, User>::iterator it = banl.begin(); it != banl.end(); it++)
-            {
-                if (target.compare(it->second.getNick()) == 0 && op.getNick().compare(it->second.getNick()) == 1)
-                {
-                    chan.RemoveUserBan(it->second.getSocket());
 
-                    std::string note = "L'utilisateur " + target + " a été unban. \r\n";
-                    ::send(clientSocket, note.c_str(), note.size(), 0);
+        std::string note = "L'utilisateur " + target + " n'a pas pus être unban. \r\n";
+        ::send(clientSocket, note.c_str(), note.size(), 0);
+    }
+    else
+    {
+        std::string err = ":" + this->_ServName + " 482 " + op.getNick() + " " + chanName + " :You're not channel operator\r\n";
+        ::send(clientSocket, err.c_str(), err.size(), 0);
 
-                    return;
-                }
-            }
 
-            std::string note = "L'utilisateur " + target + " n'a pas pus être unban. \r\n";
-            ::send(clientSocket, note.c_str(), note.size(), 0);
-        }
-        else
-        {
-            std::string err = ":" + this->_ServName + " 482 " + op.getNick() + " " + chanName + " :You're not channel operator\r\n";
-            ::send(clientSocket, err.c_str(), err.size(), 0);
-    
-
-            std::cout << RED << "[BAN]: " << chanName << " " << op.getName() << " a tenter d'utiliser la commande UNBAN sur l'user " << target << std::endl;
-            
-            return;
-        }
+        std::cout << RED << "[BAN]: " << chanName << " " << op.getName() << " a tenter d'utiliser la commande UNBAN sur l'user " << target << std::endl;
+        
+        return;
+    }
 }

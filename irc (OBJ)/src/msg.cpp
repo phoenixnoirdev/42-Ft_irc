@@ -13,7 +13,35 @@
 # include "../inc/inc.hpp"
 # include "../inc/server.hpp"
 
-
+/**
+ * @brief Diffuse un message d'un utilisateur à tous les membres d'un canal IRC.
+ *
+ * @param clientSocket Le descripteur de socket du client émetteur.
+ * @param user         Référence vers l'utilisateur envoyant le message.
+ * @param line         Ligne complète contenant la commande PRIVMSG et le message.
+ * @param idchan       Identifiant interne du canal concerné.
+ *
+ * @details
+ * Cette fonction :
+ * - Vérifie si l'utilisateur a le droit de parler sur le canal (ex : mode +m).
+ * - Extrait le message du format IRC (après " :").
+ * - Formate le message complet selon la syntaxe IRC :
+ *   @code
+ *   :<nick>!~<user>@localhost PRIVMSG #<channel> :<message>\r\n
+ *   @endcode
+ * - Diffuse le message à tous les membres du canal via Broadcast().
+ * - Affiche également le message sur la sortie standard pour le suivi serveur.
+ *
+ * En cas de restriction (canal modéré, utilisateur sans voix/opérateur),
+ * un message d'erreur "404 Cannot send to channel (moderated)" est renvoyé
+ * à l'expéditeur.
+ *
+ * @note
+ * Le message est ignoré si le texte après " :" est vide.
+ *
+ * @see Channel::canSpeak()
+ * @see Channel::Broadcast()
+ */
 void Server::handleBrodcastMsgChann(int clientSocket, User& user, std::string line, int idchan)
 {
     
@@ -44,6 +72,40 @@ void Server::handleBrodcastMsgChann(int clientSocket, User& user, std::string li
     std::cout << CYAN << chanIt->second.GetName() << " / " << YELLOW << user.getName() << RESET << ": " << msg << std::endl; 
 }
 
+/**
+ * @brief Envoie un message privé entre deux utilisateurs connectés.
+ *
+ * @param user Référence vers l'utilisateur émetteur du message.
+ * @param line Ligne brute contenant la commande PRIVMSG et le contenu du message.
+ *
+ * @details
+ * Cette fonction gère la commande IRC :
+ *   @code
+ *   PRIVMSG <nickname> :<message>
+ *   @endcode
+ *
+ * Étapes du traitement :
+ * - Extrait le pseudo du destinataire à partir de la ligne reçue.
+ * - Extrait le message après la séquence " :".
+ * - Vérifie si le destinataire est connecté via IsNickIsList().
+ * - Si le pseudo est valide :
+ *   - Construit un message IRC conforme :
+ *     @code
+ *     :<nick>!~<user>@localhost PRIVMSG <target> :<message>\r\n
+ *     @endcode
+ *   - Envoie le message directement au socket du destinataire.
+ *   - Affiche la transaction en console (suivi serveur).
+ * - Sinon :
+ *   - Avertit l’expéditeur que le destinataire n’est pas connecté.
+ *   - Affiche une erreur en console.
+ *
+ * @note
+ * Si le message ne contient pas " :", un texte vide est envoyé.
+ *
+ * @see Server::IsNickIsList()
+ * @see User::getNick()
+ * @see User::getSocket()
+ */
 void Server::handleBrodcastPrivateMsg(User& user, std::string line)
 {
     size_t pos0 = line.find(" ");
@@ -92,6 +154,35 @@ void Server::handleBrodcastPrivateMsg(User& user, std::string line)
     }
 }
 
+/**
+ * @brief Informe un utilisateur qu'il ne peut pas envoyer de message
+ *        car il a été kické ou banni.
+ *
+ * @param user Référence vers l'utilisateur tentant d'envoyer le message.
+ * @param line Ligne brute contenant la commande PRIVMSG et le contenu
+ *             original du message.
+ *
+ * @details
+ * Cette fonction est appelée lorsqu'un utilisateur tente d'envoyer un
+ * message alors qu'il a été exclu (kick) ou banni (ban) d'un canal.
+ *
+ * Étapes :
+ * - Extrait le message à partir de la séquence " :" dans la ligne reçue.
+ * - Si aucun message n'est trouvé, une chaîne vide est utilisée.
+ * - Construit un message IRC d'erreur au format :
+ *   @code
+ *   :<nick>!~<user>@localhost PRIVMSG <nick> :
+ *   Vous avez été kick ou ban. Le message n'a pas été envoyer (<msg>)
+ *   @endcode
+ * - Envoie cette notification au socket de l'utilisateur concerné.
+ * - Affiche un message d'information côté serveur dans la console.
+ *
+ * @note
+ * Cette fonction ne relaye pas le message d'origine à d'autres clients.
+ *
+ * @see Server::handleBrodcastMsgChann()
+ * @see Server::handleBrodcastPrivateMsg()
+ */
 void Server::handleBrodcastMsgKB(User& user, std::string line)
 {
     size_t pos = line.find(" :");

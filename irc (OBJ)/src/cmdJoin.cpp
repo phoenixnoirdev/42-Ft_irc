@@ -13,17 +13,30 @@
 # include "../inc/inc.hpp"
 # include "../inc/server.hpp"
 
+/**
+ * @brief Gère la commande IRC JOIN pour permettre à un utilisateur de rejoindre un channel.
+ *
+ * Cette fonction analyse la ligne de commande pour extraire le nom du channel
+ * et éventuellement la clé (mot de passe). Elle vérifie la validité du nom de
+ * channel, crée un nouveau channel si nécessaire, ou ajoute l'utilisateur à
+ * un channel existant en respectant les restrictions (ban, mode +i, +l, +k).
+ *
+ * Des messages d'erreur IRC standards sont envoyés si l'utilisateur ne peut
+ * pas rejoindre le channel pour une quelconque raison.
+ *
+ * @param clientSocket Socket du client qui envoie la commande JOIN.
+ * @param user Référence à l'objet User correspondant au client.
+ * @param line Ligne contenant la commande JOIN complète.
+ */
 void Server::handleJoin(int clientSocket, User& user, const std::string& line)
 {
     size_t pos0 = line.find(" ");
 
     char c = line[pos0 + 1];
 
-
-
     bool multi = false;
 
-    std::string tmp = line.substr(5); // aprés "JOIN "
+    std::string tmp = line.substr(5);
     std::string chanName = "";
     std::string key = "";
     
@@ -100,8 +113,6 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
     {
         std::map<int, Channel>::iterator chanIt = this->_Chan.find(idChan);
 
-        
-        // Verificar se usuário está banido
         if (chanIt->second.GetUserBan(user))
         {
             std::string err = ":" + this->_ServName + " 474 " + user.getNick() + " " + chanName + " :Cannot join channel (+b)\r\n";
@@ -109,7 +120,6 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
             return;
         }
         
-        // Verificar modo invite-only (+i)
         if (chanIt->second.isInviteOnly() && !chanIt->second.isInvited(user.getNick()))
         {
             std::string err = ":" + this->_ServName + " 473 " + user.getNick() + " " + chanName + " :Cannot join channel (+i)\r\n";
@@ -117,7 +127,6 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
             return;
         }
 
-        // Verificar limite de usuários (+l)
         if (!chanIt->second.canJoin())
         {
             std::string err = ":" + this->_ServName + " 471 " + user.getNick() + " " + chanName + " :Cannot join channel (+l)\r\n";
@@ -125,8 +134,6 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
             return;
         }
 
-        
-        // Verificar senha do canal (+k)
         if (chanIt->second.hasKey())
         {
             std::cout << "[DEBUG KEY] Canal tem senha. Provided: '" << key << "', Expected: '" << chanIt->second.getKey() << "'" << std::endl;
@@ -140,7 +147,6 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
             return;
         }
 
-        // Remover convite se estava na lista (usado uma vez)
         if (chanIt->second.isInvited(user.getNick()))
         {
             chanIt->second.removeInvite(user.getNick());
@@ -152,10 +158,7 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
 
         std::cout << "[INFO] User " << user.getNick() << " ajouté au channel " << chanIt->second.GetName() << std::endl;
         
-        
-        // Dar privilégios automáticos se configurado
         giveAutoOpPrivileges(clientSocket, "#" + chanName);
-
 
         std::string joinMsg = ":" + user.getNick() + "!" + user.getName() + " JOIN #" + chanIt->second.GetName() + "\r\n";
         chanIt->second.BroadcastAll(joinMsg);

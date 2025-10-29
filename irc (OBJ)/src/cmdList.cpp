@@ -14,7 +14,15 @@
 # include "../inc/server.hpp"
 # include "../inc/utils.hpp"
 
-//retourn la liste des channel
+/**
+ * @brief Envoie la liste des channels et leurs informations à un utilisateur.
+ *
+ * Cette fonction gère la commande IRC LIST. Elle envoie d'abord l'entête de la liste,
+ * puis pour chaque channel existant, elle envoie le nom, le nombre d'utilisateurs et le topic.
+ * Enfin, elle envoie le message de fin de liste.
+ *
+ * @param user Référence vers l'utilisateur qui a demandé la liste des channels.
+ */
 void Server::handleList(User& user)
 {
     int clientSocket = user.getSocket();

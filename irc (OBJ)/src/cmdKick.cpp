@@ -14,10 +14,22 @@
 # include "../inc/server.hpp"
 # include <sstream>
 
+/**
+ * @brief Gère la commande IRC KICK pour expulser un utilisateur d'un channel.
+ *
+ * Cette fonction vérifie que le client est présent et est autorisé à kicker
+ * dans le channel. Elle extrait le nom du channel, le pseudo de l'utilisateur
+ * cible et la raison du kick depuis la ligne de commande.
+ *
+ * Si l'utilisateur est autorisé, le message de kick est diffusé à tous les
+ * membres du channel et l'utilisateur cible est retiré du channel. Sinon,
+ * un message d'erreur est envoyé au kicker.
+ *
+ * @param clientSocket Socket du client qui envoie la commande KICK.
+ * @param line Ligne contenant la commande KICK complète.
+ */
 void Server::handleKickCommand(int clientSocket, const std::string& line)
 {
-
-    // 0) Permet retourner l'user qui lance la commande
     std::map<int, User>::iterator itK = _User.find(clientSocket);
 
     if (itK == _User.end())
@@ -25,11 +37,8 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
 
     User &kicker = itK->second;
 
-
-    // 1.0) parse: KICK = #canal / nick / reason
     std::string chanName, targetNick, reason;
 
-    // 1.1) parse: KICK = #canal / nick / reason (etrait le canal)
     std::string tmp = line.substr(5); // aprés "KICK "
     std::string::size_type sp1 = tmp.find(' ');
     if (sp1 == std::string::npos)
@@ -40,7 +49,6 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
     }
     chanName = tmp.substr(0, sp1);
 
-    // 1.2) parse: KICK = #canal / nick / reason (extrait la target et la reason si il y a)
     std::string rest = tmp.substr(sp1 + 1);
     std::string::size_type sp2 = rest.find(' ');
     if (sp2 == std::string::npos)
@@ -62,7 +70,6 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
     }
 
 
-    //Controle le grade
     int idChan;
     for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
     {
@@ -76,7 +83,6 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
 
     if (chan.GetGradeUser(kicker) == 0 || chan.GetGradeUser(kicker) == 1 || chan.GetOpChannel() == kicker.getSocket())
     {
-        // 2) Cherche l'utilisateur dans la liste
         int targetFd = -1;
         std::map<int, User>::iterator targetUs = _User.end();
         for (std::map<int, User>::iterator it = _User.begin(); it != _User.end(); ++it)
@@ -89,8 +95,6 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
             }
         }
 
-
-        // 3) Retour d’information dans le channel
         {
             std::string reply = ":" + kicker.getNick() + "!~" + kicker.getName() + "@localhost KICK " + chanName + " " + targetNick + " :" + (reason.empty() ? "" : reason) + "\r\n";
 
@@ -104,7 +108,7 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
             }
         }
 
-        // 6) Si l'utilisateur cible n'es pas en ligne informe l'utilisateur et sort de la commande
+
         if (targetFd == -1)
         {
             std::string note = ":" + this->_ServName + " NOTICE " + kicker.getNick() + " :User " + targetNick + " not online.\r\n";
@@ -112,11 +116,9 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
             return;
         }
 
-        // 5) Log serveur
         std::cout << "[" << RED << "KICK" << RESET << "]: " << chanName << " " << targetNick << " " << reason << " / OP = " << kicker.getName() << std::endl;
 
 
-        // 6) Informe la cible de sont kick
         {
             const User &target = targetUs->second;
 
@@ -127,7 +129,6 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
             ::send(targetFd, byeMp.c_str(), byeMp.size(), 0);
         }
 
-        // 8) Deconnecte la cible du channel et set a -1 pour signifier qu'il est hors channel
         for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
         {
             if (chanName.compare("#" + it->second.GetName()) == 0)
