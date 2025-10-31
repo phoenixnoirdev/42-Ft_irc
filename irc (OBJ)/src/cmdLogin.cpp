@@ -30,7 +30,8 @@ void Server::handleLogin(int clientSocket, User& user)
 {
     if (!PassCont(user.getPass()))
     {
-        send(clientSocket, "Invalid password\n", 17, 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, "Invalid password\n", 17, 0);
         close(clientSocket);
         this->_User.erase(clientSocket);
 
@@ -40,7 +41,8 @@ void Server::handleLogin(int clientSocket, User& user)
     if (NickIsList(user.getNick()) == true)
     {
         std::cout << "[INFO] User " << user.getNick() << "@" << user.getName() << " deconnecter nick doublon !" << std::endl;
-        send(clientSocket, "Nickname use\n", 13, 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, "Nickname use\n", 13, 0);
         close(clientSocket);
         this->_User.erase(clientSocket);
 
@@ -66,14 +68,18 @@ void Server::handleWelcome(const User& user)
     std::string msg;
 
     msg = ":" + _ServName + " 001 " + user.getNick() + " :Welcome to the IRC server " + user.getNick() + "!" + user.getName() + "@localhost\r\n";
-    ::send(user.getSocket(), msg.c_str(), msg.size(), 0);
+    if (Utils::IsSocketWritable(user.getSocket()))
+        ::send(user.getSocket(), msg.c_str(), msg.size(), 0);
 
     msg = ":" + _ServName + " 002 " + user.getNick() + " :Your host is " + _ServName + ", running version 1.0\r\n";
-    ::send(user.getSocket(), msg.c_str(), msg.size(), 0);
+    if (Utils::IsSocketWritable(user.getSocket()))
+        ::send(user.getSocket(), msg.c_str(), msg.size(), 0);
 
     msg = ":" + _ServName + " 003 " + user.getNick() + " :This server was created today\r\n";
-    ::send(user.getSocket(), msg.c_str(), msg.size(), 0);
+    if (Utils::IsSocketWritable(user.getSocket()))
+        ::send(user.getSocket(), msg.c_str(), msg.size(), 0);
 
     msg = ":" + _ServName + " 004 " + user.getNick() + " " + _ServName + " 1.0 ao mtov\r\n";
-    ::send(user.getSocket(), msg.c_str(), msg.size(), 0);
+    if (Utils::IsSocketWritable(user.getSocket()))
+        ::send(user.getSocket(), msg.c_str(), msg.size(), 0);
 }

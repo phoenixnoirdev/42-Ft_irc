@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 07:46:19 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/10/31 13:36:10 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/10/31 13:51:07 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <netdb.h>
 #include <cerrno>
 #include <map>
+#include <fcntl.h>
 #include <vector>
 #include "user.hpp"
 #include "channel.hpp"
@@ -80,7 +81,6 @@ class Server
 		void	Shutdown();
 		void	ShutSign();
 		void	Run();
-		bool 	IsSocketWritable(int sock);
 		void	Init();
 		void	AcceptClient();
 		void	HandleClientData(int clientSocket);

@@ -66,7 +66,8 @@ void Server::handleQuit(int clientSocket, User& user, const std::string& line)
     if (c != '#' && c != '&' && c != '+' && c != '!')
     {
         std::string err = ":" + this->_ServName + " 479 " + user.getNick() + " " + chanName + " :Illegal channel name\r\n";
-        ::send(clientSocket, err.c_str(), err.size(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            ::send(clientSocket, err.c_str(), err.size(), 0);
 
         std::cout << RED << "[PART]: " << user.getNick() << " a tenter d'utiliser la commande PART pour quitter le chan : " << chanName << RESET << std::endl;
         
@@ -93,7 +94,8 @@ void Server::handleQuit(int clientSocket, User& user, const std::string& line)
         std::cout << "[INFO] User " << user.getNick() << " a essayer de quitter le channel " << chanName << " mais le channel n'existe pas." << std::endl;
         
         std::string err = ":" + this->_ServName + " 403 " + user.getNick() + " " + chanName + " :You're not on that channel\r\n";
-        ::send(clientSocket, err.c_str(), err.size(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            ::send(clientSocket, err.c_str(), err.size(), 0);
     }
     else
     {

@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 11:21:29 by phkevin           #+#    #+#             */
-/*   Updated: 2025/09/29 12:47:34 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/10/31 13:51:37 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,4 +117,27 @@ std::string Utils::IntToString(int i)
     ss << i;
 
     return ss.str();
+}
+
+/**
+ * @brief Vérifie si un socket est prêt à l'écriture sans blocage.
+ *
+ * Cette fonction utilise `select()` avec un timeout nul pour déterminer si le
+ * descripteur de socket spécifié peut être écrit immédiatement, c’est-à-dire
+ * sans bloquer le programme.
+ *
+ * @param sock Descripteur du socket à vérifier.
+ * @return `true` si le socket est prêt à l’écriture, sinon `false`.
+ *
+ * @note Cette fonction est utile pour éviter les blocages lors de l’envoi de
+ *       données sur des sockets non-bloquants.
+ */
+bool Utils::IsSocketWritable(int sock)
+{
+    fd_set writefds;
+    struct timeval tv = {0, 0};
+    FD_ZERO(&writefds);
+    FD_SET(sock, &writefds);
+    int ret = select(sock + 1, NULL, &writefds, NULL, &tv);
+    return (ret > 0 && FD_ISSET(sock, &writefds));
 }

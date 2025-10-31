@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 11:47:01 by phkevin           #+#    #+#             */
-/*   Updated: 2025/09/29 12:47:01 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/10/31 14:09:02 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
     User &target = tar->second;
 
 
-    if (op.getNick().compare(target.getNick()) == 0)
+    if (op.getNick().compare(target.getNick()) == 0 && Utils::IsSocketWritable(clientSocket))
     {
         std::string note = "Vous ne pouvez pas vous ban vous même.\r\n";
         ::send(clientSocket, note.c_str(), note.size(), 0);
@@ -97,7 +97,7 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
         }
 
 
-        if (targetFd == -1)
+        if (targetFd == -1 && Utils::IsSocketWritable(clientSocket))
         {
             std::string note = ":" + this->_ServName + " NOTICE " + op.getNick() + " :User " + target.getName() + " not online.\r\n";
             ::send(clientSocket, note.c_str(), note.size(), 0);
@@ -116,10 +116,12 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
             const User &target = targetUs->second;
 
             std::string bye = ":" + this->_ServName + " NOTICE " + target.getNick() + " :You were BAN \r\n";
-            ::send(targetFd, bye.c_str(), bye.size(), 0);
+            if (Utils::IsSocketWritable(targetFd))
+                ::send(targetFd, bye.c_str(), bye.size(), 0);
 
             std::string byeMp = "SERVER:" + target.getNick() + "!~" + target.getName() + "@localhost PRIVMSG " + target.getNick() + " :You were BAN \r\n";
-            ::send(targetFd, byeMp.c_str(), byeMp.size(), 0);
+            if (Utils::IsSocketWritable(targetFd))
+                ::send(targetFd, byeMp.c_str(), byeMp.size(), 0);
         }
 
         
@@ -140,7 +142,8 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
     else
     {
         std::string err = ":" + this->_ServName + " 482 " + op.getNick() + " " + chanName + " :You're not channel operator\r\n";
-        ::send(clientSocket, err.c_str(), err.size(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            ::send(clientSocket, err.c_str(), err.size(), 0);
 
         std::cout << RED << "[BAN]: " << chanName << " " << op.getName() << " a tenter d'utiliser la commande BAN sur l'user " << target.getName() << RESET << std::endl;
         
@@ -192,23 +195,27 @@ void Server::handleBanlistCommand(int clientSocket, const std::string& chanName)
         std::string note = "";
 
         note = "----------- BANLIST -----------\r\n";
-        ::send(clientSocket, note.c_str(), note.size(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            ::send(clientSocket, note.c_str(), note.size(), 0);
 
         std::map<int, User> banl = chan.GetBanMap();
         int i = 0;
         for (std::map<int, User>::iterator it = banl.begin(); it != banl.end(); it++)
         {
             note = "- " + Utils::IntToString(i) + " | " + it->second.getNick() + "\r\n";
-            ::send(clientSocket, note.c_str(), note.size(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                ::send(clientSocket, note.c_str(), note.size(), 0);
         }
 
         note = "-------------------------------\r\n";
-        ::send(clientSocket, note.c_str(), note.size(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            ::send(clientSocket, note.c_str(), note.size(), 0);
     }
     else
     {
         std::string err = ":" + this->_ServName + " 482 " + op.getNick() + " " + chanName + " :You're not channel operator\r\n";
-        ::send(clientSocket, err.c_str(), err.size(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            ::send(clientSocket, err.c_str(), err.size(), 0);
 
         std::cout << RED << "[BAN]: " << chanName << " " << op.getName() << " a tenter d'utiliser la commande BANLIST." << std::endl;
         
@@ -261,19 +268,22 @@ void Server::handleUnbanCommand(int clientSocket, const std::string& chanName, c
                 chan.RemoveUserBan(it->second.getSocket());
 
                 std::string note = "L'utilisateur " + target + " a été unban. \r\n";
-                ::send(clientSocket, note.c_str(), note.size(), 0);
+                if (Utils::IsSocketWritable(clientSocket))
+                    ::send(clientSocket, note.c_str(), note.size(), 0);
 
                 return;
             }
         }
 
         std::string note = "L'utilisateur " + target + " n'a pas pus être unban. \r\n";
-        ::send(clientSocket, note.c_str(), note.size(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            ::send(clientSocket, note.c_str(), note.size(), 0);
     }
     else
     {
         std::string err = ":" + this->_ServName + " 482 " + op.getNick() + " " + chanName + " :You're not channel operator\r\n";
-        ::send(clientSocket, err.c_str(), err.size(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            ::send(clientSocket, err.c_str(), err.size(), 0);
 
 
         std::cout << RED << "[BAN]: " << chanName << " " << op.getName() << " a tenter d'utiliser la commande UNBAN sur l'user " << target << std::endl;

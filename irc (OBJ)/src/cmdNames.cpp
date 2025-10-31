@@ -58,7 +58,8 @@ void Server::handleNames(User& user, const std::string& line)
         if (!chan)
         {
             std::string msg = ":" + this->_ServName + " 366 " + user.getNick() + " " + chanName + " :End of /NAMES list.\r\n";
-            ::send(user.getSocket(), msg.c_str(), msg.size(), 0);
+            if (Utils::IsSocketWritable(user.getSocket()))
+                ::send(user.getSocket(), msg.c_str(), msg.size(), 0);
 
             return;
         }
@@ -123,8 +124,10 @@ void Server::sendNamesReply(User &user, Channel &chan)
     }
 
     std::string msg = ":" + this->_ServName + " 353 " + user.getNick() + " = " + chanName + " :" + names + "\r\n";
-    ::send(user.getSocket(), msg.c_str(), msg.size(), 0);
+    if (Utils::IsSocketWritable(user.getSocket()))
+        ::send(user.getSocket(), msg.c_str(), msg.size(), 0);
 
     std::string end = ":" + this->_ServName + " 366 " + user.getNick() + " " + chanName + " :End of /NAMES list.\r\n";
-    ::send(user.getSocket(), end.c_str(), end.size(), 0);
+    if (Utils::IsSocketWritable(user.getSocket()))
+        ::send(user.getSocket(), end.c_str(), end.size(), 0);
 }

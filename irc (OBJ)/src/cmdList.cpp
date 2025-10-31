@@ -29,14 +29,17 @@ void Server::handleList(User& user)
     std::string msg = "";
 
     msg = ":" + this->_ServName + " 321 " + user.getNick() + " Channel :Users Name\r\n";
-    ::send(clientSocket, msg.c_str(), msg.size(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+        ::send(clientSocket, msg.c_str(), msg.size(), 0);
 
     for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
     {
         msg = ":" + this->_ServName + " 322 " + user.getNick() + " #" + it->second.GetName() + " " + Utils::IntToString(it->second.GetNbUser()) + " :" + it->second.GetTopic() + "\r\n";
-        ::send(clientSocket, msg.c_str(), msg.size(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            ::send(clientSocket, msg.c_str(), msg.size(), 0);
     }
 
     msg = ":" + this->_ServName + " 323 " + user.getNick() +  " :End of /LIST\r\n";
-    ::send(clientSocket, msg.c_str(), msg.size(), 0);
+    if (Utils::IsSocketWritable(clientSocket))
+        ::send(clientSocket, msg.c_str(), msg.size(), 0);
 }

@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 08:36:42 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/10/24 16:37:59 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/10/31 14:02:10 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -324,22 +324,26 @@ void Channel::BroadcastAll(const std::string &msg)
 {
 	for (std::map<int, User>::iterator it = this->_grade_0.begin(); it != this->_grade_0.end(); ++it)
 	{
-		send(it->first, msg.c_str(), msg.size(), 0);
+		if (Utils::IsSocketWritable(it->second.getSocket()))
+			send(it->first, msg.c_str(), msg.size(), 0);
 	}
 
 	for (std::map<int, User>::iterator it = this->_grade_1.begin(); it != this->_grade_1.end(); ++it) 
 	{
-		send(it->first, msg.c_str(), msg.size(), 0);
+		if (Utils::IsSocketWritable(it->second.getSocket()))
+			send(it->first, msg.c_str(), msg.size(), 0);
 	}
 
 	for (std::map<int, User>::iterator it = this->_grade_2.begin(); it != this->_grade_2.end(); ++it) 
 	{
-		send(it->first, msg.c_str(), msg.size(), 0);
+		if (Utils::IsSocketWritable(it->second.getSocket()))
+			send(it->first, msg.c_str(), msg.size(), 0);
 	}
 
 	for (std::map<int, User>::iterator it = this->_grade_3.begin(); it != this->_grade_3.end(); ++it) 
 	{
-		send(it->first, msg.c_str(), msg.size(), 0);
+		if (Utils::IsSocketWritable(it->second.getSocket()))
+			send(it->first, msg.c_str(), msg.size(), 0);
 	}
 }
 
@@ -357,25 +361,25 @@ void Channel::Broadcast(const std::string &msg, int sender)
 {
     for (std::map<int, User>::iterator it = this->_grade_0.begin(); it != this->_grade_0.end(); ++it)
 	{
-		if (it->second.getSocket() != sender)
+		if (it->second.getSocket() != sender && Utils::IsSocketWritable(it->second.getSocket()))
         	send(it->first, msg.c_str(), msg.size(), 0);
 	}
 
 	for (std::map<int, User>::iterator it = this->_grade_1.begin(); it != this->_grade_1.end(); ++it) 
 	{
-		if (it->second.getSocket() != sender)
+		if (it->second.getSocket() != sender && Utils::IsSocketWritable(it->second.getSocket()))
         	send(it->first, msg.c_str(), msg.size(), 0);
 	}
 
 	for (std::map<int, User>::iterator it = this->_grade_2.begin(); it != this->_grade_2.end(); ++it) 
 	{
-		if (it->second.getSocket() != sender)
+		if (it->second.getSocket() != sender && Utils::IsSocketWritable(it->second.getSocket()))
         	send(it->first, msg.c_str(), msg.size(), 0);
 	}
 
 	for (std::map<int, User>::iterator it = this->_grade_3.begin(); it != this->_grade_3.end(); ++it) 
 	{
-		if (it->second.getSocket() != sender)
+		if (it->second.getSocket() != sender && Utils::IsSocketWritable(it->second.getSocket()))
         	send(it->first, msg.c_str(), msg.size(), 0);
 	}
 }

@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 11:47:00 by phkevin           #+#    #+#             */
-/*   Updated: 2025/10/24 16:38:46 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/10/31 14:10:52 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,8 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
     if ((c != '#' && c != '&' && c != '+' && c != '!') || chanName.empty())
     {
         std::string err = ":" + this->_ServName + " 479 " + user.getNick() + " " + chanName + " :Illegal channel name\r\n";
-        ::send(clientSocket, err.c_str(), err.size(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+          ::send(clientSocket, err.c_str(), err.size(), 0);
 
         std::cout << RED << "[JOIN]: " << user.getNick() << " a tenter d'utiliser la commande JOIN pour cree le chan : " << chanName << RESET << std::endl;
         
@@ -116,21 +117,24 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
         if (chanIt->second.GetUserBan(user))
         {
             std::string err = ":" + this->_ServName + " 474 " + user.getNick() + " " + chanName + " :Cannot join channel (+b)\r\n";
-            ::send(clientSocket, err.c_str(), err.size(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                ::send(clientSocket, err.c_str(), err.size(), 0);
             return;
         }
         
         if (chanIt->second.isInviteOnly() && !chanIt->second.isInvited(user.getNick()))
         {
             std::string err = ":" + this->_ServName + " 473 " + user.getNick() + " " + chanName + " :Cannot join channel (+i)\r\n";
-            ::send(clientSocket, err.c_str(), err.size(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                ::send(clientSocket, err.c_str(), err.size(), 0);
             return;
         }
 
         if (!chanIt->second.canJoin())
         {
             std::string err = ":" + this->_ServName + " 471 " + user.getNick() + " " + chanName + " :Cannot join channel (+l)\r\n";
-            ::send(clientSocket, err.c_str(), err.size(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                ::send(clientSocket, err.c_str(), err.size(), 0);
             return;
         }
 
@@ -143,7 +147,8 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
         {
             std::cout << "[DEBUG KEY] BLOCKING JOIN: Wrong key for " << user.getNick() << std::endl;
             std::string err = ":" + this->_ServName + " 475 " + user.getNick() + " " + chanName + " :Cannot join channel (+k)\r\n";
-            ::send(clientSocket, err.c_str(), err.size(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                ::send(clientSocket, err.c_str(), err.size(), 0);
             return;
         }
 

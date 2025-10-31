@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 11:21:29 by phkevin           #+#    #+#             */
-/*   Updated: 2025/10/24 16:38:37 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/10/31 13:56:41 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 # include <map>
 # include <set>
 # include "user.hpp"
+# include "utils.hpp"
+
 
 class Channel
 {

@@ -193,14 +193,19 @@ void Server::AcceptClient()
 	socklen_t clientSize = sizeof(client);
 
 	int clientSocket = accept(this->_Listening, (sockaddr*)&client, &clientSize);
-
 	if (clientSocket == -1)
 	{
 		Error::ErrorServ(8, "accept failed");
 		return;
 	}
 
-	
+    if (fcntl(clientSocket, F_SETFL, O_NONBLOCK) == -1)
+	{
+		Error::ErrorServ(9, "fcntl failed");
+		close(clientSocket);
+		return;
+	}
+
 	std::string incomingNick = "";
 	this->_User.insert(std::make_pair(clientSocket, User(clientSocket)));
 
@@ -574,29 +579,6 @@ void Server::Run()
 }
 
 /**
- * @brief Vérifie si un socket est prêt à l'écriture sans blocage.
- *
- * Cette fonction utilise `select()` avec un timeout nul pour déterminer si le
- * descripteur de socket spécifié peut être écrit immédiatement, c’est-à-dire
- * sans bloquer le programme.
- *
- * @param sock Descripteur du socket à vérifier.
- * @return `true` si le socket est prêt à l’écriture, sinon `false`.
- *
- * @note Cette fonction est utile pour éviter les blocages lors de l’envoi de
- *       données sur des sockets non-bloquants.
- */
-bool Server::IsSocketWritable(int sock)
-{
-    fd_set writefds;
-    struct timeval tv = {0, 0};
-    FD_ZERO(&writefds);
-    FD_SET(sock, &writefds);
-    int ret = select(sock + 1, NULL, &writefds, NULL, &tv);
-    return (ret > 0 && FD_ISSET(sock, &writefds));
-}
-
-/**
  * @brief Vérifie si le mot de passe fourni correspond au serveur.
  *
  * Compare la chaîne fournie avec le mot de passe interne _Pass.
@@ -828,7 +810,8 @@ void Server::giveAutoOpPrivileges(int clientSocket, const std::string& channelNa
                         chanIt->second.giveOp(nickname);
                         
                         std::string modeMsg = ":" + _ServName + " MODE " + channelName + " +o " + nickname + "\r\n";
-                        send(clientSocket, modeMsg.c_str(), modeMsg.length(), 0);
+                        if (Utils::IsSocketWritable(clientSocket))
+                            send(clientSocket, modeMsg.c_str(), modeMsg.length(), 0);
                         
                         std::cout << "Auto-op granted to " << nickname << " in " << channelName << std::endl;
 
@@ -861,8 +844,8 @@ void Server::handleOperCommand(int clientSocket, const std::string& line)
     if (tokens.size() < 3)
     {
         std::string errorMsg = ":" + _ServName + " 461 * OPER :Not enough parameters\r\n";
-
-        send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
 
         return;
     }
@@ -885,28 +868,34 @@ void Server::handleOperCommand(int clientSocket, const std::string& line)
         if (currentGrade == 0)
         {
             std::string msg1 = ":" + _ServName + " NOTICE " + nickname + " :👑 Você já é o ADMINISTRADOR PRINCIPAL!\r\n";
-            send(clientSocket, msg1.c_str(), msg1.length(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                send(clientSocket, msg1.c_str(), msg1.length(), 0);
             
             std::string msg2 = ":" + _ServName + " NOTICE " + nickname + " :⚡ Grade 0 é superior ao Grade 1 (Operador)\r\n";
-            send(clientSocket, msg2.c_str(), msg2.length(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                send(clientSocket, msg2.c_str(), msg2.length(), 0);
         }
         else
         {
             userIt->second.setGrade(1);
             
             std::string separator = ":" + _ServName + " NOTICE " + nickname + " :═══════════════════════════════════\r\n";
-            send(clientSocket, separator.c_str(), separator.length(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                send(clientSocket, separator.c_str(), separator.length(), 0);
             
             std::string successMsg1 = ":" + _ServName + " NOTICE " + nickname + " :🎉 PROMOÇÃO REALIZADA COM SUCESSO!\r\n";
-            send(clientSocket, successMsg1.c_str(), successMsg1.length(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                send(clientSocket, successMsg1.c_str(), successMsg1.length(), 0);
             
             std::string successMsg2 = ":" + _ServName + " NOTICE " + nickname + " :⚡ Você agora é OPERADOR (Grade 1)\r\n";
-            send(clientSocket, successMsg2.c_str(), successMsg2.length(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                send(clientSocket, successMsg2.c_str(), successMsg2.length(), 0);
             
             std::string successMsg3 = ":" + _ServName + " NOTICE " + nickname + " :📋 Pode usar: MODE +o, KICK, BAN\r\n";
-            send(clientSocket, successMsg3.c_str(), successMsg3.length(), 0);
-            
-            send(clientSocket, separator.c_str(), separator.length(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                send(clientSocket, successMsg3.c_str(), successMsg3.length(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                send(clientSocket, separator.c_str(), separator.length(), 0);
             
             std::cout << "OPER: " << nickname << " promoted from Grade " << currentGrade << " to Grade 1 (Operator)" << std::endl;
         }
@@ -914,8 +903,8 @@ void Server::handleOperCommand(int clientSocket, const std::string& line)
     else
     {
         std::string errorMsg = ":" + _ServName + " NOTICE " + nickname + " :❌ Senha incorreta para OPER\r\n";
-
-        send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
 
         std::cout << "OPER: Failed attempt by " << nickname << " with wrong password" << std::endl;
     }
@@ -942,10 +931,12 @@ void Server::sendWelcomeMessage(int clientSocket, const User& user)
     int grade = user.getGrade();
 
     std::string welcomeMsg = ":" + _ServName + " 001 " + nickname + " :Bienvenue sur " + _ServName + "!\r\n";
-    send(clientSocket, welcomeMsg.c_str(), welcomeMsg.length(), 0);
+    if (Utils::IsSocketWritable(clientSocket))
+        send(clientSocket, welcomeMsg.c_str(), welcomeMsg.length(), 0);
     
     std::string separator = ":" + _ServName + " 002 " + nickname + " :═══════════════════════════════════\r\n";
-    send(clientSocket, separator.c_str(), separator.length(), 0);
+    if (Utils::IsSocketWritable(clientSocket))
+        send(clientSocket, separator.c_str(), separator.length(), 0);
     
     std::string statusMsg = ":" + _ServName + " 003 " + nickname + " :";
     
@@ -967,7 +958,8 @@ void Server::sendWelcomeMessage(int clientSocket, const User& user)
             statusMsg += "❓ INCONNU";
     }
     statusMsg += "\r\n";
-    send(clientSocket, statusMsg.c_str(), statusMsg.length(), 0);
+    if (Utils::IsSocketWritable(clientSocket))
+        send(clientSocket, statusMsg.c_str(), statusMsg.length(), 0);
     
     std::string privMsg = ":" + _ServName + " 004 " + nickname + " :Privilèges: ";
     
@@ -989,46 +981,56 @@ void Server::sendWelcomeMessage(int clientSocket, const User& user)
             privMsg += "Aucun";
     }
     privMsg += "\r\n";
-    send(clientSocket, privMsg.c_str(), privMsg.length(), 0);
+    if (Utils::IsSocketWritable(clientSocket))
+        send(clientSocket, privMsg.c_str(), privMsg.length(), 0);
     
     if (grade == 0)
     {
         std::string adminMsg1 = ":" + _ServName + " 005 " + nickname + " :🎯 Vous avez le CONTRÔLE TOTAL du serveur!\r\n";
-        send(clientSocket, adminMsg1.c_str(), adminMsg1.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, adminMsg1.c_str(), adminMsg1.length(), 0);
         
         std::string adminMsg2 = ":" + _ServName + " 006 " + nickname + " :📋 Commandes: MODE, KICK, BAN, INVITE, TOPIC\r\n";
-        send(clientSocket, adminMsg2.c_str(), adminMsg2.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, adminMsg2.c_str(), adminMsg2.length(), 0);
     }
     else if (grade == 1)
     {
         std::string operMsg1 = ":" + _ServName + " 005 " + nickname + " :⚡ Vous êtes OPÉRATEUR du serveur!\r\n";
-        send(clientSocket, operMsg1.c_str(), operMsg1.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, operMsg1.c_str(), operMsg1.length(), 0);
         
         std::string operMsg2 = ":" + _ServName + " 006 " + nickname + " :📋 Commandes: MODE +o, KICK, BAN dans les canaux\r\n";
-        send(clientSocket, operMsg2.c_str(), operMsg2.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, operMsg2.c_str(), operMsg2.length(), 0);
     }
     else if (grade == 2)
     {
         std::string voiceMsg = ":" + _ServName + " 005 " + nickname + " :🔊 Vous avez la VOIX - vous pouvez parler dans les canaux modérés\r\n";
-        send(clientSocket, voiceMsg.c_str(), voiceMsg.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, voiceMsg.c_str(), voiceMsg.length(), 0);
     }
     else if (grade == 3)
     {
         std::string userMsg1 = ":" + _ServName + " 005 " + nickname + " :📈 Pour obtenir plus de privilèges:\r\n";
-        send(clientSocket, userMsg1.c_str(), userMsg1.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, userMsg1.c_str(), userMsg1.length(), 0);
         
         std::string userMsg2 = ":" + _ServName + " 006 " + nickname + " :   💼 OPER " + nickname + " <motdepasse> → Devenir Opérateur\r\n";
-        send(clientSocket, userMsg2.c_str(), userMsg2.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, userMsg2.c_str(), userMsg2.length(), 0);
         
         if (nickname == _AdminConfig.getMainAdmin())
         {
             std::string adminHint = ":" + _ServName + " 007 " + nickname + " :   👑 ADMIN " + nickname + " <motdepasse> → Devenir Admin Principal\r\n";
-            send(clientSocket, adminHint.c_str(), adminHint.length(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                send(clientSocket, adminHint.c_str(), adminHint.length(), 0);
         }
     }
     
     std::string separator2 = ":" + _ServName + " 008 " + nickname + " :═══════════════════════════════════\r\n";
-    send(clientSocket, separator2.c_str(), separator2.length(), 0);
+    if (Utils::IsSocketWritable(clientSocket))
+        send(clientSocket, separator2.c_str(), separator2.length(), 0);
     
     std::string visibleMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + nickname + " :";
     
@@ -1048,7 +1050,8 @@ void Server::sendWelcomeMessage(int clientSocket, const User& user)
             break;
     }
     visibleMsg += "\r\n";
-    send(clientSocket, visibleMsg.c_str(), visibleMsg.length(), 0);
+    if (Utils::IsSocketWritable(clientSocket))
+        send(clientSocket, visibleMsg.c_str(), visibleMsg.length(), 0);
 }
 
 /**
@@ -1077,7 +1080,8 @@ void Server::handleAdminCommand(int clientSocket, const std::string& line)
     if (tokens.size() < 3)
     {
         std::string errorMsg = ":" + _ServName + " 461 * ADMIN :Not enough parameters\r\n";
-        send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
         return;
     }
     
@@ -1097,28 +1101,35 @@ void Server::handleAdminCommand(int clientSocket, const std::string& line)
         userIt->second.setGrade(0);
         
         std::string separator = ":" + _ServName + " NOTICE " + nickname + " :═══════════════════════════════════\r\n";
-        send(clientSocket, separator.c_str(), separator.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, separator.c_str(), separator.length(), 0);
         
         std::string successMsg1 = ":" + _ServName + " NOTICE " + nickname + " :🎉 AUTENTICAÇÃO ADMIN REALIZADA!\r\n";
-        send(clientSocket, successMsg1.c_str(), successMsg1.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, successMsg1.c_str(), successMsg1.length(), 0);
         
         std::string successMsg2 = ":" + _ServName + " NOTICE " + nickname + " :👑 Você agora é ADMINISTRADOR PRINCIPAL\r\n";
-        send(clientSocket, successMsg2.c_str(), successMsg2.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, successMsg2.c_str(), successMsg2.length(), 0);
         
         std::string successMsg3 = ":" + _ServName + " NOTICE " + nickname + " :⚡ Grade 0 - CONTROLE TOTAL DO SERVIDOR\r\n";
-        send(clientSocket, successMsg3.c_str(), successMsg3.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, successMsg3.c_str(), successMsg3.length(), 0);
         
         std::string successMsg4 = ":" + _ServName + " NOTICE " + nickname + " :📋 Todos os comandos disponíveis!\r\n";
-        send(clientSocket, successMsg4.c_str(), successMsg4.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, successMsg4.c_str(), successMsg4.length(), 0);
         
-        send(clientSocket, separator.c_str(), separator.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, separator.c_str(), separator.length(), 0);
         
         std::cout << "ADMIN: " << nickname << " authenticated as server administrator" << std::endl;
     }
     else
     {
         std::string errorMsg = ":" + _ServName + " NOTICE " + nickname + " :❌ Credenciais de admin inválidas\r\n";
-        send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
         std::cout << "ADMIN: Failed authentication attempt by " << nickname << std::endl;
     }
 }
@@ -1204,10 +1215,12 @@ void Server::handleGradesCommand(int clientSocket, const std::string& /* line */
     std::string nickname = userIt->second.getNick();
     
     std::string header = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + nickname + " :📊 GRADES DOS USUÁRIOS CONECTADOS\r\n";
-    send(clientSocket, header.c_str(), header.length(), 0);
+    if (Utils::IsSocketWritable(clientSocket))
+        send(clientSocket, header.c_str(), header.length(), 0);
     
     std::string separator = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + nickname + " :═════════════════════════════════════\r\n";
-    send(clientSocket, separator.c_str(), separator.length(), 0);
+    if (Utils::IsSocketWritable(clientSocket))
+        send(clientSocket, separator.c_str(), separator.length(), 0);
     
     for (std::map<int, User>::iterator it = _User.begin(); it != _User.end(); ++it)
     {
@@ -1234,13 +1247,16 @@ void Server::handleGradesCommand(int clientSocket, const std::string& /* line */
                 gradeMsg += "❓ " + userNick + " - Desconhecido";
         }
         gradeMsg += "\r\n";
-        send(clientSocket, gradeMsg.c_str(), gradeMsg.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, gradeMsg.c_str(), gradeMsg.length(), 0);
     }
     
-    send(clientSocket, separator.c_str(), separator.length(), 0);
+    if (Utils::IsSocketWritable(clientSocket))
+        send(clientSocket, separator.c_str(), separator.length(), 0);
     
     std::string footer = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + nickname + " :💡 Use: SETGRADE <nick> <0-3> para alterar\r\n";
-    send(clientSocket, footer.c_str(), footer.length(), 0);
+    if (Utils::IsSocketWritable(clientSocket))
+        send(clientSocket, footer.c_str(), footer.length(), 0);
 }
 
 /**
@@ -1287,7 +1303,8 @@ void Server::handleSetGradeCommand(int clientSocket, const std::string& line)
     if (tokens.size() < 3)
     {
         std::string errorMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG * :❌ Uso: SETGRADE <nickname> <grade>\r\n";
-        send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
         return;
     }
     
@@ -1304,7 +1321,8 @@ void Server::handleSetGradeCommand(int clientSocket, const std::string& line)
     if (adminGrade != 0)
     {
         std::string errorMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + adminNick + " :❌ Seul l'Admin Principal (Grade 0) peut utiliser SETGRADE\r\n";
-        send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
         return;
     }
     
@@ -1321,7 +1339,8 @@ void Server::handleSetGradeCommand(int clientSocket, const std::string& line)
     if (newGrade < 0 || newGrade > 3)
     {
         std::string errorMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + adminNick + " :❌ Le grade doit être 0, 1, 2 ou 3\r\n";
-        send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
        
         return;
     }
@@ -1338,7 +1357,8 @@ void Server::handleSetGradeCommand(int clientSocket, const std::string& line)
             char newGradeChar = '0' + newGrade;
             
             std::string successMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + adminNick + " :✅ " + targetNick + " modifié du Grade " + oldGradeChar + " au Grade " + newGradeChar + "\r\n";
-            send(clientSocket, successMsg.c_str(), successMsg.length(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                send(clientSocket, successMsg.c_str(), successMsg.length(), 0);
             
             std::string gradeName;
             switch(newGrade)
@@ -1365,7 +1385,8 @@ void Server::handleSetGradeCommand(int clientSocket, const std::string& line)
             }
             
             std::string notifyMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + targetNick + " :🎉 Votre grade a été modifié en: " + gradeName + " (Grade " + newGradeChar + ")\r\n";
-            send(it->first, notifyMsg.c_str(), notifyMsg.length(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                send(it->first, notifyMsg.c_str(), notifyMsg.length(), 0);
             
             std::cout << "SETGRADE: " << adminNick << " changed " << targetNick << " from Grade " << oldGrade << " to Grade " << newGrade << std::endl;
             found = true;
@@ -1376,6 +1397,7 @@ void Server::handleSetGradeCommand(int clientSocket, const std::string& line)
     if (!found)
     {
         std::string errorMsg = ":" + _ServName + "!" + _ServName + "@" + _ServName + " PRIVMSG " + adminNick + " :❌ Usuário '" + targetNick + "' não encontrado\r\n";
-        send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
     }
 }

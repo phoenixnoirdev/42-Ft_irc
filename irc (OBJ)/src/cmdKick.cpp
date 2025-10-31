@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 11:47:09 by phkevin           #+#    #+#             */
-/*   Updated: 2025/09/29 12:46:08 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/10/31 14:13:35 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,8 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
     if (sp1 == std::string::npos)
     {
         std::string err = ":" + this->_ServName + " 461 " + kicker.getNick() + " KICK :Not enough parameters\r\n";
-        ::send(clientSocket, err.c_str(), err.size(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            ::send(clientSocket, err.c_str(), err.size(), 0);
         return;
     }
     chanName = tmp.substr(0, sp1);
@@ -66,7 +67,8 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
     if (targetNick.empty())
     {
         std::string err = ":" + this->_ServName + " 461 " + kicker.getNick() + " KICK :Not enough parameters\r\n";
-        ::send(clientSocket, err.c_str(), err.size(), 0);
+        if (Utils::IsSocketWritable(clientSocket))    
+            ::send(clientSocket, err.c_str(), err.size(), 0);
     }
 
 
@@ -112,7 +114,8 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
         if (targetFd == -1)
         {
             std::string note = ":" + this->_ServName + " NOTICE " + kicker.getNick() + " :User " + targetNick + " not online.\r\n";
-            ::send(clientSocket, note.c_str(), note.size(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                ::send(clientSocket, note.c_str(), note.size(), 0);
             return;
         }
 
@@ -123,10 +126,12 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
             const User &target = targetUs->second;
 
             std::string bye = ":" + this->_ServName + " NOTICE " + target.getNick() + " :You were KICK (" + (reason.empty() ? "no reason" : reason) + ")\r\n";
-            ::send(targetFd, bye.c_str(), bye.size(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                ::send(targetFd, bye.c_str(), bye.size(), 0);
 
             std::string byeMp = "SERVER:" + target.getNick() + "!~" + target.getName() + "@localhost PRIVMSG " + target.getNick() + " :You were KICK (" + (reason.empty() ? "no reason" : reason) + ")\r\n";
-            ::send(targetFd, byeMp.c_str(), byeMp.size(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                ::send(targetFd, byeMp.c_str(), byeMp.size(), 0);
         }
 
         for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
@@ -145,7 +150,8 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
     else
     {
         std::string err = ":server 482 " + kicker.getNick() + " " + chanName + " :You're not channel operator\r\n";
-        ::send(clientSocket, err.c_str(), err.size(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            ::send(clientSocket, err.c_str(), err.size(), 0);
 
         std::cout << RED << "[KICK]: " << chanName << " " << kicker.getName() << " a tenter d'utiliser la commande KICK sur l'user " << targetNick << " = " << reason << std::endl;
         

@@ -59,7 +59,8 @@ void Server::handleTopic(User& user, const std::string& line)
     }
         
     std::string err = ":" + this->_ServName + " 482 " + user.getNick() + " " + chanName + " :You're not channel operator\r\n";
-    ::send(user.getSocket(), err.c_str(), err.size(), 0);
+    if (Utils::IsSocketWritable(user.getSocket()))
+        ::send(user.getSocket(), err.c_str(), err.size(), 0);
 
     std::cout << RED << "[TOPIC]: " << chanName << " " << user.getName() << " a tenter d'utiliser la commande TOPIC." << RESET << std::endl;
     

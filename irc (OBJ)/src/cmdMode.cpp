@@ -96,7 +96,8 @@ void sendIRCError(int clientSocket, int errorCode, const std::string& message)
     oss << ":localhost " << errorCode << " * " << message << "\r\n";
 
     std::string response = oss.str();
-    send(clientSocket, response.c_str(), response.size(), 0);
+    if (Utils::IsSocketWritable(clientSocket))
+        send(clientSocket, response.c_str(), response.size(), 0);
 }
 
 /**
@@ -166,7 +167,8 @@ void handleModeCommand(int clientSocket, const std::string& line, std::map<int, 
     {
         std::string modes = channel->getModeString();
         std::string response = ":localhost 324 " + user.getNick() + " " + channelName + " " + modes + "\r\n";
-        send(clientSocket, response.c_str(), response.size(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            send(clientSocket, response.c_str(), response.size(), 0);
         return;
     }
     
@@ -347,10 +349,12 @@ void handleInviteCommand(int clientSocket, const std::string& line, std::map<int
     channel->addInvite(targetNick);
     
     std::string inviteMsg = ":" + inviter.getNick() + "!~" + inviter.getName() + "@localhost INVITE " + targetNick + " " + channelName + "\r\n";
-    send(target->getSocket(), inviteMsg.c_str(), inviteMsg.size(), 0);
+    if (Utils::IsSocketWritable(target->getSocket()))
+        send(target->getSocket(), inviteMsg.c_str(), inviteMsg.size(), 0);
     
     std::string confirmMsg = ":localhost 341 " + inviter.getNick() + " " + targetNick + " " + channelName + "\r\n";
-    send(clientSocket, confirmMsg.c_str(), confirmMsg.size(), 0);
+    if (Utils::IsSocketWritable(clientSocket))
+        send(clientSocket, confirmMsg.c_str(), confirmMsg.size(), 0);
 }
 
 /**
@@ -397,12 +401,14 @@ void handleTopicCommand(int clientSocket, const std::string& line, std::map<int,
         if (topic.empty())
         {
             std::string response = ":localhost 331 " + user.getNick() + " " + channelName + " :No topic is set\r\n";
-            send(clientSocket, response.c_str(), response.size(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                send(clientSocket, response.c_str(), response.size(), 0);
         }
         else
         {
             std::string response = ":localhost 332 " + user.getNick() + " " + channelName + " :" + topic + "\r\n";
-            send(clientSocket, response.c_str(), response.size(), 0);
+            if (Utils::IsSocketWritable(clientSocket))
+                send(clientSocket, response.c_str(), response.size(), 0);
         }
         return;
     }

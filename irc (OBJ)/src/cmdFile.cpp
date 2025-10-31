@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 16:29:50 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/10/31 12:32:06 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/10/31 14:09:20 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,8 @@ void	Server::_msgUser(User *target, User& user, std::string filename)
 	std::string	ircMsg;
 
 	ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG " + target->getNick() + " : " + user.getNick() + " is trying to send you a file called \"" + filename + "\"\n";
-	send(target->getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
+	if (Utils::IsSocketWritable(target->getSocket()))
+		send(target->getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
 }
 
 /**

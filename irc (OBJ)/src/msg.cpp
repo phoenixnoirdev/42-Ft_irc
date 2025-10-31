@@ -50,7 +50,8 @@ void Server::handleBrodcastMsgChann(int clientSocket, User& user, std::string li
     if (!chanIt->second.canSpeak(user))
     {
         std::string err = ":localhost 404 " + user.getNick() + " " + chanIt->second.GetName() + " :Cannot send to channel (moderated)\r\n";
-        ::send(clientSocket, err.c_str(), err.size(), 0);
+        if (Utils::IsSocketWritable(clientSocket))
+            ::send(clientSocket, err.c_str(), err.size(), 0);
         return;
     }
 
@@ -141,14 +142,16 @@ void Server::handleBrodcastPrivateMsg(User& user, std::string line)
         }
 
         std::string ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG " + userTarg + " :" + msg + "\r\n";
-        send(clientSock, ircMsg.c_str(), ircMsg.size(), 0);
+        if (Utils::IsSocketWritable(clientSock))
+            send(clientSock, ircMsg.c_str(), ircMsg.size(), 0);
 
         std::cout << CYAN << "MP " << " / " << YELLOW << user.getName() << RESET << " to " << YELLOW << userTarg << RESET <<": " << msg << std::endl;
     }
     else
     {
         std::string ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG " + user.getNick() + " :Le destinataire de votre message priver n'est pas connecter (" + msg + ")\r\n";
-        send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
+        if (Utils::IsSocketWritable(user.getSocket()))
+            send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
 
         std::cout << RED << "MP ERROR (TARGET NOT LOG)" << " / " << YELLOW << user.getName() << RESET << ": " << msg << std::endl;
     }
@@ -194,7 +197,8 @@ void Server::handleBrodcastMsgKB(User& user, std::string line)
         msg = "";
 
     std::string ircMsg = ":" + user.getNick() + "!~" + user.getName() + "@localhost PRIVMSG " + user.getNick() + " : Vous avez été kick ou ban. Le message n'a pas été envoyer (" + msg + ")\r\n";
-    send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
+    if (Utils::IsSocketWritable(user.getSocket()))
+        send(user.getSocket(), ircMsg.c_str(), ircMsg.size(), 0);
 
     std::cout << CYAN << "USER KICKED/BAN MSG RECEP" << " / " << YELLOW << user.getName() << RESET << ": " << msg << std::endl;
 }
