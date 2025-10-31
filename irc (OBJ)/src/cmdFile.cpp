@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cmdFile.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kelevequ <kelevequ@student.42luxembourg>   #+#  +:+       +#+        */
+/*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025-09-29 16:29:50 by kelevequ          #+#    #+#             */
-/*   Updated: 2025-09-29 16:29:50 by kelevequ         ###   ########.lu       */
+/*   Created: 2025/09/29 16:29:50 by kelevequ          #+#    #+#             */
+/*   Updated: 2025/10/31 12:32:06 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -312,14 +312,12 @@ void	Server::handleFileGet(User& user, const std::string& line)
 		this->_Files.erase(file.getFileName());
 		std::cout << "FGET: Succesfull, deleting _Files entry" << std::endl;
 	}
-
 	else if (ofs)
 	{
 		std::cout << "FGET: Succesfull" << std::endl;
 	}
-
 	else
-	
+	{
 		std::cout << "FGET: Error while outputting file" << std::endl;
 		return ;
 	}

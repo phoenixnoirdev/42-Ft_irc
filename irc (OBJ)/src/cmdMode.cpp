@@ -430,7 +430,7 @@ void handleTopicCommand(int clientSocket, const std::string& line, std::map<int,
     }
     
     channel->SetTopic(newTopic);
-    l
+    
     std::string response = ":" + user.getNick() + "!~" + user.getName() + "@localhost TOPIC " + channelName + " :" + newTopic + "\r\n";
     channel->BroadcastAll(response);
 }
