@@ -6,7 +6,7 @@
 #    By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/19 12:48:38 by phkevin           #+#    #+#              #
-#    Updated: 2025/09/29 12:02:44 by phkevin          ###   Luxembourg.lu      #
+#    Updated: 2025/10/31 13:20:52 by phkevin          ###   Luxembourg.lu      #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,7 +23,7 @@ RM			=	/bin/rm -f
 #	Compilation: <Your app>
 ################################################################################
 
-NAME		=	ircservOBJ
+NAME		=	ircserv
 SRC_DIR		=	./src/
 INC_DIR		=	./inc/
 OBJ_DIR		=	./obj/

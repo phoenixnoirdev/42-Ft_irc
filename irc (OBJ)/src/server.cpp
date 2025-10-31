@@ -574,6 +574,29 @@ void Server::Run()
 }
 
 /**
+ * @brief Vérifie si un socket est prêt à l'écriture sans blocage.
+ *
+ * Cette fonction utilise `select()` avec un timeout nul pour déterminer si le
+ * descripteur de socket spécifié peut être écrit immédiatement, c’est-à-dire
+ * sans bloquer le programme.
+ *
+ * @param sock Descripteur du socket à vérifier.
+ * @return `true` si le socket est prêt à l’écriture, sinon `false`.
+ *
+ * @note Cette fonction est utile pour éviter les blocages lors de l’envoi de
+ *       données sur des sockets non-bloquants.
+ */
+bool Server::IsSocketWritable(int sock)
+{
+    fd_set writefds;
+    struct timeval tv = {0, 0};
+    FD_ZERO(&writefds);
+    FD_SET(sock, &writefds);
+    int ret = select(sock + 1, NULL, &writefds, NULL, &tv);
+    return (ret > 0 && FD_ISSET(sock, &writefds));
+}
+
+/**
  * @brief Vérifie si le mot de passe fourni correspond au serveur.
  *
  * Compare la chaîne fournie avec le mot de passe interne _Pass.
