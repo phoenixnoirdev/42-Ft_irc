@@ -1,0 +1,45 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   cmdList.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/09/29 11:47:13 by phkevin           #+#    #+#             */
+/*   Updated: 2025/09/29 12:45:06 by phkevin          ###   Luxembourg.lu     */
+/*                                                                            */
+/* ************************************************************************** */
+
+# include "../inc/inc.hpp"
+# include "../inc/server.hpp"
+# include "../inc/utils.hpp"
+
+/**
+ * @brief Envoie la liste des channels et leurs informations à un utilisateur.
+ *
+ * Cette fonction gère la commande IRC LIST. Elle envoie d'abord l'entête de la liste,
+ * puis pour chaque channel existant, elle envoie le nom, le nombre d'utilisateurs et le topic.
+ * Enfin, elle envoie le message de fin de liste.
+ *
+ * @param user Référence vers l'utilisateur qui a demandé la liste des channels.
+ */
+void Server::handleList(User& user)
+{
+    int clientSocket = user.getSocket();
+    std::string msg = "";
+
+    msg = ":" + this->_ServName + " 321 " + user.getNick() + " Channel :Users Name\r\n";
+            if (Utils::IsSocketWritable(clientSocket))
+        ::send(clientSocket, msg.c_str(), msg.size(), 0);
+
+    for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
+    {
+        msg = ":" + this->_ServName + " 322 " + user.getNick() + " #" + it->second.GetName() + " " + Utils::IntToString(it->second.GetNbUser()) + " :" + it->second.GetTopic() + "\r\n";
+        if (Utils::IsSocketWritable(clientSocket))
+            ::send(clientSocket, msg.c_str(), msg.size(), 0);
+    }
+
+    msg = ":" + this->_ServName + " 323 " + user.getNick() +  " :End of /LIST\r\n";
+    if (Utils::IsSocketWritable(clientSocket))
+        ::send(clientSocket, msg.c_str(), msg.size(), 0);
+}
