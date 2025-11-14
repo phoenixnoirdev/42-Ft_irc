@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   file.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kelevequ <kelevequ@student.42luxembourg>   #+#  +:+       +#+        */
+/*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025-09-29 16:03:37 by kelevequ          #+#    #+#             */
-/*   Updated: 2025-09-29 16:03:37 by kelevequ         ###   ########.lu       */
+/*   Created: 2025/09/29 16:03:37 by kelevequ          #+#    #+#             */
+/*   Updated: 2025/11/14 13:56:59 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@
  * - _captor   : utilisateur captant le fichier
  * - _global   : indicateur global (initialisé à 0)
  */
-File::File(): _fileName(NULL), _fileDir(NULL), _channel(NULL), _sender(NULL), _captor(NULL), _global(0) {}
+File::File(): _fileName(""), _fileDir(""), _channel(""), _sender(""), _captor(""), _global(0) {}
 
 /**
  * @brief Constructeur de copie de la classe File.

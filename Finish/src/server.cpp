@@ -485,7 +485,7 @@ void Server::HandleClientData(int clientSocket)
 		{
 			handleFileGet(user, line);
 		}
-		else if (line.find("FLIST ") == 0)
+		else if (line.find("FLIST") == 0)
 		{
 			handleFileList();
 		}

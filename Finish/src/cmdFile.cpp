@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 16:29:50 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/10/31 14:09:20 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/11/14 14:33:18 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,15 @@ void	Server::_msgUser(User *target, User& user, std::string filename)
  */
 void	Server::handleFileSend(User& user, const std::string& line)
 {
-	std::string	tmp = line.substr(6);
+	std::string	tmp;
+	if (line.size() > 6)
+		tmp = line.substr(6);
+	else
+	{
+		std::cout << "FSEND: Missing or multiple options" << std::endl;
+		return ;
+	}
+	
 	char 		opt = 'd';
 	File		file;
 
@@ -77,12 +85,12 @@ void	Server::handleFileSend(User& user, const std::string& line)
 	{
 		i++;
 
-		if ((i < tmp.size() && tmp[i] == ' ') || (i + 1 < tmp.size() && tmp[i + 1] == ' '))
+		if (!((i < tmp.size() && tmp[i] == ' ') || (i + 1 < tmp.size() && tmp[i + 1] == ' ')))
 		{
 			std::cout << "FSEND: Missing or multiple options" << std::endl;
 			return ;
 		}
-		else if (tmp[i] != 'p' || tmp[i] != 'c' || tmp[i] != 'g')
+		else if (tmp[i] != 'p' && tmp[i] != 'c' && tmp[i] != 'g')
 		{
 			std::cout << "FSEND: Invalid option" << std::endl;
 			return ;
@@ -90,7 +98,7 @@ void	Server::handleFileSend(User& user, const std::string& line)
 		else
 			opt = tmp[i];
 
-
+		i++;
 		while (i < tmp.size() && tmp[i] == ' ')
 			i++;
 	}
@@ -105,7 +113,7 @@ void	Server::handleFileSend(User& user, const std::string& line)
 			break ;
 		case 'c':
 		{
-			size_t	k = 0;
+			size_t	k = 1;
 			while (i + k < tmp.size() && tmp[i + k] != ' ')
 				k++;
 			if (k == 0)
@@ -218,8 +226,7 @@ void	Server::handleFileSend(User& user, const std::string& line)
 	}
 
 	this->_Files.insert(std::pair<std::string, File>(filename, file));
-
-	_msgUser(target, user, filename);
+	std::cout << "FSEND: Successful" << std::endl;
 }
 
 /**
@@ -280,7 +287,7 @@ void	Server::handleFileGet(User& user, const std::string& line)
 
 	if (file.getGlobal())
 		;
-	else if (file.getChannel().empty())
+	else if (!file.getChannel().empty())
 	{
 		Channel* channel = findChannelByName(file.getChannel(), this->_Chan);
 		if (channel == NULL)
