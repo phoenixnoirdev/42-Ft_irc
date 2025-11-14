@@ -165,10 +165,12 @@ bool AdminConfig::isOperator(const std::string& nickname) const
     for (size_t i = 0; i < operators.size(); i++)
     {
         if (operators[i] == nickname)
-        {
             return true;
-        }
     }
+
+    if (nickname == mainAdmin)
+        return true;
+
     return false;
 }
 

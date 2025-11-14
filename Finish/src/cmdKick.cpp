@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 11:47:09 by phkevin           #+#    #+#             */
-/*   Updated: 2025/10/31 14:13:35 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/11/14 15:59:17 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,6 +85,16 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
 
     if (chan.GetGradeUser(kicker) == 0 || chan.GetGradeUser(kicker) == 1 || chan.GetOpChannel() == kicker.getSocket())
     {
+        if (kicker.getName() == targetNick)
+        {
+            std::cout << RED << "[KICK]: " << chanName << " " << kicker.getName() << " a tenter d'utiliser la commande KICK sur lui meme " << targetNick << " = " << reason << std::endl;
+
+            std::string note = ":" + this->_ServName + "Tu ne peu pas te kick.\r\n";
+            if (Utils::IsSocketWritable(clientSocket))
+                ::send(clientSocket, note.c_str(), note.size(), 0);
+            return;
+        }
+
         int targetFd = -1;
         std::map<int, User>::iterator targetUs = _User.end();
         for (std::map<int, User>::iterator it = _User.begin(); it != _User.end(); ++it)
@@ -96,6 +106,32 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
                 break; 
             }
         }
+        const User &target = targetUs->second;
+
+
+        if (!(chan.GetGradeUser(kicker) <= chan.GetGradeUser(target)))
+        {
+            if (_AdminConfig.isOperator(target.getName()))
+            {
+                std::cout << RED << "[KICK]: " << chanName << " " << kicker.getName() << " a tenter d'utiliser la commande KICK sur l'user de operateur serveur " << targetNick << " = " << reason << std::endl;
+
+                std::string note = ":" + this->_ServName + "Tu ne peu pas kick un operateur serveur.\r\n";
+                if (Utils::IsSocketWritable(clientSocket))
+                    ::send(clientSocket, note.c_str(), note.size(), 0);
+                return;
+            }
+            else
+            {   
+                std::cout << RED << "[KICK]: " << chanName << " " << kicker.getName() << " a tenter d'utiliser la commande KICK sur l'user de grade egale ou superieur " << targetNick << " = " << reason << std::endl;
+      
+                std::string note = ":" + this->_ServName + "Tu ne peu pas kick un user de grade superieur  ou egale.\r\n";
+                if (Utils::IsSocketWritable(clientSocket))
+                    ::send(clientSocket, note.c_str(), note.size(), 0);
+                return;
+            }
+        } 
+
+
 
         {
             std::string reply = ":" + kicker.getNick() + "!~" + kicker.getName() + "@localhost KICK " + chanName + " " + targetNick + " :" + (reason.empty() ? "" : reason) + "\r\n";
@@ -123,8 +159,6 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
 
 
         {
-            const User &target = targetUs->second;
-
             std::string bye = ":" + this->_ServName + " NOTICE " + target.getNick() + " :You were KICK (" + (reason.empty() ? "no reason" : reason) + ")\r\n";
             if (Utils::IsSocketWritable(clientSocket))
                 ::send(targetFd, bye.c_str(), bye.size(), 0);

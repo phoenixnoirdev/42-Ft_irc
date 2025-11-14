@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 11:47:01 by phkevin           #+#    #+#             */
-/*   Updated: 2025/10/31 14:09:02 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/11/14 16:00:18 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,16 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
 
     if (chan.GetGradeUser(op) == 0 || chan.GetGradeUser(op) == 1 || chan.GetOpChannel() == op.getSocket())
     { 
+        if (op.getName() == target.getName())
+        {
+            std::cout << RED << "[BAN]: " << chanName << " " << op.getName() << " a tenter d'utiliser la commande BAN sur lui meme " << target.getNick() << std::endl;
+
+            std::string note = ":" + this->_ServName + "Tu ne peu pas te bannir.\r\n";
+            if (Utils::IsSocketWritable(clientSocket))
+                ::send(clientSocket, note.c_str(), note.size(), 0);
+            return;
+        }
+
         int targetFd = -1;
         std::map<int, User>::iterator targetUs = _User.end();
         for (std::map<int, User>::iterator it = _User.begin(); it != _User.end(); ++it)
@@ -90,6 +100,31 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
                 break; 
             }
         }
+        const User &target = targetUs->second;
+
+
+        if (!(chan.GetGradeUser(op) <= chan.GetGradeUser(target)))
+        {
+            if (_AdminConfig.isOperator(target.getName()))
+            {
+                std::cout << RED << "[BAN]: " << chanName << " " << op.getName() << " a tenter d'utiliser la commande BAN sur l'user de operateur serveur " << target.getNick() << std::endl;
+
+                std::string note = ":" + this->_ServName + "Tu ne peu pas bannir un operateur serveur.\r\n";
+                if (Utils::IsSocketWritable(clientSocket))
+                    ::send(clientSocket, note.c_str(), note.size(), 0);
+                return;
+            }
+            else
+            {   
+                std::cout << RED << "[BAN]: " << chanName << " " << op.getName() << " a tenter d'utiliser la commande BAN sur l'user de grade egale ou superieur " << target.getNick() << std::endl;
+      
+                std::string note = ":" + this->_ServName + "Tu ne peu pas bannir un user de grade superieur ou egale.\r\n";
+                if (Utils::IsSocketWritable(clientSocket))
+                    ::send(clientSocket, note.c_str(), note.size(), 0);
+                return;
+            }
+        } 
+
 
         {
             std::string reply = ":" + op.getNick() + "!~" + op.getName() + "@localhost BAN " + chanName + " " + target.getName() + "\r\n";
@@ -113,8 +148,6 @@ void Server::handleBanCommand(int clientSocket, const std::string& chanName, con
         
 
         {
-            const User &target = targetUs->second;
-
             std::string bye = ":" + this->_ServName + " NOTICE " + target.getNick() + " :You were BAN \r\n";
             if (Utils::IsSocketWritable(targetFd))
                 ::send(targetFd, bye.c_str(), bye.size(), 0);
