@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   cmdJoin.cpp                                        :+:      :+:    :+:   */
+/*   cmdTopic.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 11:47:00 by phkevin           #+#    #+#             */
-/*   Updated: 2025/09/29 12:47:16 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/11/14 11:27:16 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,18 @@ void Server::handleTopic(User& user, const std::string& line)
     size_t sp2 = tmp.find(" :");
     std::string chanName = "";
 
+    if(sp2 > 5)
+    {
+        std::cout << CYAN << "[TOPIC]: " << chanName << " " << user.getName() << " a essayer de changer le topic mais param vide." << RESET << std::endl;
+     
+        std::string err = ":" + this->_ServName + user.getNick() + " " + chanName + " : Empty subject\r\n";
+        if (Utils::IsSocketWritable(user.getSocket()))
+            ::send(user.getSocket(), err.c_str(), err.size(), 0);
+
+        return;
+    }
+
+        
     for (size_t i = sp1; i < sp2; i++)
         chanName += tmp[i];
 
@@ -43,7 +55,7 @@ void Server::handleTopic(User& user, const std::string& line)
             break;
         }
     }
-    Channel &chan = _Chan[idChan];
+    Channel &chan = _Chan[  idChan];
 
     if (chan.GetGradeUser(user) == 0 || chan.GetGradeUser(user) == 1 || chan.GetOpChannel() == user.getSocket())
     {
