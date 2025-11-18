@@ -433,6 +433,9 @@ void Server::HandleClientData(int clientSocket)
             size_t pos2 = line.find(" &");
             size_t pos3 = line.find(" +");
             size_t pos4 = line.find(" !");
+            
+            //if (pos0 > 10)
+                //return;
 
             if (pos1 > pos0 && pos2 > pos0 && pos3 > pos0 && pos4 > pos0)
                 handleBrodcastPrivateMsg(user,line);
@@ -440,6 +443,7 @@ void Server::HandleClientData(int clientSocket)
             {
                 std::string chanName = "";
                 size_t posSpNa = line.find(" ");
+
                 for(size_t i = posSpNa + 2; i < pos0; i++)
                     chanName += line[i];
 
@@ -459,6 +463,7 @@ void Server::HandleClientData(int clientSocket)
         }
         else if (line.find("JOIN ") == 0)
         {
+            //std::cout << "[DEBUG] line join: " << line << std::endl;
             handleJoin(clientSocket, user, line);
         }
         else if (line.find("PART ") == 0)

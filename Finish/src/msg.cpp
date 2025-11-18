@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 11:47:19 by phkevin           #+#    #+#             */
-/*   Updated: 2025/09/29 11:47:36 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/11/18 12:09:54 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,6 @@
  */
 void Server::handleBrodcastMsgChann(int clientSocket, User& user, std::string line, int idchan)
 {
-    
     std::map<int, Channel>::iterator chanIt = this->_Chan.find(idchan);
     
     if (!chanIt->second.canSpeak(user))
@@ -54,7 +53,6 @@ void Server::handleBrodcastMsgChann(int clientSocket, User& user, std::string li
             ::send(clientSocket, err.c_str(), err.size(), 0);
         return;
     }
-
     size_t pos = line.find(" :");
     std::string msg;
 

@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 11:47:00 by phkevin           #+#    #+#             */
-/*   Updated: 2025/11/14 11:27:16 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/11/18 14:15:41 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,16 +33,10 @@ void Server::handleTopic(User& user, const std::string& line)
 
     if(sp2 > 5)
     {
-        std::cout << CYAN << "[TOPIC]: " << chanName << " " << user.getName() << " a essayer de changer le topic mais param vide." << RESET << std::endl;
-     
-        std::string err = ":" + this->_ServName + user.getNick() + " " + chanName + " : Empty subject\r\n";
-        if (Utils::IsSocketWritable(user.getSocket()))
-            ::send(user.getSocket(), err.c_str(), err.size(), 0);
-
+        handleTopicAff(user, line);
         return;
     }
-
-        
+    
     for (size_t i = sp1; i < sp2; i++)
         chanName += tmp[i];
 
@@ -59,14 +53,12 @@ void Server::handleTopic(User& user, const std::string& line)
 
     if (chan.GetGradeUser(user) == 0 || chan.GetGradeUser(user) == 1 || chan.GetOpChannel() == user.getSocket())
     {
-        std::string topic = "";
-        for (size_t i = sp2 + 2; i < tmp.size(); i++)
-            topic += tmp[i];
-
-        std::cout << CYAN << "[TOPIC]: " << chanName << " " << user.getName() << " a change le TOPIC en : " << topic << RESET << std::endl;
-        
-        chan.SetTopic(topic);
-        
+        EdtiTopic(chan, chanName, sp2, tmp, user);
+        return;
+    }
+    else if(chan.isTopicOpOnly() ==  0)
+    {
+        EdtiTopic(chan, chanName, sp2, tmp, user);
         return;
     }
         
@@ -77,4 +69,41 @@ void Server::handleTopic(User& user, const std::string& line)
     std::cout << RED << "[TOPIC]: " << chanName << " " << user.getName() << " a tenter d'utiliser la commande TOPIC." << RESET << std::endl;
     
     return;
+}
+
+void Server::handleTopicAff(User& user, const std::string& line)
+{
+    std::string tmp = line.substr(6);
+    std::string chanName = "";
+
+    for (size_t i = 0; i < tmp.size(); i++)
+        chanName += tmp[i];
+
+    int idChan;
+    for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
+    {
+        if (chanName.compare("#" + it->second.GetName()) == 0)
+        {
+            idChan = it->second.GetId();
+            break;
+        }
+    }
+    Channel &chan = _Chan[  idChan];
+
+    std::cout << CYAN << "[TOPIC]: " << chanName << " " << user.getName() << " a demander le sujet." << RESET << std::endl;
+    
+    std::string top = ":" + this->_ServName + user.getNick() + " " + chanName + " : " + chan.GetTopic() + "\r\n";
+    if (Utils::IsSocketWritable(user.getSocket()))
+        ::send(user.getSocket(), top.c_str(), top.size(), 0);
+}
+
+void Server::EdtiTopic(Channel& chan, std::string chanName, size_t sp2, std::string tmp, User& user)
+{
+    std::string topic = "";
+    for (size_t i = sp2 + 2; i < tmp.size(); i++)
+        topic += tmp[i];
+
+    std::cout << CYAN << "[TOPIC]: " << chanName << " " << user.getName() << " a change le TOPIC en : " << topic << RESET << std::endl;
+    
+    chan.SetTopic(topic);
 }

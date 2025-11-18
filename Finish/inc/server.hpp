@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 07:46:19 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/10/31 13:51:07 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/11/18 14:14:54 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,6 +117,8 @@ class Server
 		void	handleFileGet(User& user, const std::string& line);
 
         void handleTopic(User& user, const std::string& line);
+		void handleTopicAff(User& user, const std::string& line);
+		void EdtiTopic(Channel& chan, std::string chanName, size_t sp2, std::string tmp, User& user);
 
 		
 		void loadAdminConfig();

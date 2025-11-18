@@ -215,12 +215,12 @@ void handleModeCommand(int clientSocket, const std::string& line, std::map<int, 
                         sendIRCError(clientSocket, 461, "MODE +k :Not enough parameters");
                         continue;
                     }
-                    channel->setKey(param);
+                    channel->setKey(param, adding);
                     sendModeResponse(*channel, user, singleMode, param);
                 }
                 else
                 {
-                    channel->removeKey();
+                    channel->removeKey(adding);
                     sendModeResponse(*channel, user, singleMode);
                 }
                 break;

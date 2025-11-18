@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 08:36:42 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/10/31 14:02:10 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/11/18 14:27:24 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -854,9 +854,9 @@ bool Channel::isInvited(const std::string& nick) const
  * 
  * @param key Chaîne de caractères représentant la clé du canal.
  */
-void Channel::setKey(const std::string& key)
+void Channel::setKey(const std::string& key, bool e)
 {
-	this->_modes.has_key = !key.empty();
+	this->_modes.has_key = e;
 	this->_key = key;
 }
 
@@ -865,9 +865,9 @@ void Channel::setKey(const std::string& key)
  * 
  * Après l'appel de cette fonction, le canal n'est plus protégé par mot de passe.
  */
-void Channel::removeKey()
+void Channel::removeKey(bool e)
 {
-	this->_modes.has_key = false;
+	this->_modes.has_key = e;
 	this->_key.clear();
 }
 
@@ -905,6 +905,11 @@ bool Channel::checkKey(const std::string& provided_key) const
 std::string Channel::getKey() const
 {
 	return this->_key;
+}
+
+bool Channel::isKey()
+{
+	return this->_modes.has_key;
 }
 
 
@@ -946,9 +951,9 @@ bool Channel::applyMode(const User& user, const std::string& modestring, const s
 			return true;
 		case 'k':
 			if (adding && !param.empty())
-				setKey(param);
+				setKey(param, true);
 			else if (!adding)
-				removeKey();
+				removeKey(false);
 			return true;
 		case 'o':
 			if (!param.empty())

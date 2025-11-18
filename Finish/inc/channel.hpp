@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 11:21:29 by phkevin           #+#    #+#             */
-/*   Updated: 2025/10/31 13:56:41 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/11/18 14:27:49 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ class Channel
 		int					_id;			// Ref du channel
 		std::string			_name;			// Chan name
 		int					_user_limit; 	// Limite du nombre d'utilisateur (+l)
-		std::string			_topic;			// Topice 
+		std::string			_topic;			// Topice
 		
 		std::string			_key;			// Password du channel
 
@@ -137,11 +137,12 @@ class Channel
 		bool isInvited(const std::string& nick) const;		// Retourn si l'user fait partie des inviter
 
 		//Channel key (Modes +k/-k)
-		void setKey(const std::string& key);						// Active le password sur le channel si key et non vide
-		void removeKey();											// Desactive le password et clear key
-		bool hasKey() const;										// Retourn si le password est actife sur le chan
-		bool checkKey(const std::string& provided_key) const;		// Retourn si le passwotd correspond a celui du chan
-		std::string getKey() const;									// Retourn le password
+		void setKey(const std::string& key, bool e);						// Active le password sur le channel si key et non vide
+		void removeKey(bool e);												// Desactive le password et clear key
+		bool hasKey() const;												// Retourn si le password est actife sur le chan
+		bool checkKey(const std::string& provided_key) const;				// Retourn si le passwotd correspond a celui du chan
+		std::string getKey() const;											// Retourn le password
+		bool isKey();									
 
 		//Methode generale appliquer au modes
 		bool applyMode(const User& user, const std::string& modestring, const std::string& param = "");
