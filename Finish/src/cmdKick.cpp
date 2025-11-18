@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 11:47:09 by phkevin           #+#    #+#             */
-/*   Updated: 2025/11/18 17:18:11 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/11/18 17:34:39 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,7 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
         return;
     }
     chanName = tmp.substr(0, sp1);
+
 
     std::string rest = tmp.substr(sp1 + 1);
     std::string::size_type sp2 = rest.find(' ');
