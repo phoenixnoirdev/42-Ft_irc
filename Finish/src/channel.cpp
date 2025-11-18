@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 08:36:42 by kelevequ          #+#    #+#             */
-/*   Updated: 2025/11/18 14:27:24 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/11/18 18:52:01 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@
 Channel::Channel(): _id(0), _name(""), _user_limit(0), _topic("") 
 {
 	_modes.invite_only = false;
-	_modes.topic_op_only = false;
+	_modes.topic_op_only = true;
 	_modes.has_key = false;
 	_modes.moderated = false;
 	_modes.has_limit = false;
@@ -65,7 +65,7 @@ Channel::Channel(int id, std::string name): _user_limit(0), _topic(""), _OpChann
 	this->_name = name;
 
 	_modes.invite_only = false;
-	_modes.topic_op_only = false;
+	_modes.topic_op_only = true;
 	_modes.has_key = false;
 	_modes.moderated = false;
 	_modes.has_limit = false;

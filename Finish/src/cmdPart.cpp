@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 11:46:56 by phkevin           #+#    #+#             */
-/*   Updated: 2025/09/29 12:48:12 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/11/18 18:44:13 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ void Server::handleQuit(int clientSocket, User& user, const std::string& line)
     {
         for (size_t i = 1; i < (sp1 - 1); i++)
             chanName += tmp[i];
-    }
+    }   
 
     
     if (c != '#' && c != '&' && c != '+' && c != '!')
@@ -78,7 +78,6 @@ void Server::handleQuit(int clientSocket, User& user, const std::string& line)
     bool existe = false;
 
     int idChan;
-    std::cout << chanName << std::endl;
     for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
     {
         if (chanName.compare(it->second.GetName()) == 0)
@@ -110,12 +109,9 @@ void Server::handleQuit(int clientSocket, User& user, const std::string& line)
 
         if (chanIt->second.GetNbUser() == 0)
         {
-            if (idChan != 0)
-            {
-                std::cout << "[INFO] Suppression du channel " << chanIt->second.GetName() << " car le channel est vide " << std::endl;
+            std::cout << "[INFO] Suppression du channel " << chanIt->second.GetName() << " car le channel est vide " << std::endl;
 
-                this->_Chan.erase(idChan);
-            } 
+            this->_Chan.erase(idChan);
         }
     }
 }

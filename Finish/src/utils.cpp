@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 11:21:29 by phkevin           #+#    #+#             */
-/*   Updated: 2025/10/31 13:51:37 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/11/18 18:53:52 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,10 +134,14 @@ std::string Utils::IntToString(int i)
  */
 bool Utils::IsSocketWritable(int sock)
 {
+    (void) sock;
+    /*
     fd_set writefds;
     struct timeval tv = {0, 0};
     FD_ZERO(&writefds);
     FD_SET(sock, &writefds);
     int ret = select(sock + 1, NULL, &writefds, NULL, &tv);
     return (ret > 0 && FD_ISSET(sock, &writefds));
+    */
+   return true;
 }

@@ -444,8 +444,8 @@ void Server::HandleClientData(int clientSocket)
             if (tmp0[1] != ':')
                 return;
 
-            
-            if ('#' != tmp[0] && '&' == tmp[0] && '+' == tmp[0] && '!' == tmp[0])
+
+            if ('#' != tmp[0] && '&' != tmp[0] && '+' != tmp[0] && '!' != tmp[0])
                 handleBrodcastPrivateMsg(user,line);
             else
             {
@@ -454,7 +454,7 @@ void Server::HandleClientData(int clientSocket)
 
                 for(size_t i = 0 + 1; i < pos0 - 1; i++)
                     chanName += tmp[i];
-
+                
                 int ref = -1;
                 for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
                 {
