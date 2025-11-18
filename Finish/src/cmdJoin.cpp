@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 11:47:00 by phkevin           #+#    #+#             */
-/*   Updated: 2025/11/18 15:44:42 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/11/18 16:05:23 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,6 @@ void Server::handleJoin(int clientSocket, User& user, const std::string& line)
 
     std::string chanName = "";
     std::string tmp = line.substr(5);
-    std::string key = "";
     size_t spt = tmp.find(" ");
     std::string pwd = "";
 

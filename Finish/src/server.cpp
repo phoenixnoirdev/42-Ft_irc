@@ -428,24 +428,35 @@ void Server::HandleClientData(int clientSocket)
         }
         else if (line.find("PRIVMSG ") == 0)
         {
-            size_t pos0 = line.find(" :");
-            size_t pos1 = line.find(" #");
-            size_t pos2 = line.find(" &");
-            size_t pos3 = line.find(" +");
-            size_t pos4 = line.find(" !");
-            
-            //if (pos0 > 10)
-                //return;
+            if(line.size() == 8)
+                return;
 
-            if (pos1 > pos0 && pos2 > pos0 && pos3 > pos0 && pos4 > pos0)
+            size_t posSpNa = line.find(" ");
+            std::string tmp = line.substr(posSpNa + 1);
+
+            size_t tmppos = tmp.find(" ");
+            if(tmppos > 512)
+                return;
+
+            std::string tmp0 = "";
+            tmp0 = tmp.substr(tmppos);
+            for(size_t i = 1; i < tmp0.size(); i++)
+                std::cout << i << " " << tmp0[i] << std::endl;
+
+            if (tmp0[1] != ':')
+                return;
+
+            
+            if ('#' != tmp[0] && '&' == tmp[0] && '+' == tmp[0] && '!' == tmp[0])
                 handleBrodcastPrivateMsg(user,line);
             else
             {
+                std::cout << "0" << std::endl;
+                size_t pos0 = tmp.find(":");
                 std::string chanName = "";
-                size_t posSpNa = line.find(" ");
 
-                for(size_t i = posSpNa + 2; i < pos0; i++)
-                    chanName += line[i];
+                for(size_t i = 0 + 1; i < pos0 - 1; i++)
+                    chanName += tmp[i];
 
                 int ref = -1;
                 for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
@@ -463,7 +474,6 @@ void Server::HandleClientData(int clientSocket)
         }
         else if (line.find("JOIN ") == 0)
         {
-            //std::cout << "[DEBUG] line join: " << line << std::endl;
             handleJoin(clientSocket, user, line);
         }
         else if (line.find("PART ") == 0)
