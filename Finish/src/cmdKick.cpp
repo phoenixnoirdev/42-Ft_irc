@@ -6,7 +6,7 @@
 /*   By: phkevin <phkevin@42luxembourg.lu>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 11:47:09 by phkevin           #+#    #+#             */
-/*   Updated: 2025/11/14 15:59:17 by phkevin          ###   Luxembourg.lu     */
+/*   Updated: 2025/11/18 17:18:11 by phkevin          ###   Luxembourg.lu     */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,6 +109,15 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
         const User &target = targetUs->second;
 
 
+        if (targetFd == -1)
+        {
+            std::string note = ":" + this->_ServName + " NOTICE " + kicker.getNick() + " :User " + targetNick + " not online.\r\n";
+            if (Utils::IsSocketWritable(clientSocket))
+                ::send(clientSocket, note.c_str(), note.size(), 0);
+            return;
+        }
+
+        
         if (!(chan.GetGradeUser(kicker) <= chan.GetGradeUser(target)))
         {
             if (_AdminConfig.isOperator(target.getName()))
@@ -124,7 +133,7 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
             {   
                 std::cout << RED << "[KICK]: " << chanName << " " << kicker.getName() << " a tenter d'utiliser la commande KICK sur l'user de grade egale ou superieur " << targetNick << " = " << reason << std::endl;
       
-                std::string note = ":" + this->_ServName + "Tu ne peu pas kick un user de grade superieur  ou egale.\r\n";
+                std::string note = ":" + this->_ServName + "Tu ne peu pas kick un user de grade superieur ou egale.\r\n";
                 if (Utils::IsSocketWritable(clientSocket))
                     ::send(clientSocket, note.c_str(), note.size(), 0);
                 return;
@@ -147,13 +156,7 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
         }
 
 
-        if (targetFd == -1)
-        {
-            std::string note = ":" + this->_ServName + " NOTICE " + kicker.getNick() + " :User " + targetNick + " not online.\r\n";
-            if (Utils::IsSocketWritable(clientSocket))
-                ::send(clientSocket, note.c_str(), note.size(), 0);
-            return;
-        }
+
 
         std::cout << "[" << RED << "KICK" << RESET << "]: " << chanName << " " << targetNick << " " << reason << " / OP = " << kicker.getName() << std::endl;
 
@@ -167,6 +170,7 @@ void Server::handleKickCommand(int clientSocket, const std::string& line)
             if (Utils::IsSocketWritable(clientSocket))
                 ::send(targetFd, byeMp.c_str(), byeMp.size(), 0);
         }
+
 
         for (std::map<int, Channel>::iterator it = this->_Chan.begin(); it != this->_Chan.end(); it++)
         {

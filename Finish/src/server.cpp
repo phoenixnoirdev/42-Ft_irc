@@ -440,8 +440,6 @@ void Server::HandleClientData(int clientSocket)
 
             std::string tmp0 = "";
             tmp0 = tmp.substr(tmppos);
-            for(size_t i = 1; i < tmp0.size(); i++)
-                std::cout << i << " " << tmp0[i] << std::endl;
 
             if (tmp0[1] != ':')
                 return;
@@ -451,7 +449,6 @@ void Server::HandleClientData(int clientSocket)
                 handleBrodcastPrivateMsg(user,line);
             else
             {
-                std::cout << "0" << std::endl;
                 size_t pos0 = tmp.find(":");
                 std::string chanName = "";
 
