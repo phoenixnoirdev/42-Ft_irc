@@ -1,8 +1,0 @@
-{
-    "viewg": 0, # grade requis pour voire le channel
-    "g0": [], # root
-    "g1": [], # modo
-    "g3": [uuid:nick, uuid2:nick2], # user
-    "g4": [], # groupe viewer
-    "ban": [] # user ban du chann
-}
